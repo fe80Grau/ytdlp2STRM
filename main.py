@@ -7,13 +7,13 @@ import urllib.error
 import os
 app = Flask(__name__)
 
-keep_downloaded = 60 #in seconds
+keep_downloaded = 1800 #in seconds
 
 #Function used in thread to remove files webm older than **keep_downloaded** 
 def clean_old_videos():
     while True:
         try:
-            time.sleep(10)
+            time.sleep(60)
             path = os.getcwd()
             now = time.time()
             for f in os.listdir(path):

@@ -3,6 +3,7 @@ Description=ytdlp2STRM Service
 After=network-online.target
 
 [Service]
+WorkingDirectory=/opt/ytdlp2STRM
 Type=simple
 ExecStart=/usr/bin/python3 /opt/ytdlp2STRM/main.py
 Restart=always
