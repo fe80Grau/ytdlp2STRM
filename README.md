@@ -30,6 +30,11 @@ ytdlp2strm.service example service to run main.py with systemctl . Put it into /
 
 * Edit variable media_folder , host and port /by default http://127.0.0.1 and 5000
 
+* Example cron.d file to create to create strm files from channel_list every 2 horus
+> ``` console
+> cd /etc/cron.d && sudo echo "00 22 * * * root /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,download" > ytdlp2STRM
+> ```
+
 ## Credits
 [![GitHub - ShieldsIO](https://img.shields.io/badge/GitHub-ShieldsIO-42b983?logo=GitHub)](https://github.com/badges/shields)
 [![GitHub - Flask](https://img.shields.io/badge/GitHub-Flask-0000ff?logo=GitHub)](https://github.com/pallets/flask)
