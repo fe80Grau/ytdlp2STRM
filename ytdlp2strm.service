@@ -1,0 +1,12 @@
+[Unit]
+Description=ytdlp2STRM Service
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/ytdlp2STRM/main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
