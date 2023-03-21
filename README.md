@@ -10,8 +10,8 @@
 ## main.py 
 A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/stream/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
 
-## cli.py and channel_list.py
-A little script to list last 60 days videos in channels setted on channel_list.py and save all as .strm files . I added id channels and videos in names [xxxx] for YoutubeMetadata Jellyfin plugin integration.
+## cli.py and channel_list.json
+A little script to list last 60 days videos in channels setted on channel_list.json and save all as .strm files . I added id channels and videos in names [xxxx] for YoutubeMetadata Jellyfin plugin integration.
 
 ## Service
 ytdlp2strm.service example service to run main.py with systemctl . Put it into /etc/systemd/system and run systemctl enable ytdlp2strm.service , systemctl start ytdlp2strm.service
@@ -28,7 +28,7 @@ ytdlp2strm.service example service to run main.py with systemctl . Put it into /
 > cli.py --m make_files_strm --p youtube,stream
 > ```
 
-* Edit variable media_folder , host and port /by default http://127.0.0.1 and 5000
+* Edit config.json with your params
 
 * Example cron.d file to create to create strm files from channel_list every 2 horus
 > ``` console
