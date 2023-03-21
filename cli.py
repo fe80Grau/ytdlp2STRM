@@ -1,14 +1,26 @@
 from datetime import datetime
-from channel_list import channels
 import argparse, sys
 import subprocess
+import json
 import glob
 import os
 
-media_folder = "/media/Youtube"
-host = "http://127.0.0.1"
-port = "5000"
 
+#Reading config file
+with open('config.json', 'r') as f:
+    config = json.load(f)
+
+
+media_folder = config["strm_output_folder"]
+host = config["ytdlp2strm_host"]
+port = config["ytdlp2strm_port"]
+channels_list_file = config["ytdlp2strm_channels_list_file"]
+
+def channels():
+    channels = []
+    with open(channels_list_file, 'r') as f:
+        channels = json.load(f)
+    return channels
 
 def makecleanfolder(folder):
     print("Clearing {} folder...".format(folder))
@@ -37,7 +49,7 @@ def createSTRM(file, content):
 
 
 def make_files_strm(platform="youtube", method="stream"):
-    for youtube_channel in channels:
+    for youtube_channel in channels():
         youtube_channel_url = "https://www.youtube.com/{}/videos".format(youtube_channel)
         print("Preparing channel {}".format(youtube_channel))
 

@@ -1,0 +1,6 @@
+{
+    "strm_output_folder" : "/media/Youtube",
+    "ytdlp2strm_host" : "127.0.0.1",
+    "ytdlp2strm_port" : "5000",
+    "ytdlp2strm_channels_list_file" : "channel_list.json"
+}
