@@ -128,7 +128,7 @@ def make_nfo(platform="youtube", params=""):
                     '--write-description', 
                     '--playlist-items', '0',
                     '--output', '{}.description'.format(channel_name),
-                    '2>&1 && ', 'cat {}.description'.format(channel_name) 
+                    '2>&1 && ', 'cat', "{}".description'.format(channel_name) 
                     ]
         #fixear salida
         print(' '.join(command))
