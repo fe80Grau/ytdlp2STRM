@@ -94,14 +94,20 @@ def inflate_nfo(source_platform="youtube", params=""):
                             row[headers[i]] = d
                         thumbnails.append(row)
                 c += 1
-        print(thumbnails)
         #get images
-        url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "avatar_uncropped"), None)
-        poster = thumbnails[url_avatar_uncropped_index]['URL']
+        poster = ""
+        try:
+            url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "avatar_uncropped"), None)
+            poster = thumbnails[url_avatar_uncropped_index]['URL']
+        except:
+            continue
 
-        url_max_landscape_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "banner_uncropped"), None)
-        landscape = thumbnails[url_avatar_uncropped_index-1]['URL']
-
+        landscape = ""
+        try:
+            url_max_landscape_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "banner_uncropped"), None)
+            landscape = thumbnails[url_avatar_uncropped_index-1]['URL']
+        except:
+            continue
 
         #get channel id
         command = ['yt-dlp', 
@@ -139,6 +145,8 @@ def inflate_nfo(source_platform="youtube", params=""):
                         ]
             description = subprocess.getoutput(' '.join(command))
             os.remove("{}.description".format(channel_name))
+        else:
+            print("Descriptions only works in Linux system at the moment")
 
         output_nfo = tvinfo_scheme.format(
             channel_name,
