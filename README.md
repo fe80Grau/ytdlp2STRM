@@ -1,6 +1,7 @@
 # ytdlp2STRM
 * Youtube to STRM files
-* Youtube integration with Jellyfin/Emby
+* Youtube integration with Jellyfin/Emby (Requires YoutubeMetadata plugin)
+![image](https://user-images.githubusercontent.com/6680464/227725095-8451ea3b-d404-47d7-82b6-59ec9f683eb2.png)
 
 ## Requierments
 * Python 3
@@ -15,7 +16,7 @@ A little script to list last 60 days videos in channels setted on channel_list.j
 
 * ¡¡IMPORTANT!! EDIT channel_list.example.json with your channels names (you can see channel name (or ID or USER)  after first / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix).
 
-* Makes a NFO (tvshow.nfo) for each youtube channel (to get name, description and images). 
+* Makes a NFO (tvshow.nfo) for each youtube channel (to get name, description and images). *Description only works in Linux systems at the moment
 
 ## Service
 ytdlp2strm.service example service to run main.py with systemctl . Put it into /etc/systemd/system and run systemctl enable ytdlp2strm.service , systemctl start ytdlp2strm.service
@@ -27,7 +28,7 @@ ytdlp2strm.service example service to run main.py with systemctl . Put it into /
 > cli.py --m make_files_strm --p youtube,download
 > ```
 
-* Stream content (no duration info, no disk usage)
+>* Stream content (no duration info, no disk usage)
 > ```console
 > cli.py --m make_files_strm --p youtube,stream
 > ```
