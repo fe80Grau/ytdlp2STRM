@@ -217,7 +217,7 @@ def make_files_strm(source_platform="youtube", method="stream"):
 
                     video_id = str(line.decode("utf-8")).rstrip().split(';')[0]
                     video_name = "{} [{}]".format(str(line.decode("utf-8")).rstrip().split(';')[1], video_id)
-                    file_content = "{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
+                    file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
                     file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(youtube_channel_folder,channel_id), video_name, "strm")
 
                     data = {
