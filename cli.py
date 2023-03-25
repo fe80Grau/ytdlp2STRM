@@ -120,6 +120,7 @@ def make_nfo(platform="youtube", params=""):
                     '--print', '%(channel)s', 
                     '--playlist-items', '1',
                     '--compat-options', 'no-youtube-channel-redirect' ]
+        print(' '.join(command))
         channel_name = subprocess.getoutput(' '.join(command))
 
         #get description
