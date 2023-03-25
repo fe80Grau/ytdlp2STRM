@@ -75,13 +75,12 @@ def make_nfo(platform="youtube", params=""):
                     'https://www.youtube.com/{}'.format(params), 
                     '--list-thumbnails', 
                     '--playlist-items', '0']
-        print(command)
         lines = subprocess.getoutput(command).split('\n')
+        print(lines)
         headers = []
         thumbnails = []
         for line in lines:
             line = ' '.join(line.split())
-            print(line)
             if not '[' in line:
                 data = line.split(' ')
                 if c == 0:
