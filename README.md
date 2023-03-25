@@ -13,7 +13,7 @@ A little script to serve yt-dlp video/audio as HTTP data throught Flask and dyna
 ## cli.py and channel_list.json
 A little script to list last 60 days videos in channels setted on channel_list.json and save all as .strm files . I added id channels and videos in names [xxxx] for YoutubeMetadata Jellyfin plugin integration.
 
-* ¡¡IMPORTANT!! EDIT channel_list.example.json with your channels names (you can see channel name (or ID)  after / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix)
+* ¡¡IMPORTANT!! EDIT channel_list.example.json with your channels names (you can see channel name (or ID or USER)  after first / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix).
 
 * Makes a NFO (tvshow.nfo) for each youtube channel (to get name, description and images). 
 
