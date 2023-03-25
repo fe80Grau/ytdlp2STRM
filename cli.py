@@ -76,8 +76,6 @@ def make_nfo(platform="youtube", params=""):
                     '--list-thumbnails', 
                     '--playlist-items', '0']
         lines = subprocess.getoutput(' '.join(command)).split('\n')
-        print(command)
-        print(lines)
         headers = []
         thumbnails = []
         for line in lines:
@@ -122,7 +120,7 @@ def make_nfo(platform="youtube", params=""):
                     '--print', '%(channel)s', 
                     '--playlist-items', '1',
                     '--compat-options', 'no-youtube-channel-redirect', ]
-        channel_name = subprocess.getoutput(command)
+        channel_name = subprocess.getoutput(' '.join(command))
 
         #get description
         command = ['yt-dlp', 
@@ -132,7 +130,7 @@ def make_nfo(platform="youtube", params=""):
                     '--output', '{}.description'.format(channel_name),
                     '2>&1 && ', 'cat {}.description'.format(channel_name) 
                     ]
-        description = subprocess.getoutput(command)
+        description = subprocess.getoutput(' '.join(command))
 
         output_nfo = tvinfo_scheme.format(
             channel_name,
@@ -150,7 +148,7 @@ def make_nfo(platform="youtube", params=""):
         
         if channel_id:
             file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(params,channel_id), video_name, "nfo")
-
+            writeFile(file_path, output_nfo)
 
 def make_files_strm(platform="youtube", method="stream"):
     if platform == "youtube":
