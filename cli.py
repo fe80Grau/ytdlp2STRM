@@ -131,7 +131,8 @@ def inflate_nfo(source_platform="youtube", params=""):
                     'https://www.youtube.com/{}'.format(params['youtube_channel']), 
                     '--print', '"%(channel)s"', 
                     '--playlist-items', '1',
-                    '--compat-options', 'no-youtube-channel-redirect' ]
+                    '--compat-options', 'no-youtube-channel-redirect',
+                    '--no-warnings']
         channel_name = subprocess.getoutput(' '.join(command))
 
         #get description
