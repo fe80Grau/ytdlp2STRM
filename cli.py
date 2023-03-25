@@ -1,4 +1,5 @@
 from datetime import datetime
+import platform
 import argparse, sys
 import subprocess
 import json
@@ -67,8 +68,8 @@ def writeFile(file, content):
         return False
     return True
 
-def make_nfo(platform="youtube", params=""):
-    if platform == "youtube":
+def make_nfo(source_platform="youtube", params=""):
+    if source_platform == "youtube":
         #Table thumbnails
         c = 0
         command = ['yt-dlp', 
@@ -123,17 +124,17 @@ def make_nfo(platform="youtube", params=""):
         channel_name = subprocess.getoutput(' '.join(command))
 
         #get description
-        command = ['yt-dlp', 
-                    'https://www.youtube.com/{}'.format(params), 
-                    '--write-description', 
-                    '--playlist-items', '0',
-                    '--output', '{}.description'.format(channel_name),
-                    '>', '/dev/null', '2>&1', 
-                    '&&', 'cat', "{}.description".format(channel_name) 
-                    ]
-        #fixear salida
-        print(' '.join(command))
-        description = subprocess.getoutput(' '.join(command))
+        description = ""
+        if platform.system() == "Linux":
+            command = ['yt-dlp', 
+                        'https://www.youtube.com/{}'.format(params), 
+                        '--write-description', 
+                        '--playlist-items', '0',
+                        '--output', '{}.description'.format(channel_name),
+                        '>', '/dev/null', '2>&1', 
+                        '&&', 'cat', "{}.description".format(channel_name) 
+                        ]
+            description = subprocess.getoutput(' '.join(command))
 
         #eliminar {}.description
         #...
@@ -155,8 +156,8 @@ def make_nfo(platform="youtube", params=""):
             file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(params,channel_id), "tvshow", "nfo")
             writeFile(file_path, output_nfo)
 
-def make_files_strm(platform="youtube", method="stream"):
-    if platform == "youtube":
+def make_files_strm(source_platform="youtube", method="stream"):
+    if source_platform == "youtube":
         for youtube_channel in channels():
             make_nfo("youtube", youtube_channel)
             youtube_channel_url = "https://www.youtube.com/{}/videos".format(youtube_channel)
@@ -192,7 +193,7 @@ def make_files_strm(platform="youtube", method="stream"):
 
                     video_id = str(line.decode("utf-8")).rstrip().split(';')[0]
                     video_name = "{} [{}]".format(str(line.decode("utf-8")).rstrip().split(';')[1], video_id)
-                    file_content = "{}:{}/{}/{}/{}".format(host, port, platform, method, video_id)
+                    file_content = "{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
                     file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(youtube_channel,channel_id), video_name, "strm")
 
                     data = {
