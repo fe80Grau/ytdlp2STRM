@@ -205,6 +205,7 @@ def make_files_strm(source_platform="youtube", method="stream"):
                     print(data)
                 except:
                     break
+    return True
                 
 
 if __name__ == "__main__":
