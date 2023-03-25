@@ -77,7 +77,8 @@ def inflate_nfo(source_platform="youtube", params=""):
                     'https://www.youtube.com/{}'.format(params['youtube_channel']), 
                     '--list-thumbnails', 
                     '--playlist-items', '0']
-        print(' '.join(command))
+        #The madness begins... 
+        #No comments between lines, smoke a joint if you want understand it
         lines = subprocess.getoutput(' '.join(command)).split('\n')
         headers = []
         thumbnails = []
@@ -94,6 +95,8 @@ def inflate_nfo(source_platform="youtube", params=""):
                             row[headers[i]] = d
                         thumbnails.append(row)
                 c += 1
+        #finally...
+
         #get images
         poster = ""
         try:
