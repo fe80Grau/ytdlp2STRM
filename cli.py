@@ -119,7 +119,7 @@ def make_nfo(platform="youtube", params=""):
                     'https://www.youtube.com/{}'.format(params), 
                     '--print', '%(channel)s', 
                     '--playlist-items', '1',
-                    '--compat-options', 'no-youtube-channel-redirect', ]
+                    '--compat-options', 'no-youtube-channel-redirect' ]
         channel_name = subprocess.getoutput(' '.join(command))
 
         #get description
@@ -130,6 +130,7 @@ def make_nfo(platform="youtube", params=""):
                     '--output', '{}.description'.format(channel_name),
                     '2>&1 && ', 'cat {}.description'.format(channel_name) 
                     ]
+        print(' '.join(command))
         description = subprocess.getoutput(' '.join(command))
 
         output_nfo = tvinfo_scheme.format(
