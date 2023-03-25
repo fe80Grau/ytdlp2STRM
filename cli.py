@@ -18,8 +18,7 @@ port = config["ytdlp2strm_port"]
 channels_list_file = config["ytdlp2strm_channels_list_file"]
 
 
-tvinfo_scheme = """
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+tvinfo_scheme = """<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <tvshow>
     <title>{}</title>
     <originaltitle>{}</originaltitle>
