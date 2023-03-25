@@ -153,6 +153,7 @@ def make_nfo(platform="youtube", params=""):
 def make_files_strm(platform="youtube", method="stream"):
     if platform == "youtube":
         for youtube_channel in channels():
+            make_nfo("youtube", youtube_channel)
             youtube_channel_url = "https://www.youtube.com/{}/videos".format(youtube_channel)
             print("Preparing channel {}".format(youtube_channel))
 
