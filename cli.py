@@ -135,9 +135,8 @@ def make_nfo(source_platform="youtube", params=""):
                         '&&', 'cat', "{}.description".format(channel_name) 
                         ]
             description = subprocess.getoutput(' '.join(command))
+            os.remove("{}.description".format(channel_name))
 
-        #eliminar {}.description
-        #...
         output_nfo = tvinfo_scheme.format(
             channel_name,
             channel_name,
