@@ -186,7 +186,7 @@ def make_files_strm(source_platform="youtube", method="stream"):
             youtube_channel_folder = youtube_channel.replace('/user/','@')
             #Make a folder and inflate nfo file
             makecleanfolder("{}/{}".format(media_folder, "{} [{}]".format(youtube_channel_folder,channel_id)))
-            inflate_nfo("youtube", youtube_channel, {'youtube_channel' : youtube_channel, 'youtube_channel_folder' : youtube_channel_folder})
+            inflate_nfo("youtube", {'youtube_channel' : youtube_channel, 'youtube_channel_folder' : youtube_channel_folder})
 
             #Get las 60 days videos in channel
             command = ['yt-dlp', 
