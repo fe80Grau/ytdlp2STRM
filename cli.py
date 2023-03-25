@@ -120,7 +120,6 @@ def make_nfo(platform="youtube", params=""):
                     '--print', '"%(channel)s"', 
                     '--playlist-items', '1',
                     '--compat-options', 'no-youtube-channel-redirect' ]
-        print(' '.join(command))
         channel_name = subprocess.getoutput(' '.join(command))
 
         #get description
@@ -131,9 +130,12 @@ def make_nfo(platform="youtube", params=""):
                     '--output', '{}.description'.format(channel_name),
                     '2>&1 && ', 'cat {}.description'.format(channel_name) 
                     ]
+        #fixear salida
         print(' '.join(command))
         description = subprocess.getoutput(' '.join(command))
 
+        #eliminar {}.description
+        #...
         output_nfo = tvinfo_scheme.format(
             channel_name,
             channel_name,
