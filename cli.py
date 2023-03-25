@@ -117,7 +117,7 @@ def make_nfo(platform="youtube", params=""):
         #get channel name
         command = ['yt-dlp', 
                     'https://www.youtube.com/{}'.format(params), 
-                    '--print', '%(channel)s', 
+                    '--print', '"%(channel)s"', 
                     '--playlist-items', '1',
                     '--compat-options', 'no-youtube-channel-redirect' ]
         print(' '.join(command))
