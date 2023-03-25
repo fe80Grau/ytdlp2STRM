@@ -68,7 +68,7 @@ def writeFile(file, content):
         return False
     return True
 
-def make_nfo(source_platform="youtube", params=""):
+def inflate_nfo(source_platform="youtube", params=""):
     print("Inflating  nfo file..")
     if source_platform == "youtube":
         #Table thumbnails
@@ -159,7 +159,7 @@ def make_nfo(source_platform="youtube", params=""):
 def make_files_strm(source_platform="youtube", method="stream"):
     if source_platform == "youtube":
         for youtube_channel in channels():
-            make_nfo("youtube", youtube_channel)
+            inflate_nfo("youtube", youtube_channel)
             youtube_channel_url = "https://www.youtube.com/{}/videos".format(youtube_channel)
             print("Preparing channel {}".format(youtube_channel))
 
