@@ -131,9 +131,9 @@ def inflate_nfo(source_platform="youtube", params=""):
                         'https://www.youtube.com/{}'.format(params), 
                         '--write-description', 
                         '--playlist-items', '0',
-                        '--output', '{}.description'.format(channel_name),
+                        '--output', '"{}.description"'.format(channel_name),
                         '>', '/dev/null', '2>&1', 
-                        '&&', 'cat', "{}.description".format(channel_name) 
+                        '&&', 'cat', '"{}.description"'.format(channel_name) 
                         ]
             print(' '.join(command))
             description = subprocess.getoutput(' '.join(command))
