@@ -76,6 +76,7 @@ def make_nfo(platform="youtube", params=""):
                     '--list-thumbnails', 
                     '--playlist-items', '0']
         lines = subprocess.getoutput(command).split('\n')
+        print(command)
         print(lines)
         headers = []
         thumbnails = []
