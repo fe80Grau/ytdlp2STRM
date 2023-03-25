@@ -147,7 +147,7 @@ def make_nfo(platform="youtube", params=""):
 
         
         if channel_id:
-            file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(params,channel_id), video_name, "nfo")
+            file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(params,channel_id), "tvshow", "nfo")
             writeFile(file_path, output_nfo)
 
 def make_files_strm(platform="youtube", method="stream"):
