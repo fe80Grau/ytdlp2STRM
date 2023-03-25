@@ -103,14 +103,14 @@ def inflate_nfo(source_platform="youtube", params=""):
             url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "avatar_uncropped"), None)
             poster = thumbnails[url_avatar_uncropped_index]['URL']
         except:
-            continue
+            print("No poster detected")
 
         landscape = ""
         try:
             url_max_landscape_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "banner_uncropped"), None)
             landscape = thumbnails[url_avatar_uncropped_index-1]['URL']
         except:
-            continue
+            print("No landscape detected")
 
         #get channel id
         command = ['yt-dlp', 
