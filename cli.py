@@ -96,7 +96,7 @@ def make_nfo(platform="youtube", params=""):
         command = ['yt-dlp', 
                     '--compat-options', 'no-youtube-channel-redirect', 
                     '--print', 'channel_url', 
-                    params]
+                    'https://www.youtube.com/{}'.format(params)]
 
         channel_id = False
         process = subprocess.Popen(command, stdout = subprocess.PIPE)
@@ -137,9 +137,9 @@ def make_nfo(platform="youtube", params=""):
             channel_name,
             channel_name,
             description,
-            landscape,
-            poster,
-            poster,
+            landscape, landscape,
+            poster, poster,
+            poster, poster,
             channel_id,
             "Youtube",
             "Youtube"
