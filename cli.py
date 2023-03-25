@@ -69,6 +69,7 @@ def writeFile(file, content):
     return True
 
 def make_nfo(source_platform="youtube", params=""):
+    print("Inflating  nfo file..")
     if source_platform == "youtube":
         #Table thumbnails
         c = 0
