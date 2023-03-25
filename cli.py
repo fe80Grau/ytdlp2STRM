@@ -74,7 +74,7 @@ def inflate_nfo(source_platform="youtube", params=""):
         #Table thumbnails
         c = 0
         command = ['yt-dlp', 
-                    'https://www.youtube.com/{}'.format(params), 
+                    'https://www.youtube.com/{}'.format(params['youtube_channel']), 
                     '--list-thumbnails', 
                     '--playlist-items', '0']
         print(' '.join(command))
@@ -107,7 +107,7 @@ def inflate_nfo(source_platform="youtube", params=""):
         command = ['yt-dlp', 
                     '--compat-options', 'no-youtube-channel-redirect', 
                     '--print', 'channel_url', 
-                    'https://www.youtube.com/{}'.format(params)]
+                    'https://www.youtube.com/{}'.format(params['youtube_channel'])]
 
         channel_id = False
         process = subprocess.Popen(command, stdout = subprocess.PIPE)
@@ -120,7 +120,7 @@ def inflate_nfo(source_platform="youtube", params=""):
 
         #get channel name
         command = ['yt-dlp', 
-                    'https://www.youtube.com/{}'.format(params), 
+                    'https://www.youtube.com/{}'.format(params['youtube_channel']), 
                     '--print', '"%(channel)s"', 
                     '--playlist-items', '1',
                     '--compat-options', 'no-youtube-channel-redirect' ]
@@ -130,7 +130,7 @@ def inflate_nfo(source_platform="youtube", params=""):
         description = ""
         if platform.system() == "Linux":
             command = ['yt-dlp', 
-                        'https://www.youtube.com/{}'.format(params), 
+                        'https://www.youtube.com/{}'.format(params['youtube_channel']), 
                         '--write-description', 
                         '--playlist-items', '0',
                         '--output', '"{}.description"'.format(channel_name),
@@ -155,14 +155,20 @@ def inflate_nfo(source_platform="youtube", params=""):
 
         
         if channel_id:
-            file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(params,channel_id), "tvshow", "nfo")
+            file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(params['youtube_channel_folder'],channel_id), "tvshow", "nfo")
             writeFile(file_path, output_nfo)
 
 def make_files_strm(source_platform="youtube", method="stream"):
     if source_platform == "youtube":
         for youtube_channel in channels():
-            youtube_channel_url = "https://www.youtube.com/{}/videos".format(youtube_channel)
             print("Preparing channel {}".format(youtube_channel))
+
+            #formating youtube URL and init channel_id
+            youtube_channel_url = "https://www.youtube.com/{}/videos".format(youtube_channel)
+            channel_id = False
+            #Cases like /user/xbox
+            if not "@" in youtube_channel:
+                youtube_channel_url = "https://www.youtube.com/{}".format(youtube_channel)
 
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-channel-redirect', 
@@ -175,9 +181,14 @@ def make_files_strm(source_platform="youtube", method="stream"):
                 channel_id = line.decode("utf-8").rstrip().split('/')[-1]
                 break
             process.kill()
-            makecleanfolder("{}/{}".format(media_folder, "{} [{}]".format(youtube_channel,channel_id)))
-            inflate_nfo("youtube", youtube_channel)
 
+            #Clearing channel folder name
+            youtube_channel_folder = youtube_channel.replace('/user/','@')
+            #Make a folder and inflate nfo file
+            makecleanfolder("{}/{}".format(media_folder, "{} [{}]".format(youtube_channel_folder,channel_id)))
+            inflate_nfo("youtube", youtube_channel, {'youtube_channel' : youtube_channel, 'youtube_channel_folder' : youtube_channel_folder})
+
+            #Get las 60 days videos in channel
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-channel-redirect', 
                         '--print', '%(id)s;%(title)s', 
@@ -196,7 +207,7 @@ def make_files_strm(source_platform="youtube", method="stream"):
                     video_id = str(line.decode("utf-8")).rstrip().split(';')[0]
                     video_name = "{} [{}]".format(str(line.decode("utf-8")).rstrip().split(';')[1], video_id)
                     file_content = "{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
-                    file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(youtube_channel,channel_id), video_name, "strm")
+                    file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(youtube_channel_folder,channel_id), video_name, "strm")
 
                     data = {
                         "video_id" : video_id, 
