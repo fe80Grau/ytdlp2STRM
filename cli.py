@@ -93,6 +93,14 @@ def inflate_nfo(source_platform="youtube", params=""):
                             row[headers[i]] = d
                         thumbnails.append(row)
                 c += 1
+        print(thumbnails)
+        #get images
+        url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "avatar_uncropped"), None)
+        poster = thumbnails[url_avatar_uncropped_index]['URL']
+
+        url_max_landscape_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "banner_uncropped"), None)
+        landscape = thumbnails[url_avatar_uncropped_index-1]['URL']
+
 
         #get channel id
         command = ['yt-dlp', 
@@ -108,13 +116,6 @@ def inflate_nfo(source_platform="youtube", params=""):
             break
         process.kill()
 
-
-        #get images
-        url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "avatar_uncropped"), None)
-        poster = thumbnails[url_avatar_uncropped_index]['URL']
-
-        url_max_landscape_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "banner_uncropped"), None)
-        landscape = thumbnails[url_avatar_uncropped_index-1]['URL']
 
         #get channel name
         command = ['yt-dlp', 
