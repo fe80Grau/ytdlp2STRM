@@ -77,6 +77,7 @@ def inflate_nfo(source_platform="youtube", params=""):
                     'https://www.youtube.com/{}'.format(params), 
                     '--list-thumbnails', 
                     '--playlist-items', '0']
+        print(' '.join(command))
         lines = subprocess.getoutput(' '.join(command)).split('\n')
         headers = []
         thumbnails = []
