@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
+channel_list.json
 __pycache__/
 *.py[cod]
 *$py.class
-channel_list.json
