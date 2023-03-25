@@ -23,7 +23,7 @@ ytdlp2strm.service example service to run main.py with systemctl . Put it into /
 
 ## Examples
 * Example commands to generate strm files
-> * Download file (cached mode, duration info, disk usage)
+> * Download file (cached mode, duration info, temp disk usage)
 > ```console
 > cli.py --m make_files_strm --p youtube,download
 > ```
