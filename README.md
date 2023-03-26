@@ -41,11 +41,11 @@ sudo systemctl status ytdlp2strm.service
 ```
 * EDIT channel_list.example.json with your channels names (you can see channel name (or ID or USER)  after first / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix).
 
-* Example cron.d file to create to create strm files in download mode from channel_list every 2 hours (cached mode, duration info, temp disk usage)
+* Example cron.d file to create to create strm files in download mode from channel_list every 2 hours (cached mode, duration info, temp disk usage, slow first loading)
 > ``` console
 > cd /etc/cron.d && sudo echo "00 22 * * * root /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,download" > ytdlp2STRM
 > ```
-* Example cron.d file to create to create strm files in strean mode from channel_list every 2 hours (no duration info, no disk usage)
+* Example cron.d file to create to create strm files in strean mode from channel_list every 2 hours (no duration info, no disk usage, fast first loading)
 > ``` console
 > cd /etc/cron.d && sudo echo "00 22 * * * root /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,stream" > ytdlp2STRM
 > ```
@@ -64,6 +64,8 @@ A little script to list last 60 days videos in channels setted on channel_list.j
 ytdlp2strm.service example service to run main.py with systemctl. 
 
 ## Pendings
+* Include subtitles
+* Video quality. Config options: Forced (worst, balanced, best) or Dynamic (depends connection speed)
 * Get Youtube account subscrition channel list
 * Crunchyroll integration
 * Do this as a Jellyfin plugin
