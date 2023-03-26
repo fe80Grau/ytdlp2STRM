@@ -68,7 +68,7 @@ ytdlp2strm.service example service to run main.py with systemctl.
 * Video quality. Config options: Forced (worst, balanced, best) or Dynamic (depends connection speed)
 * Get Youtube account subscrition channel list
 * Crunchyroll integration
-* Do this as a Jellyfin plugin
+* Do this as a Jellyfin plugin with GUI (settings and search for channels to add in list)
 
 ## Credits
 [![GitHub - ShieldsIO](https://img.shields.io/badge/GitHub-ShieldsIO-42b983?logo=GitHub)](https://github.com/badges/shields)
