@@ -50,6 +50,7 @@ sudo systemctl status ytdlp2strm.service
 > cd /etc/cron.d && sudo echo "00 22 * * * root /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,stream" > ytdlp2STRM
 > ```
 
+* After that you can see all channels folders under /media/Youtube and strm files inside them.
 
 ## main.py 
 A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/stream/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
