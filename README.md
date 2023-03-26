@@ -22,6 +22,7 @@ cd /opt/ytdlp2STRM && pip install -r requierments.txt
 ```console
 mkdir /media/Youtube
 ```
+* EDIT channel_list.example.json with your channels names (you can see channel name (or ID or USER)  after first / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix).
 * Edit config.json [and ytdlp2strm.service with your preferences and copy ytdlp2strm.service to /etc/systemd/system]*Between brackets only Linux.
 ```console
 sudo cp ytdlp2strm.service /etc/systemd/system/ytdlp2strm.service
@@ -38,7 +39,6 @@ sudo systemctl start ytdlp2strm.service
 ```console
 sudo systemctl status ytdlp2strm.service
 ```
-* EDIT channel_list.example.json with your channels names (you can see channel name (or ID or USER)  after first / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix).
 
 * Example cron.d file to create to create strm files in download mode from channel_list every 2 hours (cached mode, duration info, temp disk usage, slow first loading)
 > ``` console
