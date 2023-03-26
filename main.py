@@ -2,11 +2,18 @@ from flask import Flask, stream_with_context, request, Response, send_from_direc
 from threading import Thread
 import subprocess
 import time
+import json
 import urllib.request
 import urllib.error
 import os
 app = Flask(__name__)
 
+
+
+#Reading config file
+with open('config.json', 'r') as f:
+    config = json.load(f)
+    
 keep_downloaded = 1800 #in seconds
 
 #Function used in thread to remove files webm older than **keep_downloaded** 
@@ -93,4 +100,4 @@ if __name__ == "__main__":
     thread.daemon = True
     thread.start()
     #Run Flask server
-    app.run()
+    app.run(host='0.0.0.0',port=config['ytdlp2strm_port'])
