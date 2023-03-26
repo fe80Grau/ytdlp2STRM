@@ -23,7 +23,6 @@ cd /opt/ytdlp2STRM && pip install -r requierments.txt
 mkdir /media/Youtube
 ```
 * Edit config.json [and ytdlp2strm.service with your preferences and copy ytdlp2strm.service to /etc/systemd/system]*Between brackets only Linux.
-* Create folder to store .strm files (by default /media/Youtube)
 ```console
 sudo cp ytdlp2strm.service /etc/systemd/system/ytdlp2strm.service
 ```
