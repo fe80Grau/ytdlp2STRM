@@ -42,11 +42,11 @@ sudo systemctl status ytdlp2strm.service
 
 * Example cron.d file to create to create strm files in download mode from channel_list every 2 hours (cached mode, duration info, temp disk usage, slow first loading)
 > ``` console
-> cd /etc/cron.d && sudo echo "00 22 * * * root /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,download" > ytdlp2STRM
+> cd /etc/cron.d && sudo echo "0 */2 * * * root /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,download" > ytdlp2STRM
 > ```
 * Example cron.d file to create to create strm files in strean mode from channel_list every 2 hours (no duration info, no disk usage, fast first loading)
 > ``` console
-> cd /etc/cron.d && sudo echo "00 22 * * * root /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,stream" > ytdlp2STRM
+> cd /etc/cron.d && sudo echo "0 */2 * * * root /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,stream" > ytdlp2STRM
 > ```
 
 * After that you can see all channels folders under /media/Youtube and strm files inside them. If you are using Jellyfin/Emby, add /media/Youtube as folder in Library and enjoy it!
