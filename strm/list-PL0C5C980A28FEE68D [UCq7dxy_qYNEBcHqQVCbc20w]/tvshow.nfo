@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<tvshow>
+    <title>Practical x64 Assembly and C++ Tutorials</title>
+    <originaltitle>Practical x64 Assembly and C++ Tutorials</originaltitle>
+    <showtitle>Practical x64 Assembly and C++ Tutorials</showtitle>
+    <season>1</season>
+    <displayseason>-1</displayseason>
+    <displayepisode>-1</displayepisode>
+    <plot></plot>
+    <thumb spoof="" cache="" aspect="landscape" preview="https://yt3.googleusercontent.com/ytc/AL5GRJUs9Ix1zOhkUZzN6Bj5IfOa5Lo4uCmtPjaHlEUGDQ=s900-c-k-c0x00ffffff-no-rj">https://yt3.googleusercontent.com/ytc/AL5GRJUs9Ix1zOhkUZzN6Bj5IfOa5Lo4uCmtPjaHlEUGDQ=s900-c-k-c0x00ffffff-no-rj</thumb>
+    <thumb spoof="" cache="" aspect="poster" preview="https://yt3.googleusercontent.com/ytc/AL5GRJUs9Ix1zOhkUZzN6Bj5IfOa5Lo4uCmtPjaHlEUGDQ=s0">https://yt3.googleusercontent.com/ytc/AL5GRJUs9Ix1zOhkUZzN6Bj5IfOa5Lo4uCmtPjaHlEUGDQ=s0</thumb>
+    <thumb spoof="" cache="" season="1" type="season" aspect="poster" preview="https://yt3.googleusercontent.com/ytc/AL5GRJUs9Ix1zOhkUZzN6Bj5IfOa5Lo4uCmtPjaHlEUGDQ=s0">https://yt3.googleusercontent.com/ytc/AL5GRJUs9Ix1zOhkUZzN6Bj5IfOa5Lo4uCmtPjaHlEUGDQ=s0</thumb>
+    <mpaa></mpaa>
+    <uniqueid type="YoutubeMetadata" default="true">UCq7dxy_qYNEBcHqQVCbc20w</uniqueid>    
+    <genre>Youtube</genre>
+    <studio>Youtube</studio>
+</tvshow>

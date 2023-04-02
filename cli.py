@@ -17,6 +17,9 @@ host = config["ytdlp2strm_host"]
 port = config["ytdlp2strm_port"]
 channels_list_file = config["ytdlp2strm_channels_list_file"]
 
+days_dateafter = config["ytdlp2strm_days_dateafter"]
+videos_limit = config["ytdlp2strm_videos_limit"]
+
 
 tvinfo_scheme = """<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <tvshow>
@@ -112,27 +115,24 @@ def inflate_nfo(source_platform="youtube", params=""):
             print("No landscape detected")
 
         #get channel id
-        command = ['yt-dlp', 
-                    '--compat-options', 'no-youtube-channel-redirect', 
-                    '--print', 'channel_url', 
-                    'https://www.youtube.com/{}'.format(params['youtube_channel'])]
-
-        channel_id = False
-        process = subprocess.Popen(command, stdout = subprocess.PIPE)
-        while True:
-            line = process.stdout.readline()
-            channel_id = line.decode("utf-8").rstrip().split('/')[-1]
-            break
-        process.kill()
+        channel_id = params['youtube_channel'].split('/')[-1]
 
 
-        #get channel name
-        command = ['yt-dlp', 
+        #get channel or playlist name
+        if 'list-' in params['youtube_channel_folder']:
+            command = ['yt-dlp', 
                     'https://www.youtube.com/{}'.format(params['youtube_channel']), 
-                    '--print', '"%(channel)s"', 
+                    '--print', '"%(playlist_title)s"', 
                     '--playlist-items', '1',
                     '--compat-options', 'no-youtube-channel-redirect',
                     '--no-warnings']
+        else:
+            command = ['yt-dlp', 
+                        'https://www.youtube.com/{}'.format(params['youtube_channel']), 
+                        '--print', '"%(channel)s"', 
+                        '--playlist-items', '1',
+                        '--compat-options', 'no-youtube-channel-redirect',
+                        '--no-warnings']
         channel_name = subprocess.getoutput(' '.join(command))
 
         #get description
@@ -181,6 +181,11 @@ def make_files_strm(source_platform="youtube", method="stream"):
             if not "@" in youtube_channel:
                 youtube_channel_url = "https://www.youtube.com/{}".format(youtube_channel)
 
+            if 'list-' in youtube_channel:
+                youtube_channel_url = "https://www.youtube.com/playlist?list={}".format(youtube_channel.split('list-')[1])
+
+
+
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-channel-redirect', 
                         '--print', 'channel_url', 
@@ -197,15 +202,15 @@ def make_files_strm(source_platform="youtube", method="stream"):
             youtube_channel_folder = youtube_channel.replace('/user/','@')
             #Make a folder and inflate nfo file
             makecleanfolder("{}/{}".format(media_folder, "{} [{}]".format(youtube_channel_folder,channel_id)))
-            inflate_nfo("youtube", {'youtube_channel' : youtube_channel, 'youtube_channel_folder' : youtube_channel_folder})
+            inflate_nfo("youtube", {'youtube_channel' : "channel/{}".format(channel_id), 'youtube_channel_folder' : youtube_channel_folder})
 
             #Get las 60 days videos in channel
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-channel-redirect', 
                         '--print', '%(id)s;%(title)s', 
-                        '--dateafter', 'today-60days', 
+                        '--dateafter', "today-{}days".format(days_dateafter), 
                         '--playlist-start', '1', 
-                        '--playlist-end', '30', 
+                        '--playlist-end', videos_limit, 
                         youtube_channel_url]
             process = subprocess.Popen(command, stdout = subprocess.PIPE)
             while True:
