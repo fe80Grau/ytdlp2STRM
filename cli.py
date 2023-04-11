@@ -5,7 +5,7 @@ import subprocess
 import json
 import glob
 import os
-
+from sanitize_filename import sanitize
 
 #Reading config file
 with open('config.json', 'r') as f:
@@ -66,7 +66,8 @@ def writeFile(file, content):
         f = open(file, "w")
         f.write(content)
         f.close()
-    except:
+    except Exception as e:
+        print(e)
         return False
     return True
 
@@ -76,8 +77,11 @@ def inflate_nfo(source_platform="youtube", params=""):
         #Table thumbnails
         c = 0
         command = ['yt-dlp', 
-                    'https://www.youtube.com/{}'.format(params['youtube_channel']), 
-                    '--list-thumbnails', 
+                    'https://www.youtube.com/{}'.format(params['youtube_channel']),
+                    '--list-thumbnails',
+                    '--restrict-filenames',
+                    '--ignore-errors',
+                    '--no-warnings',
                     '--playlist-items', '0']
         #The madness begins... 
         #No comments between lines, smoke a joint if you want understand it
@@ -122,14 +126,22 @@ def inflate_nfo(source_platform="youtube", params=""):
         if 'list-' in params['youtube_channel_folder']:
             command = ['yt-dlp', 
                     'https://www.youtube.com/{}'.format(params['youtube_channel']), 
+                    '--compat-options', 'no-youtube-unavailable-videos',
                     '--print', '"%(playlist_title)s"', 
                     '--playlist-items', '1',
+                    '--restrict-filenames',
+                    '--ignore-errors',
+                    '--no-warnings',
                     '--compat-options', 'no-youtube-channel-redirect',
                     '--no-warnings']
         else:
             command = ['yt-dlp', 
-                        'https://www.youtube.com/{}'.format(params['youtube_channel']), 
-                        '--print', '"%(channel)s"', 
+                        'https://www.youtube.com/{}'.format(params['youtube_channel']),
+                        '--compat-options', 'no-youtube-unavailable-videos',
+                        '--print', '"%(channel)s"',
+                        '--restrict-filenames',
+                        '--ignore-errors',
+                        '--no-warnings',
                         '--playlist-items', '1',
                         '--compat-options', 'no-youtube-channel-redirect',
                         '--no-warnings']
@@ -187,54 +199,75 @@ def make_files_strm(source_platform="youtube", method="stream"):
 
 
             command = ['yt-dlp', 
-                        '--compat-options', 'no-youtube-channel-redirect', 
+                        '--compat-options', 'no-youtube-channel-redirect',
+                        '--compat-options', 'no-youtube-unavailable-videos',
+                        '--restrict-filenames',
+                        '--ignore-errors',
+                        '--no-warnings',
+                        '--playlist-start', '1', 
+                        '--playlist-end', '1', 
                         '--print', 'channel_url', 
                         youtube_channel_url]
 
-            process = subprocess.Popen(command, stdout = subprocess.PIPE)
-            while True:
-                line = process.stdout.readline()
-                channel_id = line.decode("utf-8").rstrip().split('/')[-1]
-                break
-            process.kill()
+            lines = subprocess.getoutput(' '.join(command)).split('\n')
+            for line in lines:
+                if 'channel' in line:
+                    channel_id = line.rstrip().split('/')[-1]
+            
 
+            if not channel_id:
+                youtube_channel_url = "https://www.youtube.com/{}".format(youtube_channel)
+                command = ['yt-dlp', 
+                            '--compat-options', 'no-youtube-channel-redirect',
+                            '--compat-options', 'no-youtube-unavailable-videos',
+                            '--restrict-filenames',
+                            '--ignore-errors',
+                            '--no-warnings',
+                            '--playlist-start', '1', 
+                            '--playlist-end', '1', 
+                            '--print', 'channel_url', 
+                            youtube_channel_url]
+
+                lines = subprocess.getoutput(' '.join(command)).split('\n')
+                for line in lines:
+                    if 'channel' in line:
+                        channel_id = line.rstrip().split('/')[-1]
+            
             #Clearing channel folder name
             youtube_channel_folder = youtube_channel.replace('/user/','@')
             #Make a folder and inflate nfo file
-            makecleanfolder("{}/{}".format(media_folder, "{} [{}]".format(youtube_channel_folder,channel_id)))
+            makecleanfolder("{}/{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id))))
             inflate_nfo("youtube", {'youtube_channel' : "channel/{}".format(channel_id), 'youtube_channel_folder' : youtube_channel_folder})
 
             #Get las 60 days videos in channel
             command = ['yt-dlp', 
-                        '--compat-options', 'no-youtube-channel-redirect', 
-                        '--print', '%(id)s;%(title)s', 
+                        '--compat-options', 'no-youtube-channel-redirect',
+                        '--compat-options', 'no-youtube-unavailable-videos',
+                        '--print', '"%(id)s;%(title)s"', 
                         '--dateafter', "today-{}days".format(days_dateafter), 
                         '--playlist-start', '1', 
                         '--playlist-end', videos_limit, 
-                        youtube_channel_url]
-            process = subprocess.Popen(command, stdout = subprocess.PIPE)
-            while True:
-                try:
-                    line = process.stdout.readline()
-                    if not line:
-                        break
-                    
+                        '--ignore-errors',
+                        '--no-warnings',
+                        '{}'.format(youtube_channel_url)]
+            lines = subprocess.getoutput(' '.join(command)).split('\n')
 
-                    video_id = str(line.decode("utf-8")).rstrip().split(';')[0]
-                    video_name = "{} [{}]".format(str(line.decode("utf-8")).rstrip().split(';')[1], video_id)
-                    file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
-                    file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(youtube_channel_folder,channel_id), video_name, "strm")
+            for line in lines:
+                
+                video_id = str(line).rstrip().split(';')[0]
+                video_name = "{} [{}]".format(str(line).rstrip().split(';')[1], video_id)
+                file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
+                file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id)),  sanitize(video_name), "strm")
 
-                    data = {
-                        "video_id" : video_id, 
-                        "video_name" : video_name
-                    }
-                    if not os.path.isfile(file_path):
-                        writeFile(file_path, file_content)
+                data = {
+                    "video_id" : video_id, 
+                    "video_name" : video_name
+                }
+                if not os.path.isfile(file_path):
+                    writeFile(file_path, file_content)
 
-                    print(data)
-                except:
-                    break
+                print(data)
+
     return True
                 
 
