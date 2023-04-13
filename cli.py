@@ -172,7 +172,7 @@ def inflate_nfo(source_platform="youtube", params=""):
                 os.remove("{}.description".format(channel_name))
             except:
                 description = ""
-                pass
+
         else:
             print("Descriptions only works in Linux system at the moment")
 
