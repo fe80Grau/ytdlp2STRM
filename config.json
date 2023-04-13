@@ -3,6 +3,6 @@
     "ytdlp2strm_host" : "127.0.0.1",
     "ytdlp2strm_port" : "5000",
     "ytdlp2strm_channels_list_file" : "channel_list.json",
-    "ytdlp2strm_days_dateafter" : "60", 
-    "ytdlp2strm_videos_limit" : "100"
+    "ytdlp2strm_days_dateafter" : "10", 
+    "ytdlp2strm_videos_limit" : "10"
 }
