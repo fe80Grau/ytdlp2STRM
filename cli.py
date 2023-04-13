@@ -259,6 +259,7 @@ def make_files_strm(source_platform="youtube", method="stream"):
             inflate_nfo("youtube", {'youtube_channel' : "channel/{}".format(channel_id), 'youtube_channel_folder' : youtube_channel_folder})
 
             #Get las 60 days videos in channel
+            print("Processing videos in channel")
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-channel-redirect',
                         '--compat-options', 'no-youtube-unavailable-videos',
@@ -269,9 +270,11 @@ def make_files_strm(source_platform="youtube", method="stream"):
                         '--ignore-errors',
                         '--no-warnings',
                         '{}'.format(youtube_channel_url)]
+            print("Command \n {}".format(' '.join(command)))
             lines = subprocess.getoutput(' '.join(command)).split('\n')
 
             for line in lines:
+                print("Video encontrado")
                 
                 video_id = str(line).rstrip().split(';')[0]
                 video_name = "{} [{}]".format(str(line).rstrip().split(';')[1], video_id)
