@@ -165,7 +165,9 @@ def inflate_nfo(source_platform="youtube", params=""):
                         '>', '/dev/null', '2>&1', 
                         '&&', 'cat', '"{}.description"'.format(channel_name) 
                         ]
+            print("Command \n {}".format(' '.join(command)))
             description = subprocess.getoutput(' '.join(command))
+            print("Output \n {}".format(description))
             try:
                 os.remove("{}.description".format(channel_name))
             except:
