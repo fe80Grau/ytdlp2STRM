@@ -274,21 +274,22 @@ def make_files_strm(source_platform="youtube", method="stream"):
             lines = subprocess.getoutput(' '.join(command)).split('\n')
 
             for line in lines:
-                print("Video encontrado")
-                
-                video_id = str(line).rstrip().split(';')[0]
-                video_name = "{} [{}]".format(str(line).rstrip().split(';')[1], video_id)
-                file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
-                file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id)),  sanitize(video_name), "strm")
+                if line != "":
+                    print("Video encontrado")
+                    
+                    video_id = str(line).rstrip().split(';')[0]
+                    video_name = "{} [{}]".format(str(line).rstrip().split(';')[1], video_id)
+                    file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
+                    file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id)),  sanitize(video_name), "strm")
 
-                data = {
-                    "video_id" : video_id, 
-                    "video_name" : video_name
-                }
-                if not os.path.isfile(file_path):
-                    writeFile(file_path, file_content)
+                    data = {
+                        "video_id" : video_id, 
+                        "video_name" : video_name
+                    }
+                    if not os.path.isfile(file_path):
+                        writeFile(file_path, file_content)
 
-                print(data)
+                    print(data)
 
     return True
                 
