@@ -111,18 +111,21 @@ def inflate_nfo(source_platform="youtube", params=""):
         try:
             url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "avatar_uncropped"), None)
             poster = thumbnails[url_avatar_uncropped_index]['URL']
+            print("Poster found")
         except:
             print("No poster detected")
 
         landscape = ""
         try:
             url_max_landscape_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "banner_uncropped"), None)
-            landscape = thumbnails[url_avatar_uncropped_index-1]['URL']
+            landscape = thumbnails[url_max_landscape_index-1]['URL']
+            print("Landscape found")
         except:
             print("No landscape detected")
 
         #get channel id
         channel_id = params['youtube_channel'].split('/')[-1]
+        print("Channel ID {}".format(channel_id))
 
 
         #get channel or playlist name
@@ -148,8 +151,9 @@ def inflate_nfo(source_platform="youtube", params=""):
                         '--playlist-items', '1',
                         '--compat-options', 'no-youtube-channel-redirect',
                         '--no-warnings']
+        print("Command {}".format(' '.join(command)))
         channel_name = subprocess.getoutput(' '.join(command))
-
+        print("Output: \n {}".format(channel_name))
         #get description
         description = ""
         if platform.system() == "Linux":
@@ -165,6 +169,7 @@ def inflate_nfo(source_platform="youtube", params=""):
             try:
                 os.remove("{}.description".format(channel_name))
             except:
+                description = ""
                 pass
         else:
             print("Descriptions only works in Linux system at the moment")
