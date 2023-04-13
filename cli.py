@@ -83,9 +83,12 @@ def inflate_nfo(source_platform="youtube", params=""):
                     '--ignore-errors',
                     '--no-warnings',
                     '--playlist-items', '0']
+        print("Command: \n {}".format(' '.join(command)))
         #The madness begins... 
         #No comments between lines, smoke a joint if you want understand it
         lines = subprocess.getoutput(' '.join(command)).split('\n')
+        print("Output: \n {}".format(lines))
+
         headers = []
         thumbnails = []
         for line in lines:
