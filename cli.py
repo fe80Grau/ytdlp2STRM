@@ -194,7 +194,7 @@ def make_files_strm(source_platform="youtube", method="stream"):
             channel_id = False
             #Cases like /user/xbox
             if not "@" in youtube_channel:
-                youtube_channel_url = "https://www.youtube.com/{}".format(youtube_channel)
+                youtube_channel_url = "https://www.youtube.com{}".format(youtube_channel)
 
             if 'list-' in youtube_channel:
                 youtube_channel_url = "https://www.youtube.com/playlist?list={}".format(youtube_channel.split('list-')[1])
