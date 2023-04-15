@@ -1,4 +1,4 @@
-from flask import Flask, stream_with_context, request, Response, send_from_directory, send_file
+from flask import Flask, stream_with_context, request, Response, send_from_directory, send_file, redirect
 from threading import Thread
 import subprocess
 import time
@@ -34,6 +34,13 @@ def clean_old_videos():
         
 
 ### YOUTUBE ZONE
+#Redirect to best pre-merget format youtube url
+@app.route("/youtube/redirect/<youtube_id>")
+def youtube_redirect(youtube_id):
+    youtube_url = subprocess.getoutput("yt-dlp -f best --no-warnings {}".format(youtube_id))
+    return redirect(youtube_url, code=301)
+
+
 #Stream data directly throught http (no serve video duration info, no disk usage)
 @app.route("/youtube/stream/<youtube_id>")
 def youtube(youtube_id):
