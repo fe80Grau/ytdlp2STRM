@@ -37,7 +37,7 @@ def clean_old_videos():
 #Redirect to best pre-merget format youtube url
 @app.route("/youtube/redirect/<youtube_id>")
 def youtube_redirect(youtube_id):
-    youtube_url = subprocess.getoutput("yt-dlp -f best --no-warnings {}".format(youtube_id))
+    youtube_url = subprocess.getoutput("yt-dlp -f best --no-warnings {} --get-url".format(youtube_id))
     return redirect(youtube_url, code=301)
 
 
