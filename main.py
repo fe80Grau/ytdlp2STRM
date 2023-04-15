@@ -50,9 +50,9 @@ def youtube(youtube_id):
         buffer = []
         sentBurst = False
         if config["ytdlp2strm_sponsorblock"]:
-            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['ytdlp2strm_sponsorblock_cats'], '--audio-multistreams', youtube_id]
+            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['ytdlp2strm_sponsorblock_cats'], '--restrict-filenames', youtube_id]
         else:
-            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--audio-multistreams', youtube_id]
+            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
 
         process = subprocess.Popen(ytdlp_command, stdout=subprocess.PIPE)
         try:
