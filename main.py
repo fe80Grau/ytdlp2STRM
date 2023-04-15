@@ -85,6 +85,7 @@ def youtube(youtube_id):
 @app.route("/youtube/download/<youtube_id>")
 def youtube_full(youtube_id):
     ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove', '--restrict-filenames', youtube_id]
+    print(ytdlp_command)
     process = subprocess.call(ytdlp_command)
     filename = subprocess.getoutput("yt-dlp --print filename --restrict-filenames {}".format(youtube_id))
     return send_file(filename)
