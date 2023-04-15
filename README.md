@@ -43,11 +43,15 @@ sudo systemctl start ytdlp2strm.service
 sudo systemctl status ytdlp2strm.service
 ```
 
-* Example cron.d file to create to create strm files in download mode from channel_list every 2 hours (cached mode, duration info, temp disk usage, slow first loading)
+* Example cron.d file to create strm files in redirect mode from channel_list every 2 hours (duration info, no disk usage, fast first loading, no cpu usage, autoredirect to youtube mreged video url)
+> ``` console
+> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,redirect" > ytdlp2STRM
+> ```
+* Example cron.d file to create strm files in download mode from channel_list every 2 hours (cached mode, duration info, temp disk usage, slow first loading)
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,download" > ytdlp2STRM
 > ```
-* Example cron.d file to create to create strm files in strean mode from channel_list every 2 hours (no duration info, no disk usage, fast first loading)
+* Example cron.d file to create strm files in strean mode from channel_list every 2 hours (no duration info, no disk usage, fast first loading)
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,stream" > ytdlp2STRM
 > ```
@@ -55,7 +59,7 @@ sudo systemctl status ytdlp2strm.service
 * After that you can see all channels folders under /media/Youtube and strm files inside them. If you are using Jellyfin/Emby, add /media/Youtube as folder in Library and enjoy it!
 
 ## main.py 
-A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/stream/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
+A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/redirect/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
 
 ## cli.py and channel_list.json
 A little script to list 100 videos from 60 days ago to today in channels declared in channel_list.json and save all as .strm files (100 and 60 values are default, you can change them in config.json) . Added id channels and videos in names [xxxx] for YoutubeMetadata Jellyfin plugin integration.
