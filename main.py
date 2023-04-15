@@ -84,7 +84,7 @@ def youtube(youtube_id):
 #Download video and semd data throught http (serve video duration info, disk usage **clean_old_videos fucntion save your money)
 @app.route("/youtube/download/<youtube_id>")
 def youtube_full(youtube_id):
-    ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
+    ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove', '--restrict-filenames', youtube_id]
     process = subprocess.call(ytdlp_command)
     filename = subprocess.getoutput("yt-dlp --print filename --restrict-filenames {}".format(youtube_id))
     return send_file(filename)
