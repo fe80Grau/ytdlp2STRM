@@ -44,6 +44,7 @@ sudo systemctl status ytdlp2strm.service
 ```
 
 * Example cron.d file to create strm files in redirect mode from channel_list every 2 hours (duration info, no disk usage, fast first loading, no cpu usage, autoredirect to youtube mreged video url)
+* SponsorBlock not works on redirect mode
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,redirect" > ytdlp2STRM
 > ```
