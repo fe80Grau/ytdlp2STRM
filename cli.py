@@ -211,9 +211,9 @@ def make_files_strm(source_platform="youtube", method="stream"):
                         '--playlist-end', '1', 
                         '--print', 'channel_url', 
                         youtube_channel_url]
-            print(' '.join(command))
 
             lines = subprocess.getoutput(' '.join(command)).split('\n')
+            print(lines)
             for line in lines:
                 if 'channel' in line:
                     channel_id = line.rstrip().split('/')[-1]
