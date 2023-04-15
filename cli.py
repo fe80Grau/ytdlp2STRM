@@ -213,13 +213,17 @@ def make_files_strm(source_platform="youtube", method="stream"):
                         youtube_channel_url]
 
             lines = subprocess.getoutput(' '.join(command)).split('\n')
-            print(lines)
+            print("Command: \n {}".format(' '.join(command)))
+            print("Output: \n {}".format(lines))
+
             for line in lines:
                 if 'channel' in line:
                     channel_id = line.rstrip().split('/')[-1]
             
-
+            print("Channel ID value: {}".format(channel_id))
             if not channel_id:
+                print("No channel ID Found, Research with no video tab")
+
                 youtube_channel_url = "https://www.youtube.com/{}".format(youtube_channel)
                 command = ['yt-dlp', 
                             '--compat-options', 'no-youtube-channel-redirect',
@@ -232,6 +236,7 @@ def make_files_strm(source_platform="youtube", method="stream"):
                             '--print', 'channel_url', 
                             youtube_channel_url]
                 print(' '.join(command))
+                
                 lines = subprocess.getoutput(' '.join(command)).split('\n')
                 for line in lines:
                     if 'channel' in line:
