@@ -83,7 +83,7 @@ def inflate_nfo(source_platform="youtube", params=""):
                     '--ignore-errors',
                     '--no-warnings',
                     '--playlist-items', '0']
-        print("Command: \n {}".format(' '.join(command)))
+        #print("Command: \n {}".format(' '.join(command)))
         #The madness begins... 
         #No comments between lines, smoke a joint if you want understand it
         lines = subprocess.getoutput(' '.join(command)).split('\n')
@@ -109,7 +109,7 @@ def inflate_nfo(source_platform="youtube", params=""):
         try:
             url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "avatar_uncropped"), None)
             poster = thumbnails[url_avatar_uncropped_index]['URL']
-            print("Poster found")
+            #print("Poster found")
         except:
             print("No poster detected")
 
@@ -117,13 +117,13 @@ def inflate_nfo(source_platform="youtube", params=""):
         try:
             url_max_landscape_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "banner_uncropped"), None)
             landscape = thumbnails[url_max_landscape_index-1]['URL']
-            print("Landscape found")
+            #print("Landscape found")
         except:
             print("No landscape detected")
 
         #get channel id
         channel_id = params['youtube_channel'].split('/')[-1]
-        print("Channel ID {}".format(channel_id))
+        #print("Channel ID {}".format(channel_id))
 
 
         #get channel or playlist name
@@ -149,9 +149,9 @@ def inflate_nfo(source_platform="youtube", params=""):
                         '--playlist-items', '1',
                         '--compat-options', 'no-youtube-channel-redirect',
                         '--no-warnings']
-        print("Command {}".format(' '.join(command)))
+        #print("Command {}".format(' '.join(command)))
         channel_name = subprocess.getoutput(' '.join(command))
-        print("Output: \n {}".format(channel_name))
+        #print("Output: \n {}".format(channel_name))
         #get description
         description = ""
         if platform.system() == "Linux":
@@ -163,9 +163,9 @@ def inflate_nfo(source_platform="youtube", params=""):
                         '>', '/dev/null', '2>&1', 
                         '&&', 'cat', '"{}.description"'.format(channel_name) 
                         ]
-            print("Command \n {}".format(' '.join(command)))
+            #print("Command \n {}".format(' '.join(command)))
             description = subprocess.getoutput(' '.join(command))
-            print("Output \n {}".format(description))
+            #print("Output \n {}".format(description))
             try:
                 os.remove("{}.description".format(channel_name))
             except:
@@ -221,14 +221,14 @@ def make_files_strm(source_platform="youtube", method="stream"):
                         youtube_channel_url]
 
             lines = subprocess.getoutput(' '.join(command)).split('\n')
-            print("Command: \n {}".format(' '.join(command)))
-            print("Output: \n {}".format(lines))
+            #print("Command: \n {}".format(' '.join(command)))
+            #print("Output: \n {}".format(lines))
 
             for line in lines:
                 if 'channel' in line:
                     channel_id = line.rstrip().split('/')[-1]
             
-            print("Channel ID value: {}".format(channel_id))
+            #print("Channel ID value: {}".format(channel_id))
             if not channel_id:
                 print("No channel ID Found, Research with no video tab")
 
@@ -268,15 +268,15 @@ def make_files_strm(source_platform="youtube", method="stream"):
                         '--ignore-errors',
                         '--no-warnings',
                         '{}'.format(youtube_channel_url)]
-            print("Command \n {}".format(' '.join(command)))
+            #print("Command \n {}".format(' '.join(command)))
             lines = subprocess.getoutput(' '.join(command)).split('\n')
 
             for line in lines:
-                
-                video_id = str(line).rstrip().split(';')[0]
-                video_name = "{} [{}]".format(str(line).rstrip().split(';')[1], video_id)
-                file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
-                file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id)),  sanitize(video_name), "strm")
+                if line != "":
+                    video_id = str(line).rstrip().split(';')[0]
+                    video_name = "{} [{}]".format(str(line).rstrip().split(';')[1], video_id)
+                    file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
+                    file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id)),  sanitize(video_name), "strm")
 
                     data = {
                         "video_id" : video_id, 
