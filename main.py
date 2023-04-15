@@ -49,8 +49,11 @@ def youtube(youtube_id):
         startTime = time.time()
         buffer = []
         sentBurst = False
+        if config["ytdlp2strm_sponsorblock"]:
+            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['ytdlp2strm_sponsorblock_cats'], '--audio-multistreams', youtube_id]
+        else:
+            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--audio-multistreams', youtube_id]
 
-        ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--audio-multistreams', youtube_id]
         process = subprocess.Popen(ytdlp_command, stdout=subprocess.PIPE)
         try:
             while True:
@@ -84,7 +87,10 @@ def youtube(youtube_id):
 #Download video and semd data throught http (serve video duration info, disk usage **clean_old_videos fucntion save your money)
 @app.route("/youtube/download/<youtube_id>")
 def youtube_full(youtube_id):
-    ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove', 'sponsor', '--restrict-filenames', youtube_id]
+    if config["ytdlp2strm_sponsorblock"]:
+        ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['ytdlp2strm_sponsorblock_cats'], '--restrict-filenames', youtube_id]
+    else:
+        ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
     print(ytdlp_command)
     process = subprocess.call(ytdlp_command)
     filename = subprocess.getoutput("yt-dlp --print filename --restrict-filenames {}".format(youtube_id))
