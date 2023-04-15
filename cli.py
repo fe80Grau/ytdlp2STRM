@@ -167,7 +167,7 @@ def inflate_nfo(source_platform="youtube", params=""):
             description = subprocess.getoutput(' '.join(command))
             print("Output \n {}".format(description))
             try:
-                os.remove("{}.description".format(channel_name))
+                os.remove("{}/{}.description".format(media_folder,channel_name))
             except:
                 description = ""
 
