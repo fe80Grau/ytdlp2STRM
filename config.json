@@ -5,6 +5,6 @@
     "ytdlp2strm_channels_list_file" : "channel_list.json",
     "ytdlp2strm_days_dateafter" : "10", 
     "ytdlp2strm_videos_limit" : "10",
-    "ytdlp2strm_sponsorblock" : true,
+    "ytdlp2strm_sponsorblock" : false,
     "ytdlp2strm_sponsorblock_cats" : "sponsor"
 }
