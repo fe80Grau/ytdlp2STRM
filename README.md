@@ -43,7 +43,7 @@ sudo systemctl start ytdlp2strm.service
 sudo systemctl status ytdlp2strm.service
 ```
 
-* Example cron.d file to create strm files in redirect mode from channel_list every 2 hours (duration info, no disk usage, fast first loading, no cpu usage, autoredirect to youtube mreged video url)
+* Example cron.d file to create strm files in redirect mode from channel_list every 2 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct youtube url with video/audio merged)
 * SponsorBlock not works on redirect mode
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,redirect" > ytdlp2STRM
@@ -52,7 +52,7 @@ sudo systemctl status ytdlp2strm.service
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,download" > ytdlp2STRM
 > ```
-* Example cron.d file to create strm files in strean mode from channel_list every 2 hours (no duration info, no disk usage, fast first loading)
+* Example cron.d file to create strm files in stream mode from channel_list every 2 hours (no duration info, no download/disk usage, fast first loading)
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,stream" > ytdlp2STRM
 > ```
@@ -65,7 +65,7 @@ A little script to serve yt-dlp video/audio as HTTP data throught Flask and dyna
 ## cli.py and channel_list.json
 A little script to list N videos (by default 10) from N days (by default 10) ago to today in channels declared in channel_list.json and save all as .strm files (you can change them in config.json) . Added id channels and videos in names [xxxx] for YoutubeMetadata Jellyfin plugin integration.
 
-* Playlist needs "list-" prefix before playlist id, yo u can see an exaple in channel_list.example.json
+* Playlist needs "list-" prefix before playlist id, you can see an exaple in channel_list.example.json
 * NFO (tvshow.nfo) for each youtube channel (to get name, description and images). *Description only works in Linux systems at the moment
 
 ## Service
