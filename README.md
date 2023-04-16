@@ -48,7 +48,7 @@ sudo systemctl status ytdlp2strm.service
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,redirect" > ytdlp2STRM
 > ```
-* Example cron.d file to create strm files in **download mode** from channel_list every 2 hours (cached mode, duration info, temp disk usage, slow first loading)
+* Example cron.d file to create strm files in **download mode** from channel_list every 2 hours (cached mode, duration info, temp download/disk usage, slow first loading)
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,download" > ytdlp2STRM
 > ```
