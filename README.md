@@ -43,16 +43,16 @@ sudo systemctl start ytdlp2strm.service
 sudo systemctl status ytdlp2strm.service
 ```
 
-* Example cron.d file to create strm files in redirect mode from channel_list every 2 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct youtube url with video/audio merged)
+* Example cron.d file to create strm files in **redirect mode** from channel_list every 2 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct youtube url with video/audio merged)
 * SponsorBlock not works on redirect mode
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,redirect" > ytdlp2STRM
 > ```
-* Example cron.d file to create strm files in download mode from channel_list every 2 hours (cached mode, duration info, temp disk usage, slow first loading)
+* Example cron.d file to create strm files in **download mode** from channel_list every 2 hours (cached mode, duration info, temp disk usage, slow first loading)
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,download" > ytdlp2STRM
 > ```
-* Example cron.d file to create strm files in stream mode from channel_list every 2 hours (no duration info, no download/disk usage, fast first loading)
+* Example cron.d file to create strm files in **stream mode** from channel_list every 2 hours (no duration info, no download/disk usage, fast first loading)
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,stream" > ytdlp2STRM
 > ```
