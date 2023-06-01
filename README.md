@@ -69,7 +69,7 @@ A little script to list N videos (by default 10) from N days (by default 10) ago
 
 * Playlist needs "list-" prefix before playlist id, you can see an exaple in channel_list.example.json
 * If you want to get livestream from /streams youtube channel tab you need to add a new channel in channel_list with /streams (Check an example in ./plugins/channel_list.example.json)
-* NFO (tvshow.nfo) for each youtube channel (to get name, description and images). *Description only works in Linux systems at the moment
+* This script makes a NFO file (tvshow.nfo) for each youtube channel (to get name, description and images). *Description only works in Linux systems at the moment
 
 ## Service
 ytdlp2strm.service example service to run main.py with systemctl. 
