@@ -3,3 +3,4 @@ __pycache__/
 *.py[cod]
 *$py.class
 channel_list.json
+config.json

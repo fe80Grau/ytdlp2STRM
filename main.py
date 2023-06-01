@@ -7,11 +7,11 @@ import urllib.request
 import urllib.error
 import os
 app = Flask(__name__)
-
+import config.routes
 
 
 #Reading config file
-with open('config.json', 'r') as f:
+with open('./config/config.json', 'r') as f:
     config = json.load(f)
     
 keep_downloaded = 1800 #in seconds
@@ -30,82 +30,7 @@ def clean_old_videos():
                         os.remove(os.path.join(path, f))
         except:
             continue
-            
-        
 
-### YOUTUBE ZONE
-#Redirect to best pre-merget format youtube url
-@app.route("/youtube/redirect/<youtube_id>")
-def youtube_redirect(youtube_id):
-    youtube_url = subprocess.getoutput("yt-dlp -f best --no-warnings {} --get-url".format(youtube_id))
-    return redirect(youtube_url, code=301)
-
-
-#Stream data directly throught http (no serve video duration info, no disk usage)
-@app.route("/youtube/stream/<youtube_id>")
-def youtube(youtube_id):
-    print(request.headers)
-    print(request.cookies)
-    print(request.data)
-    print(request.args)
-    print(request.form)
-    print(request.endpoint)
-    print(request.method)
-    print(request.remote_addr)
-    def generate():
-        startTime = time.time()
-        buffer = []
-        sentBurst = False
-        if config["ytdlp2strm_sponsorblock"]:
-            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['ytdlp2strm_sponsorblock_cats'], '--restrict-filenames', youtube_id]
-        else:
-            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
-
-        process = subprocess.Popen(ytdlp_command, stdout=subprocess.PIPE)
-        try:
-            while True:
-                # Get some data from ffmpeg
-                line = process.stdout.read(1024)
-
-                # We buffer everything before outputting it
-                buffer.append(line)
-
-                # Minimum buffer time, 3 seconds
-                if sentBurst is False and time.time() > startTime + 3 and len(buffer) > 0:
-                    sentBurst = True
-
-                    for i in range(0, len(buffer) - 2):
-                        print("Send initial burst #", i)
-                        yield buffer.pop(0)
-
-                elif time.time() > startTime + 3 and len(buffer) > 0:
-                    yield buffer.pop(0)
-
-                process.poll()
-                if isinstance(process.returncode, int):
-                    if process.returncode > 0:
-                        print('yt-dlp Error', process.returncode)
-                    break
-        finally:
-            process.kill()
-
-    return Response(stream_with_context(generate()), mimetype = "video/mp4") 
-
-#Download video and semd data throught http (serve video duration info, disk usage **clean_old_videos fucntion save your money)
-@app.route("/youtube/download/<youtube_id>")
-def youtube_full(youtube_id):
-    if config["ytdlp2strm_sponsorblock"]:
-        ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['ytdlp2strm_sponsorblock_cats'], '--restrict-filenames', youtube_id]
-    else:
-        ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
-    print(ytdlp_command)
-    process = subprocess.call(ytdlp_command)
-    filename = subprocess.getoutput("yt-dlp --print filename --restrict-filenames {}".format(youtube_id))
-    return send_file(filename)
-
-
-### CRUNCHUROLL ZONE
-### under construction...
 
 if __name__ == "__main__":
     #Thread for clean_old_videos

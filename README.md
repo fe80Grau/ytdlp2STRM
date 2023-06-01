@@ -22,13 +22,15 @@ cd /opt/ytdlp2STRM && pip install -r requierments.txt
 ```console
 mkdir /media/Youtube
 ```
-* EDIT channel_list.example.json with your channels names (you can see channel name (or ID or USER)  after first / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix).
-* Edit config.json [and ytdlp2strm.service with your preferences and copy ytdlp2strm.service to /etc/systemd/system]*Between brackets only Linux.
+* EDIT plugins/youtube/channel_list.example.json with your channels names (you can see channel name (or ID or USER)  after first / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix).
+* Edit config/config.json [and ytdlp2strm.service with your preferences and copy ytdlp2strm.service to /etc/systemd/system]*Between brackets only Linux.
+* ytdlp2strm_keep_old_strm in config/config.json is true by default, this options keep in filesystem all strm files,  with false all strm will be cleaned in each ytdlp2strm execution
+* Edit plugins/youtube/config.json with your preferences
 * I'm testing SponsorBlock. Requieres ffmpeg custom build from yt-dlp. https://github.com/yt-dlp/FFmpeg-Builds#ffmpeg-static-auto-builds (Download your version Linux x64 or LinuxARM64, Windows x64 or Windows x86), extract an replace binaries in bin folder in your system. Normaly ffmpeg, ffprobe and ffplay binaries are installed in /usr/bin/ , back up orginials before replace. 
 * SponsorBlock is disabled by default in config.json
 * SponsorBlock categories: sponsor, intro, outro, selfpromo, preview, filler, interaction, music_offtopic, poi_highlight, chapter, all. By default is setted sponsor.
 ```console
-sudo cp ytdlp2strm.service /etc/systemd/system/ytdlp2strm.service
+sudo cp config/ytdlp2strm.service /etc/systemd/system/ytdlp2strm.service
 ```
 * Enable service
 ```console
@@ -43,21 +45,21 @@ sudo systemctl start ytdlp2strm.service
 sudo systemctl status ytdlp2strm.service
 ```
 
-* Example cron.d file to create strm files in **redirect mode** from channel_list every 2 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct youtube url with video/audio merged)
+* Example cron.d file to create strm files in **direct mode** from channel_list every 2 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct youtube url with video/audio merged, faster mode)
 * SponsorBlock not works on redirect mode
 > ``` console
-> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,redirect" > ytdlp2STRM
+> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,direct" > ytdlp2STRM
 > ```
 * Example cron.d file to create strm files in **download mode** from channel_list every 2 hours (cached mode, duration info, temp download/disk usage, slow first loading)
 > ``` console
-> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,download" > ytdlp2STRM
+> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,download" > ytdlp2STRM
 > ```
-* Example cron.d file to create strm files in **stream mode** from channel_list every 2 hours (no duration info, no download/disk usage, fast first loading)
+* Example cron.d file to create strm files in **bridge mode** from channel_list every 2 hours (no duration info, no download/disk usage, fast first loading)
 > ``` console
-> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m make_files_strm --p youtube,stream" > ytdlp2STRM
+> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,bridge" > ytdlp2STRM
 > ```
 
-* After that you can see all channels folders under /media/Youtube and strm files inside them. If you are using Jellyfin/Emby, add /media/Youtube as folder in Library and enjoy it!
+* After that you can see all channels folders under /media/Youtube and strm files insi                              de them. If you are using Jellyfin/Emby, add /media/Youtube as folder in Library and enjoy it!
 
 ## main.py 
 A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/redirect/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
@@ -66,6 +68,7 @@ A little script to serve yt-dlp video/audio as HTTP data throught Flask and dyna
 A little script to list N videos (by default 10) from N days (by default 10) ago to today in channels declared in channel_list.json and save all as .strm files (you can change them in config.json) . Added id channels and videos in names [xxxx] for YoutubeMetadata Jellyfin plugin integration.
 
 * Playlist needs "list-" prefix before playlist id, you can see an exaple in channel_list.example.json
+* If you want to get livestream from /streams youtube channel tab you need to add a new channel in channel_list with /streams (Check an example in ./plugins/channel_list.example.json)
 * NFO (tvshow.nfo) for each youtube channel (to get name, description and images). *Description only works in Linux systems at the moment
 
 ## Service

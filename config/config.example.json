@@ -1,0 +1,5 @@
+{
+    "ytdlp2strm_host" : "127.0.0.1",
+    "ytdlp2strm_port" : "5000",
+    "ytdlp2strm_keep_old_strm" : true
+}
