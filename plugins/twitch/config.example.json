@@ -1,4 +1,4 @@
 {
-    "strm_output_folder" : "D:/Twitch",
+    "strm_output_folder" : "/media/Twitch",
     "channels_list_file" : "./plugins/twitch/channel_list.json"
 }
