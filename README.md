@@ -70,7 +70,7 @@ sudo systemctl status ytdlp2strm.service
 * [TWITCH] Example cron.d file to create strm files in **direct mode** from channel_list every 10 minutes (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
 * SponsorBlock not works on redirect mode, Twitch only works over direct mode at the moment.
 > ``` console
-> cd /etc/cron.d && sudo echo "*/0 * * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.twitch.to_strm --p twitch,direct" > ytdlp2STRM_twitch_direct
+> cd /etc/cron.d && sudo echo "*/10 * * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.twitch.to_strm --p twitch,direct" > ytdlp2STRM_twitch_direct
 > ```
 
 
