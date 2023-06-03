@@ -53,36 +53,37 @@ sudo systemctl status ytdlp2strm.service
 * [YOUTUBE] Example cron.d file to create strm files in **direct mode** from channel_list every 2 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct youtube url with video/audio merged, faster mode)
 * SponsorBlock not works on redirect mode
 > ``` console
-> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,direct" > ytdlp2STRM
+> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,direct" > ytdlp2STRM_youtube_direct
 > ```
 * Example cron.d file to create strm files in **download mode** from channel_list every 2 hours (cached mode, duration info, temp download/disk usage, slow first loading)
 > ``` console
-> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,download" > ytdlp2STRM
+> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,download" > ytdlp2STRM_youtube_download
 > ```
 * Example cron.d file to create strm files in **bridge mode** from channel_list every 2 hours (no duration info, no download/disk usage, fast first loading)
 > ``` console
-> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,bridge" > ytdlp2STRM
+> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,bridge" > ytdlp2STRM_youtube_bridge
 > ```
 
 * After that you can see all channels folders under /media/Youtube and strm files inside them. If you are using Jellyfin/Emby, add /media/Youtube as folder in Library and enjoy it!
 
 
-* [TWITCH] Example cron.d file to create strm files in **direct mode** from channel_list every 2 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
+* [TWITCH] Example cron.d file to create strm files in **direct mode** from channel_list every 10 minutes (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
 * SponsorBlock not works on redirect mode, Twitch only works over direct mode at the moment.
 > ``` console
-> cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.youtube.to_strm --p youtube,direct" > ytdlp2STRM
+> cd /etc/cron.d && sudo echo "*/0 * * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --m plugins.twitch.to_strm --p twitch,direct" > ytdlp2STRM_twitch_direct
 > ```
 
 
 ## main.py 
-A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/redirect/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
+A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/direct/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
 
 ## cli.py and channel_list.json
 A little script to list N videos (by default 10) from N days (by default 10) ago to today in channels declared in channel_list.json and save all as .strm files (you can change them in config.json) . Added id channels and videos in names [xxxx] for YoutubeMetadata Jellyfin plugin integration.
 
-* Playlist needs "list-" prefix before playlist id, you can see an exaple in channel_list.example.json
-* If you want to get livestream from /streams youtube channel tab you need to add a new channel in channel_list with /streams (Check an example in ./plugins/channel_list.example.json)
-* This script makes a NFO file (tvshow.nfo) for each youtube channel (to get name, description and images). *Description only works in Linux systems at the moment
+* [YOUTUBE] Playlist needs "list-" prefix before playlist id, you can see an exaple in channel_list.example.json
+* [YOUTUBE] If you want to get livestream from /streams youtube channel tab you need to add a new channel in channel_list with /streams (Check an example in ./plugins/youtube/channel_list.example.json)
+* [TWITCH] Only gets and create strm live videos at the moment. (No /videos tab)
+* This script makes a NFO file (tvshow.nfo) for each youtube or twitch channel (to get name, description and images). *Description only works in Linux systems at the moment
 
 ## Service
 ytdlp2strm.service example service to run main.py with systemctl. 
