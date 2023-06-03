@@ -16,7 +16,7 @@ if __name__ == "__main__":
     params = args.p.split(',') if args.p != None else None
     
     # Keep working for old version
-    if method == "make_filest_strm":
+    if method == "make_files_strm":
         method = "plugins.youtube.to_strm"
     if args.p == "youtube,redirect":
         params = ["youtube", "direct"]
