@@ -14,7 +14,15 @@ if __name__ == "__main__":
 
     method = args.m if args.m != None else "error"
     params = args.p.split(',') if args.p != None else None
-
+    
+    # Keep working for old version
+    if method == "make_filest_strm":
+        method = "plugins.youtube.to_strm"
+    if args.p == "youtube,redirect":
+        params = ["youtube", "direct"]
+    if args.p == "youtube,stream":
+        params = ["youtube", "bridge"]
+    # --
 
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")

@@ -1,3 +1,4 @@
 flask==2.2.3
 yt-dlp>=2023.3.4
+streamlink>=5.5.1
 sanitize_filename

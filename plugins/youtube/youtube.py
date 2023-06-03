@@ -8,8 +8,13 @@ import platform
 import subprocess
 
 #Reading config file
+config_file = './plugins/youtube/config.json'
+if not os.path.isfile(config_file):
+    print("No config.json detected, using config.example.json. Please check this in current plugin folder")
+    config_file = './plugins/youtube/config.example.json'
+
 with open(
-        './plugins/youtube/config.json', 
+        config_file, 
         'r'
     ) as f:
     config = json.load(f)
@@ -23,6 +28,10 @@ videos_limit = config["videos_limit"]
 ##Utils | Read and download full channels, generate nfo and strm files
 def channels():
     channels = []
+    if not os.path.isfile(channels_list):
+        print("No channel_list.json detected, using channel_list.example.json. Please check this in current plugin folder")
+        channels_list = './plugins/youtube/channel_list.example.json'
+
     with open(
             channels_list, 
             'r'

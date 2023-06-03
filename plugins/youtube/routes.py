@@ -2,14 +2,7 @@ from __main__ import app
 from plugins.youtube.youtube import direct, bridge, download
 from flask import Flask, stream_with_context, request, Response, send_from_directory, send_file, redirect
 import json
-
-#Reading config file
-with open(
-        './plugins/youtube/config.json', 
-        'r'
-    ) as f:
-    config = json.load(f)
-
+import os
 
 ### YOUTUBE ZONE
 #Redirect to best pre-merget format youtube url
