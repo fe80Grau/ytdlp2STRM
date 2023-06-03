@@ -27,13 +27,14 @@ videos_limit = config["videos_limit"]
 
 ##Utils | Read and download full channels, generate nfo and strm files
 def channels():
-    channels = []
-    if not os.path.isfile(channels_list):
+    channels_list_local = channels_list
+
+    if not os.path.isfile(channels_list_local):
         print("No channel_list.json detected, using channel_list.example.json. Please check this in current plugin folder")
-        channels_list = './plugins/youtube/channel_list.example.json'
+        channels_list_local = './plugins/twitch/channel_list.example.json'
 
     with open(
-            channels_list, 
+            channels_list_local, 
             'r'
         ) as f:
         channels = json.load(f)
