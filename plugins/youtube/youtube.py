@@ -31,7 +31,7 @@ def channels():
 
     if not os.path.isfile(channels_list_local):
         print("No channel_list.json detected, using channel_list.example.json. Please check this in current plugin folder")
-        channels_list_local = './plugins/twitch/channel_list.example.json'
+        channels_list_local = './plugins/youtube/channel_list.example.json'
 
     with open(
             channels_list_local, 
