@@ -156,7 +156,7 @@ def to_nfo(params):
         poster, poster,
         poster, poster,
         poster, poster,
-        params['twitch_channel'],
+        "",
         "Twitch",
         "Twitch"
     )
