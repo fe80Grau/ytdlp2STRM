@@ -12,7 +12,7 @@ if not os.path.isfile(config_file):
     config_file = './plugins/twitch/config.example.json'
 
 with open(
-        './plugins/twitch/config.json', 
+        config_file, 
         'r'
     ) as f:
     config = json.load(f)
