@@ -1,7 +1,7 @@
 # ytdlp2STRM
 * Youtube / Twitch to STRM files
 * Youtube / Twitch integration with Jellyfin/Emby (Requires YoutubeMetadata plugin)
-![image](https://user-images.githubusercontent.com/6680464/227725095-8451ea3b-d404-47d7-82b6-59ec9f683eb2.png)
+![image](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/6c10e9a7-ae46-4ef1-a9f3-da86dbb9a780)
 
 ## Requierments
 * Python 3
