@@ -19,9 +19,14 @@ with open(
 
 media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
-days_after = config["days_dateafter"]
-videos_limit = config['videos_limit']
 source_platform = "twitch"
+
+if 'days_dateafter' in config:
+    days_after = config["days_dateafter"]
+    videos_limit = config['videos_limit']
+else:
+    days_after = "10"
+    videos_limit = "10"
 
 ##Utils | Read and download full channels, generate nfo and strm files
 def channels():

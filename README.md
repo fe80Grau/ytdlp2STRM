@@ -90,6 +90,10 @@ A little script to list N videos (by default 10) from N days (by default 10) ago
 * channels_list_file
 * days_dateafter
 * videos_limit
+* proxy
+* proxy_url
+* [YOUTUBE] sponsorblock
+* [YOUTUBE] sponsorblock_cats
 
 ## plugins/*media*/channel_list.json
 * [YOUTUBE] Playlist needs "list-" prefix before playlist id, you can see an exaple in channel_list.example.json
