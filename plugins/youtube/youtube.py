@@ -24,8 +24,12 @@ channels_list = config["channels_list_file"]
 days_dateafter = config["days_dateafter"]
 videos_limit = config["videos_limit"]
 source_platform = "youtube"
-proxy = config['proxy']
-proxy_url = config['proxy_url']
+if 'proxy' in config:
+    proxy = config['proxy']
+    proxy_url = config['proxy_url']
+else:
+    proxy = False
+    proxy_url = ""
 
 ##Utils | Read and download full channels, generate nfo and strm files
 def channels():
