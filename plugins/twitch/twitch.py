@@ -100,7 +100,7 @@ def to_strm(method):
         print("Processing videos tab in channel")
 
         command = ['yt-dlp', 
-                    '--print', '"%(id)s;%(title)s"', 
+                    '--print', '"%(id)s;%(title)s;%(upload_date)s"', 
                     '--dateafter', "today-{}days".format(days_after),
                     '--playlist-start', '1', 
                     '--playlist-end', videos_limit, 
@@ -117,13 +117,14 @@ def to_strm(method):
                 if not 'ERROR' in line:
                     video_id = str(line).rstrip().split(';')[0]
                     video_name = str(line).rstrip().split(';')[1].split(" ")
+                    upload_date = str(line).rstrip().split(';')[2]
                     try:
                         video_name.pop(3)
                     except:
                         pass
                     video_name = "{} [{}]".format(' '.join(video_name), video_id)
                     file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, "{}@{}".format(twitch_channel, video_id))
-                    file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(twitch_channel)),  sanitize(video_name), "strm")
+                    file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(twitch_channel)),  sanitize("{}-{}".format(upload_date,video_name)), "strm")
 
                     data = {
                         "video_id" : video_id, 
