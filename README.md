@@ -90,8 +90,8 @@ A little script to list N videos (by default 10) from N days (by default 10) ago
 * channels_list_file
 * days_dateafter
 * videos_limit
-* proxy
-* proxy_url
+* [YOUTUBE] proxy
+* [YOUTUBE] proxy_url
 * [YOUTUBE] sponsorblock
 * [YOUTUBE] sponsorblock_cats
 
