@@ -24,6 +24,8 @@ channels_list = config["channels_list_file"]
 days_dateafter = config["days_dateafter"]
 videos_limit = config["videos_limit"]
 source_platform = "youtube"
+proxy = config['proxy']
+proxy_url = config['proxy_url']
 
 ##Utils | Read and download full channels, generate nfo and strm files
 def channels():
@@ -68,6 +70,7 @@ def to_strm(method):
                     '--playlist-end', '1', 
                     '--print', 'channel_url', 
                     youtube_channel_url]
+        set_proxy(command)
 
         lines = subprocess.getoutput(' '.join(command)).split('\n')
         #print("Command: \n {}".format(' '.join(command)))
@@ -92,8 +95,9 @@ def to_strm(method):
                         '--playlist-end', '1', 
                         '--print', 'channel_url', 
                         youtube_channel_url]
-            print(' '.join(command))
-            
+            #print(' '.join(command))
+            set_proxy(command)
+                    
             lines = subprocess.getoutput(' '.join(command)).split('\n')
             for line in lines:
                 if 'channel' in line:
@@ -118,7 +122,10 @@ def to_strm(method):
                     '--ignore-errors',
                     '--no-warnings',
                     '{}'.format(youtube_channel_url)]
-    
+
+        set_proxy(command)
+
+
         if config['days_dateafter'] == "0":
             command.pop(7)
             command.pop(7)
@@ -155,6 +162,8 @@ def to_nfo(params):
                 '--ignore-errors',
                 '--no-warnings',
                 '--playlist-items', '0']
+    set_proxy(command)
+
     #print("Command: \n {}".format(' '.join(command)))
     #The madness begins... 
     #No comments between lines, smoke a joint if you want understand it
@@ -221,6 +230,8 @@ def to_nfo(params):
                     '--playlist-items', '1',
                     '--compat-options', 'no-youtube-channel-redirect',
                     '--no-warnings']
+    set_proxy(command)
+
     #print("Command {}".format(' '.join(command)))
     channel_name = subprocess.getoutput(' '.join(command))
     #print("Output: \n {}".format(channel_name))
@@ -235,7 +246,9 @@ def to_nfo(params):
                     '>', '/dev/null', '2>&1', 
                     '&&', 'cat', '"{}/{}.description"'.format(media_folder, channel_name) 
                     ]
-        print("Command \n {}".format(' '.join(command)))
+        set_proxy(command)
+
+        #print("Command \n {}".format(' '.join(command)))
         description = subprocess.getoutput(' '.join(command))
         print("Output \n {}".format(description))
         try:
@@ -264,9 +277,24 @@ def to_nfo(params):
         file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(params['youtube_channel_folder'],channel_id), "tvshow", "nfo")
         write_file(file_path, output_nfo)
 
+def set_proxy(command):
+    if proxy:
+        if proxy_url != "":
+            command.append('--proxy')
+            command.append(proxy_url)
+        else:
+            print("Proxy setted true but no proxy url, please check it in plugin config.json")
+
+
 ##Video data stream | direct, bridge and download mode
 def direct(youtube_id): #Sponsorblock doesn't work in this mode
-    youtube_url = subprocess.getoutput("yt-dlp -f best --no-warnings {} --get-url".format(youtube_id))
+    command = ['yt-dlp', 
+                '-f', 'best',
+                '--no-warnings',
+                '--get-url', 
+                youtube_id]
+    set_proxy(command)
+    youtube_url = subprocess.getoutput(' '.join(command))
     return redirect(youtube_url, code=301)
 
 def bridge(youtube_id):
@@ -275,11 +303,14 @@ def bridge(youtube_id):
         buffer = []
         sentBurst = False
         if config["sponsorblock"]:
-            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', youtube_id]
+            command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', youtube_id]
         else:
-            ytdlp_command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
+            command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
 
-        process = subprocess.Popen(ytdlp_command, stdout=subprocess.PIPE)
+        set_proxy(command)
+
+
+        process = subprocess.Popen(command, stdout=subprocess.PIPE)
         try:
             while True:
                 # Get some data from ffmpeg
@@ -311,10 +342,10 @@ def bridge(youtube_id):
 
 def download(youtube_id):
     if config["sponsorblock"]:
-        ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', youtube_id]
+        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', youtube_id]
     else:
-        ytdlp_command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
-    print(ytdlp_command)
-    process = subprocess.call(ytdlp_command)
+        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
+    set_proxy(command)
+    process = subprocess.call(command)
     filename = subprocess.getoutput("yt-dlp --print filename --restrict-filenames {}".format(youtube_id))
     return send_file(filename)

@@ -219,6 +219,7 @@ def to_nfo(params):
         file_path = "{}/{}/{}.{}".format(media_folder, "{}".format(params['twitch_channel_folder']), "tvshow", "nfo")
         write_file(file_path, output_nfo)
 
+
 ##Video data stream | direct, bridge and download mode
 def direct(twitch_id): #Sponsorblock doesn't work in this mode
     channel = twitch_id.split("@")[0]
