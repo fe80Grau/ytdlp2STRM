@@ -23,7 +23,7 @@ media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
 days_dateafter = config["days_dateafter"]
 videos_limit = config["videos_limit"]
-
+source_platform = "youtube"
 
 ##Utils | Read and download full channels, generate nfo and strm files
 def channels():
@@ -41,7 +41,7 @@ def channels():
     return channels
 
 #¡¡¡¡¡ to_strm is mandatory start function, forced in cli.py under run function !!!!!
-def to_strm(source_platform, method):
+def to_strm(method):
     for youtube_channel in channels():
         print("Preparing channel {}".format(youtube_channel))
 

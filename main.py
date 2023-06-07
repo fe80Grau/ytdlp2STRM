@@ -1,12 +1,6 @@
 from flask import Flask, stream_with_context, request, Response, send_from_directory, send_file, redirect
 from threading import Thread
 from functions import host, port, clean_old_videos
-import subprocess
-import time
-import json
-import urllib.request
-import urllib.error
-import os
 app = Flask(__name__)
 import config.routes
 

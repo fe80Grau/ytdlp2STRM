@@ -1,0 +1,6 @@
+{
+    "strm_output_folder" : "/media/Crunchyroll",
+    "channels_list_file" : "./plugins/crunchyroll/channel_list.json",
+    "crunchyroll_cookies_file" : "/etc/www.crunchyroll.com_cookies.txt",
+    "crunchyroll_audio_lang" : "JAP"
+}

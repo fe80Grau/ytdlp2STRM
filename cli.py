@@ -7,21 +7,34 @@ from sanitize_filename import sanitize
 if __name__ == "__main__":
     parser=argparse.ArgumentParser()
 
-    parser.add_argument('--m', help='Método a ejecutar')
-    parser.add_argument('--p', help='Parámetros para el método a ejecutar. Separado por comas.')
+    parser.add_argument('-m', '--media', help='Media platform')
+    parser.add_argument('-p', '--params', help='Params to media platform mode.')
+    # Keep working for old version
+    parser.add_argument('--m', help='Media platform (old)')
+    parser.add_argument('--p', help='Params to media platform mode (old)')
+    # --
 
     args=parser.parse_args()
+    method = args.media if args.media != None else "error"
+    params = args.params.split(',') if args.params != None else None
 
-    method = args.m if args.m != None else "error"
-    params = args.p.split(',') if args.p != None else None
-    
     # Keep working for old version
+    if method == "error":
+        method = args.m if args.m != None else "error"
+    if params == None:
+        params = args.p.split(',') if args.p != None else None
+
+
+    if "plugins" in method:
+        method = method.split('.')[1]
     if method == "make_files_strm":
-        method = "plugins.youtube.to_strm"
-    if args.p == "youtube,redirect":
-        params = ["youtube", "direct"]
-    if args.p == "youtube,stream":
-        params = ["youtube", "bridge"]
+        method = "youtube"
+    if "twitch" in params:
+        params = [params[1]]
+    if 'redirect' in params:
+        params = ["direct"]
+    if 'stream' in params:
+        params = ["bridge"]
     # --
 
     now = datetime.now()
@@ -30,6 +43,4 @@ if __name__ == "__main__":
     print("Running {} with {} params".format(method, params))
     r = False
     if params != None:
-        r = eval(method)(*params)
-    else:
-        r = eval(method)
+        r = eval("{}.{}.{}".format("plugins",method,"to_strm"))(*params)

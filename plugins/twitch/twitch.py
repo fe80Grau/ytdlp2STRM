@@ -19,7 +19,9 @@ with open(
 
 media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
-
+days_after = config["days_dateafter"]
+videos_limit = config['videos_limit']
+source_platform = "twitch"
 
 ##Utils | Read and download full channels, generate nfo and strm files
 def channels():
@@ -37,7 +39,7 @@ def channels():
     return channels
 
 #¡¡¡¡¡ to_strm is mandatory start function, forced in cli.py under run function !!!!!
-def to_strm(source_platform, method):
+def to_strm(method):
     for twitch_channel in channels():
         print("Preparing channel {}".format(twitch_channel))
 
@@ -72,6 +74,50 @@ def to_strm(source_platform, method):
                         pass
                     video_name = "{} [{}]".format(' '.join(video_name), video_id)
                     file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, "{}@{}".format(twitch_channel, video_id))
+                    file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(twitch_channel)),  sanitize("!000-live-{}".format(twitch_channel)), "strm")
+
+                    data = {
+                        "video_id" : video_id, 
+                        "video_name" : video_name
+                    }
+                    if not os.path.isfile(file_path):
+                        write_file(file_path, file_content)
+
+                    print(data)
+                else:
+                    try:
+                        os.remove("{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(twitch_channel)),  sanitize("!000-live-{}".format(twitch_channel)), "strm"))
+                    except:
+                        pass
+    
+    
+        #Download /videos tab
+        print("Processing videos tab in channel")
+
+        command = ['yt-dlp', 
+                    '--print', '"%(id)s;%(title)s"', 
+                    '--dateafter', "today-{}days".format(days_after),
+                    '--playlist-start', '1', 
+                    '--playlist-end', videos_limit, 
+                    '--ignore-errors',
+                    '--no-warnings',
+                    '{}/{}'.format(twitch_channel_url,"videos")]
+    
+
+        #print("Command \n {}".format(' '.join(command)))
+        lines = subprocess.getoutput(' '.join(command)).split('\n')
+
+        for line in lines:
+            if line != "":
+                if not 'ERROR' in line:
+                    video_id = str(line).rstrip().split(';')[0]
+                    video_name = str(line).rstrip().split(';')[1].split(" ")
+                    try:
+                        video_name.pop(3)
+                    except:
+                        pass
+                    video_name = "{} [{}]".format(' '.join(video_name), video_id)
+                    file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, "{}@{}".format(twitch_channel, video_id))
                     file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(twitch_channel)),  sanitize(video_name), "strm")
 
                     data = {
@@ -82,7 +128,6 @@ def to_strm(source_platform, method):
                         write_file(file_path, file_content)
 
                     print(data)
-
     return True 
 
 def to_nfo(params):
@@ -90,12 +135,13 @@ def to_nfo(params):
     #Table thumbnails
     c = 0
     command = ['yt-dlp', 
-                'https://www.twitch.tv/{}'.format(params['twitch_channel']),
+                'https://www.twitch.tv/{}/{}'.format(params['twitch_channel'],"videos"),
                 '--list-thumbnails',
                 '--restrict-filenames',
                 '--ignore-errors',
                 '--no-warnings',
-                '--playlist-items', '0']
+                '--no-download',
+                '--playlist-items', '1']
     #print("Command: \n {}".format(' '.join(command)))
     #The madness begins... 
     #No comments between lines, smoke a joint if you want understand it
@@ -104,7 +150,7 @@ def to_nfo(params):
     thumbnails = []
     for line in lines:
         line = ' '.join(line.split())
-        if not '[' in line:
+        if not '[' in line and not 'has no' in line:
             data = line.split(' ')
             if c == 0:
                 headers = data
@@ -118,6 +164,7 @@ def to_nfo(params):
     #finally...
 
     #get images
+    #print(thumbnails)
     poster = ""
     try:
         url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "0"), None)
@@ -171,7 +218,12 @@ def direct(twitch_id): #Sponsorblock doesn't work in this mode
     channel = twitch_id.split("@")[0]
     video_id = twitch_id.split("@")[1]
     twitch_url = subprocess.getoutput("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id))
+    print("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id))
     if 'ERROR' in twitch_url:
-        twitch_url = subprocess.getoutput("yt-dlp -f best --no-warnings https://www.twitch.tv/{} --get-url".format(channel))
+        twitch_url = subprocess.getoutput("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id.replace('v','')))
+        print("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id.replace('v','')))
+        if 'ERROR' in twitch_url:
+            twitch_url = subprocess.getoutput("yt-dlp -f best --no-warnings https://www.twitch.tv/{} --get-url".format(channel))
+            print("yt-dlp -f best --no-warnings https://www.twitch.tv/{} --get-url".format(channel))
 
     return redirect(twitch_url, code=301)
