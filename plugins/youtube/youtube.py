@@ -241,17 +241,17 @@ def to_nfo(params):
     #print("Output: \n {}".format(channel_name))
     #get description
     description = ""
-    if platform.system() == "Linux":
+    if platform.system() != "Linux":
         command = ['yt-dlp', 
                     'https://www.youtube.com/{}'.format(params['youtube_channel']), 
                     '--write-description', 
                     '--playlist-items', '0',
-                    '--output', '"{}/{}.description"'.format(media_folder, channel_name),
-                    '>', '/dev/null', '2>&1', 
-                    '&&', 'cat', '"{}/{}.description"'.format(media_folder, channel_name) 
+                    '--output', '"{}/{}.description"'.format(media_folder, channel_name)
                     ]
         set_proxy(command)
 
+        command = command + ['>', '/dev/null', '2>&1','&&', 'cat', '"{}/{}.description"'.format(media_folder, channel_name)]
+        
         #print("Command \n {}".format(' '.join(command)))
         description = subprocess.getoutput(' '.join(command))
         print("Output \n {}".format(description))
