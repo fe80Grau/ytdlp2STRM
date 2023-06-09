@@ -46,24 +46,34 @@ def channels():
         channels = json.load(f)
     return channels
 
-#¡¡¡¡¡ to_strm is mandatory start function, forced in cli.py under run function !!!!!
-def to_strm(method):
-    for youtube_channel in channels():
-        print("Preparing channel {}".format(youtube_channel))
+def channel_strm(youtube_channel, youtube_channel_url, method):
+    channel_id = False
 
-        #formating youtube URL and init channel_id
-        youtube_channel_url = "https://www.youtube.com/{}/videos".format(youtube_channel)
-        channel_id = False
-        #Cases like /user/xbox
-        if not "@" in youtube_channel:
-            youtube_channel_url = "https://www.youtube.com{}".format(youtube_channel)
+    command = ['yt-dlp', 
+                '--compat-options', 'no-youtube-channel-redirect',
+                '--compat-options', 'no-youtube-unavailable-videos',
+                '--restrict-filenames',
+                '--ignore-errors',
+                '--no-warnings',
+                '--playlist-start', '1', 
+                '--playlist-end', '1', 
+                '--print', 'channel_url', 
+                youtube_channel_url]
+    set_proxy(command)
 
-        if 'list-' in youtube_channel:
-            youtube_channel_url = "https://www.youtube.com/playlist?list={}".format(youtube_channel.split('list-')[1])
+    lines = subprocess.getoutput(' '.join(command)).split('\n')
+    #print("Command: \n {}".format(' '.join(command)))
+    #print("Output: \n {}".format(lines))
 
-        if '/streams' in youtube_channel:
-            method = 'direct'
+    for line in lines:
+        if 'channel' in line:
+            channel_id = line.rstrip().split('/')[-1]
+    
+    #print("Channel ID value: {}".format(channel_id))
+    if not channel_id:
+        print("No channel ID Found, Research with no video tab")
 
+        youtube_channel_url = "https://www.youtube.com/{}".format(youtube_channel)
         command = ['yt-dlp', 
                     '--compat-options', 'no-youtube-channel-redirect',
                     '--compat-options', 'no-youtube-unavailable-videos',
@@ -74,84 +84,120 @@ def to_strm(method):
                     '--playlist-end', '1', 
                     '--print', 'channel_url', 
                     youtube_channel_url]
+        #print(' '.join(command))
         set_proxy(command)
-
+                
         lines = subprocess.getoutput(' '.join(command)).split('\n')
-        #print("Command: \n {}".format(' '.join(command)))
-        #print("Output: \n {}".format(lines))
-
         for line in lines:
             if 'channel' in line:
                 channel_id = line.rstrip().split('/')[-1]
-        
-        #print("Channel ID value: {}".format(channel_id))
-        if not channel_id:
-            print("No channel ID Found, Research with no video tab")
+    
+    #Clearing channel folder name
+    youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
+    #Make a folder and inflate nfo file
+    make_clean_folder("{}/{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id))))
+    to_nfo({'youtube_channel' : "channel/{}".format(channel_id), 'youtube_channel_folder' : youtube_channel_folder})
 
-            youtube_channel_url = "https://www.youtube.com/{}".format(youtube_channel)
-            command = ['yt-dlp', 
-                        '--compat-options', 'no-youtube-channel-redirect',
-                        '--compat-options', 'no-youtube-unavailable-videos',
-                        '--restrict-filenames',
-                        '--ignore-errors',
-                        '--no-warnings',
-                        '--playlist-start', '1', 
-                        '--playlist-end', '1', 
-                        '--print', 'channel_url', 
-                        youtube_channel_url]
-            #print(' '.join(command))
-            set_proxy(command)
-                    
-            lines = subprocess.getoutput(' '.join(command)).split('\n')
-            for line in lines:
-                if 'channel' in line:
-                    channel_id = line.rstrip().split('/')[-1]
-        
-        #Clearing channel folder name
-        youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
-        #Make a folder and inflate nfo file
-        make_clean_folder("{}/{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id))))
-        to_nfo({'youtube_channel' : "channel/{}".format(channel_id), 'youtube_channel_folder' : youtube_channel_folder})
+    #Get las 60 days videos in channel
+    print("Processing videos in channel")
 
-        #Get las 60 days videos in channel
-        print("Processing videos in channel")
+    command = ['yt-dlp', 
+                '--compat-options', 'no-youtube-channel-redirect',
+                '--compat-options', 'no-youtube-unavailable-videos',
+                '--print', '"%(id)s;%(title)s"', 
+                '--dateafter', "today-{}days".format(days_dateafter), 
+                '--playlist-start', '1', 
+                '--playlist-end', videos_limit, 
+                '--ignore-errors',
+                '--no-warnings',
+                '{}'.format(youtube_channel_url)]
 
-        command = ['yt-dlp', 
-                    '--compat-options', 'no-youtube-channel-redirect',
-                    '--compat-options', 'no-youtube-unavailable-videos',
-                    '--print', '"%(id)s;%(title)s"', 
-                    '--dateafter', "today-{}days".format(days_dateafter), 
-                    '--playlist-start', '1', 
-                    '--playlist-end', videos_limit, 
-                    '--ignore-errors',
-                    '--no-warnings',
-                    '{}'.format(youtube_channel_url)]
-
-        set_proxy(command)
+    set_proxy(command)
 
 
-        if config['days_dateafter'] == "0":
-            command.pop(7)
-            command.pop(7)
+    if config['days_dateafter'] == "0":
+        command.pop(7)
+        command.pop(7)
 
-        #print("Command \n {}".format(' '.join(command)))
-        lines = subprocess.getoutput(' '.join(command)).split('\n')
+    #print("Command \n {}".format(' '.join(command)))
+    lines = subprocess.getoutput(' '.join(command)).split('\n')
 
-        for line in lines:
-            if line != "":
-                video_id = str(line).rstrip().split(';')[0]
-                video_name = "{} [{}]".format(str(line).rstrip().split(';')[1], video_id)
-                file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
-                file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id)),  sanitize(video_name), "strm")
+    for line in lines:
+        if line != "":
+            video_id = str(line).rstrip().split(';')[0]
+            video_name = "{} [{}]".format(str(line).rstrip().split(';')[1], video_id)
+            file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
+            file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id)),  sanitize(video_name), "strm")
 
-                data = {
-                    "video_id" : video_id, 
-                    "video_name" : video_name
-                }
-                if not os.path.isfile(file_path):
-                    write_file(file_path, file_content)
+            data = {
+                "video_id" : video_id, 
+                "video_name" : video_name
+            }
+            if not os.path.isfile(file_path):
+                write_file(file_path, file_content)
 
-                print(data)
+            print(data)
+
+
+def keyword_strm(keyword, method):
+    command = ['yt-dlp', 
+                '-f', 'best', 'ytsearch10:["{}"]'.format(keyword),
+                '--compat-options', 'no-youtube-channel-redirect',
+                '--compat-options', 'no-youtube-unavailable-videos',
+                '--no-warning',
+                '--print', '"%(id)s;%(channel_id)s;%(uploader_id)s;%(title)s"']
+                
+    set_proxy(command)
+    #print(' '.join(command))
+
+    lines = subprocess.getoutput(' '.join(command)).split('\n')
+    for line in lines:
+        if line != "" and not 'ERROR' in line:
+            video_id = str(line).rstrip().split(';')[0]
+            channel_id = str(line).rstrip().split(';')[1]
+            video_name = str(line).rstrip().split(';')[3]
+            youtube_channel = str(line).rstrip().split(';')[2]
+            youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
+            file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
+            file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id)),  sanitize(video_name), "strm")
+
+            make_clean_folder("{}/{}".format(media_folder,  sanitize("{} [{}]".format(youtube_channel_folder,channel_id))))
+            to_nfo({'youtube_channel' : "channel/{}".format(channel_id), 'youtube_channel_folder' : youtube_channel_folder})
+
+
+            data = {
+                "video_id" : video_id, 
+                "video_name" : video_name
+            }
+            if not os.path.isfile(file_path):
+                write_file(file_path, file_content)
+
+            print(data)
+
+#¡¡¡¡¡ to_strm is mandatory start function, forced in cli.py under run function !!!!!
+def to_strm(method):
+    for youtube_channel in channels():
+        print("Preparing channel {}".format(youtube_channel))
+
+        #formating youtube URL and init channel_id
+        youtube_channel_url = "https://www.youtube.com/{}/videos".format(youtube_channel)
+        #Cases like /user/xbox
+        if not "@" in youtube_channel:
+            youtube_channel_url = "https://www.youtube.com{}".format(youtube_channel)
+
+        if 'list-' in youtube_channel:
+            youtube_channel_url = "https://www.youtube.com/playlist?list={}".format(youtube_channel.split('list-')[1])
+
+        if '/streams' in youtube_channel:
+            method = 'direct'
+
+        if 'keyword-' in youtube_channel:
+            keyword = youtube_channel.split('-')
+            if len(keyword) > 1:
+                keyword_strm(keyword[1], method)
+        else:
+            channel_strm(youtube_channel, youtube_channel_url,method)
+
 
     return True 
 
