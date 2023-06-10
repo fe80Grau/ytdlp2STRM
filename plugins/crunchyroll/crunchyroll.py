@@ -133,7 +133,7 @@ def direct(crunchyroll_id): #Sponsorblock doesn't work in this mode
     
     command = ['yt-dlp', 
                 '-f', 'best',
-                '--cokies', '"{}"'.format(cookies_file),
+                '--cookies', '"{}"'.format(cookies_file),
                 '--no-warnings',
                 '--match-filter', '"language={}"'.format(audio_language),
                 '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(subtitle_language),
@@ -141,8 +141,8 @@ def direct(crunchyroll_id): #Sponsorblock doesn't work in this mode
                 '--get-url']
     
     set_proxy(command)
-
+    print(' '.join(command))
     crunchyroll_url = subprocess.getoutput(' '.join(command))
-    
+    print(crunchyroll_url)
     #print(crunchyroll_url)
     return redirect(crunchyroll_url, code=301)
