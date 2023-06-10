@@ -287,7 +287,7 @@ def to_nfo(params):
     #print("Output: \n {}".format(channel_name))
     #get description
     description = ""
-    if platform.system() != "Linux":
+    if platform.system() == "Linux":
         command = ['yt-dlp', 
                     'https://www.youtube.com/{}'.format(params['youtube_channel']), 
                     '--write-description', 
