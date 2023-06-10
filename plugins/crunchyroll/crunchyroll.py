@@ -138,6 +138,7 @@ def direct(crunchyroll_id): #Sponsorblock doesn't work in this mode
                 '--match-filter', '"language={}"'.format(audio_language),
                 '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(subtitle_language),
                 'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+                '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"',
                 '--get-url']
     
     set_proxy(command)
