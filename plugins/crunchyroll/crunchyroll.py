@@ -72,7 +72,7 @@ def to_strm(method):
     
 
 
-        #print("Command \n {}".format(' '.join(command)))
+        print("Command \n {}".format(' '.join(command)))
         #lines = subprocess.getoutput(' '.join(command)).split('\n')
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True)
