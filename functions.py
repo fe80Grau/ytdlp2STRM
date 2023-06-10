@@ -27,7 +27,7 @@ def make_clean_folder(folder):
                 for r in items:
                     os.remove(r)
         else:
-            os.mkdir(folder)
+            os.makedirs(folder)
     except Exception as e:
         print(e)
         return False

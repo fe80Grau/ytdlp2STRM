@@ -7,6 +7,9 @@ import time
 import platform
 import subprocess
 
+
+# yt-dlp --sub-lang es-419 --cookies "D:\Crunchyroll\www.crunchyroll.com_cookies.txt" https://www.crunchyroll.com/es/series/GRMG8ZQZR/one-piece --print "%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s" --extractor-args "crunchyrollbeta:hardsub=jp-JP,es-ES" --no-download
+
 source_platform = "crunchyroll"
 #Reading config file
 config_file = './plugins/crunchyroll/config.json'
@@ -22,8 +25,8 @@ with open(
 
 media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
-days_dateafter = config["days_dateafter"]
-videos_limit = config["videos_limit"]
+cookies_file = config["crunchyroll_cookies_file"]
+lang_audio_subtitle = config["crunchyroll_lang_audio_subtitle"]
 
 
 ##Utils | Read and download full channels, generate nfo and strm files
@@ -54,15 +57,16 @@ def to_strm(method):
         crunchyroll_channel_folder = crunchyroll_channel.split('/')[-1]
         #Make a folder and inflate nfo file
         make_clean_folder("{}/{}".format(media_folder,  sanitize("{}".format(crunchyroll_channel_folder))))
-        to_nfo({'crunchyroll_channel' : crunchyroll_channel, 'crunchyroll_channel_folder' : crunchyroll_channel_folder})
 
         #Make seasons folders Get all videos and subtitle from serie
         print("Processing videos in channel")
 
         command = ['yt-dlp', 
-                    '--print', '"%(id)s;%(title)s"', 
-                    '--ignore-errors',
+                    '--cookies', '"{}"'.format(cookies_file),
+                    '--print', '"%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s;%(quality)s"', 
+                    '--no-download',
                     '--no-warnings',
+                    '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(lang_audio_subtitle),
                     '{}'.format(crunchyroll_channel_url)]
     
 
@@ -71,14 +75,24 @@ def to_strm(method):
         lines = subprocess.getoutput(' '.join(command)).split('\n')
 
         for line in lines:
-            if line != "":
-                video_id = str(line).rstrip().split(';')[0]
-                video_name = "{} [{}]".format(str(line).rstrip().split(';')[1], video_id)
-                file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, video_id)
-                file_path = "{}/{}/{}.{}".format(media_folder,  sanitize("{} [{}]".format(crunchyroll_channel_folder,channel_id)),  sanitize(video_name), "strm")
+            if line != "" and not 'ERROR' in line and not 'WARNING' in line:
+                print(line)
+                quality = str(line).rstrip().split(';')[5]
+                season_number = str(line).rstrip().split(';')[0]
+                season = str(line).rstrip().split(';')[1]
+                episode_number = (line).rstrip().split(';')[2]
+                episode = (line).rstrip().split(';')[3]
+                url = (line).rstrip().split(';')[4].replace('https://www.crunchyroll.com/','').replace('/','_')
 
+
+                video_name = "{} [{}]".format("S{}E{} - {}".format(season_number, episode_number, episode), quality)
+
+
+                file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, url)
+                file_path = "{}/{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(crunchyroll_channel_folder)),  sanitize(season), sanitize(video_name), "strm")
+                make_clean_folder(file_path)
                 data = {
-                    "video_id" : video_id, 
+                    "video_id" : quality, 
                     "video_name" : video_name
                 }
                 if not os.path.isfile(file_path):
@@ -88,127 +102,8 @@ def to_strm(method):
 
     return True 
 
-def to_nfo(params):
-    print("Inflating  nfo file..")
-    #Table thumbnails
-    c = 0
-    command = ['yt-dlp', 
-                'https://www.crunchyroll.com/{}'.format(params['crunchyroll_channel']),
-                '--list-thumbnails',
-                '--restrict-filenames',
-                '--ignore-errors',
-                '--no-warnings',
-                '--playlist-items', '0']
-    #print("Command: \n {}".format(' '.join(command)))
-    #The madness begins... 
-    #No comments between lines, smoke a joint if you want understand it
-    lines = subprocess.getoutput(' '.join(command)).split('\n')
-    headers = []
-    thumbnails = []
-    for line in lines:
-        line = ' '.join(line.split())
-        if not '[' in line:
-            data = line.split(' ')
-            if c == 0:
-                headers = data
-            else:
-                if not 'ID' in data[0]:
-                    row = {}
-                    for i, d in enumerate(data):
-                        row[headers[i]] = d
-                    thumbnails.append(row)
-            c += 1
-    #finally...
-
-    #get images
-    poster = ""
-    try:
-        url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "avatar_uncropped"), None)
-        poster = thumbnails[url_avatar_uncropped_index]['URL']
-        #print("Poster found")
-    except:
-        print("No poster detected")
-
-    landscape = ""
-    try:
-        url_max_landscape_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "banner_uncropped"), None)
-        landscape = thumbnails[url_max_landscape_index-1]['URL']
-        #print("Landscape found")
-    except:
-        print("No landscape detected")
-
-    #get channel id
-    channel_id = params['crunchyroll_channel'].split('/')[-1]
-    #print("Channel ID {}".format(channel_id))
-
-
-    #get channel or playlist name
-    if 'list-' in params['crunchyroll_channel_folder']:
-        command = ['yt-dlp', 
-                'https://www.crunchyroll.com/{}'.format(params['crunchyroll_channel']), 
-                '--compat-options', 'no-crunchyroll-unavailable-videos',
-                '--print', '"%(playlist_title)s"', 
-                '--playlist-items', '1',
-                '--restrict-filenames',
-                '--ignore-errors',
-                '--no-warnings',
-                '--compat-options', 'no-crunchyroll-channel-redirect',
-                '--no-warnings']
-    else:
-        command = ['yt-dlp', 
-                    'https://www.crunchyroll.com/{}'.format(params['crunchyroll_channel']),
-                    '--compat-options', 'no-crunchyroll-unavailable-videos',
-                    '--print', '"%(channel)s"',
-                    '--restrict-filenames',
-                    '--ignore-errors',
-                    '--no-warnings',
-                    '--playlist-items', '1',
-                    '--compat-options', 'no-crunchyroll-channel-redirect',
-                    '--no-warnings']
-    #print("Command {}".format(' '.join(command)))
-    channel_name = subprocess.getoutput(' '.join(command))
-    #print("Output: \n {}".format(channel_name))
-    #get description
-    description = ""
-    if platform.system() == "Linux":
-        command = ['yt-dlp', 
-                    'https://www.crunchyroll.com/{}'.format(params['crunchyroll_channel']), 
-                    '--write-description', 
-                    '--playlist-items', '0',
-                    '--output', '"{}/{}.description"'.format(media_folder, channel_name),
-                    '>', '/dev/null', '2>&1', 
-                    '&&', 'cat', '"{}/{}.description"'.format(media_folder, channel_name) 
-                    ]
-        print("Command \n {}".format(' '.join(command)))
-        description = subprocess.getoutput(' '.join(command))
-        print("Output \n {}".format(description))
-        try:
-            os.remove("{}/{}.description".format(media_folder,channel_name))
-        except:
-            pass
-
-    else:
-        print("Descriptions only works in Linux system at the moment")
-
-    output_nfo = tvinfo_scheme().format(
-        channel_name,
-        channel_name,
-        channel_name,
-        description,
-        landscape, landscape,
-        poster, poster,
-        poster, poster,
-        channel_id,
-        "crunchyroll",
-        "crunchyroll"
-    )
-
-    
-    if channel_id:
-        file_path = "{}/{}/{}.{}".format(media_folder, "{} [{}]".format(params['crunchyroll_channel_folder'],channel_id), "tvshow", "nfo")
-        write_file(file_path, output_nfo)
 
 ##Video data stream | direct, bridge and download mode
 def direct(crunchyroll_id): #Sponsorblock doesn't work in this mode
-    crunchyroll_url = subprocess.getoutput("yt-dlp -f best --no-warnings {} --get-url".format(crunchyroll_id))
+    crunchyroll_url = subprocess.getoutput("yt-dlp -f best --no-warnings {} --get-url".format(crunchyroll_id.replace('_','/')))
     return redirect(crunchyroll_url, code=301)

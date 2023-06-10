@@ -353,12 +353,13 @@ def bridge(youtube_id):
         buffer = []
         sentBurst = False
         if config["sponsorblock"]:
-            command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', youtube_id]
+            command = ['yt-dlp', '-o', '-', '-f', 'best', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', youtube_id]
         else:
-            command = ['yt-dlp', '-o', '-', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
+            command = ['yt-dlp', '-o', '-', '-f', 'best', '--restrict-filenames', youtube_id]
 
         set_proxy(command)
 
+        print(' '.join(command))
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE)
         try:
