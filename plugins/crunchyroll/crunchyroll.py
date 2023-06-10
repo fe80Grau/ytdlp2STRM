@@ -28,8 +28,24 @@ channels_list = config["channels_list_file"]
 cookies_file = config["crunchyroll_cookies_file"]
 subtitle_language = config["crunchyroll_subtitle_language"]
 audio_language = config['crunchyroll_audio_language']
+if 'proxy' in config:
+    proxy = config['proxy']
+    proxy_url = config['proxy_url']
+else:
+    proxy = False
+    proxy_url = ""
 
 ##Utils | Read and download full channels, generate nfo and strm files
+def set_proxy(command):
+    if proxy:
+        if proxy_url != "":
+            command.append('--proxy')
+            command.append(proxy_url)
+        else:
+            print("Proxy setted true but no proxy url, please check it in plugin config.json")
+
+
+
 def channels():
     channels_list_local = channels_list
 
@@ -70,9 +86,9 @@ def to_strm(method):
                     '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
                     '{}'.format(crunchyroll_channel_url)]
     
+        set_proxy(command)
 
-
-        print("Command \n {}".format(' '.join(command)))
+        #print("Command \n {}".format(' '.join(command)))
         #lines = subprocess.getoutput(' '.join(command)).split('\n')
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True)
@@ -114,5 +130,19 @@ def to_strm(method):
 ##Video data stream | direct, bridge and download mode
 def direct(crunchyroll_id): #Sponsorblock doesn't work in this mode
     crunchyroll_url = subprocess.getoutput("yt-dlp -f best --cookies {} --no-warnings --match-filter language={} --extractor-args crunchyrollbeta:hardsub={} https://www.crunchyroll.com/{} --get-url".format(cookies_file, audio_language, subtitle_language, crunchyroll_id.replace('_','/')))
+    
+    command = ['yt-dlp', 
+                '-f', 'best',
+                '--cokies', '"{}"'.format(cookies_file),
+                '--no-warnings',
+                '--match-filter', '"language={}"'.format(audio_language),
+                '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(subtitle_language),
+                'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+                '--get-url']
+    
+    set_proxy(command)
+
+    crunchyroll_url = subprocess.getoutput(' '.join(command))
+    
     #print(crunchyroll_url)
     return redirect(crunchyroll_url, code=301)
