@@ -129,7 +129,7 @@ def to_strm(method):
 
 ##Video data stream | direct, bridge and download mode
 def direct(crunchyroll_id): #Sponsorblock doesn't work in this mode
-    crunchyroll_url = subprocess.getoutput("yt-dlp -f best --cookies {} --no-warnings --match-filter language={} --extractor-args crunchyrollbeta:hardsub={} https://www.crunchyroll.com/{} --get-url".format(cookies_file, audio_language, subtitle_language, crunchyroll_id.replace('_','/')))
+    #crunchyroll_url = subprocess.getoutput("yt-dlp -f best --cookies {} --no-warnings --match-filter language={} --extractor-args crunchyrollbeta:hardsub={} https://www.crunchyroll.com/{} --get-url".format(cookies_file, audio_language, subtitle_language, crunchyroll_id.replace('_','/')))
     
     command = ['yt-dlp', 
                 '-f', 'best',
@@ -138,12 +138,11 @@ def direct(crunchyroll_id): #Sponsorblock doesn't work in this mode
                 '--match-filter', '"language={}"'.format(audio_language),
                 '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(subtitle_language),
                 'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
-                '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"',
                 '--get-url']
     
     set_proxy(command)
-    print(' '.join(command))
+    #print(' '.join(command))
     crunchyroll_url = subprocess.getoutput(' '.join(command))
-    print(crunchyroll_url)
+    #print(crunchyroll_url)
     #print(crunchyroll_url)
     return redirect(crunchyroll_url, code=301)
