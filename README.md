@@ -131,7 +131,6 @@ ytdlp2strm.service example service to run main.py with systemctl.
 * Include subtitles
 * Video quality. Config options: Forced (worst, balanced, best) or Dynamic (depends connection speed)
 * Get Youtube account subscrition channel list
-* Crunchyroll integration
 * Do this as a Jellyfin plugin with GUI (settings and search for channels to add in list)
 
 ## Credits
