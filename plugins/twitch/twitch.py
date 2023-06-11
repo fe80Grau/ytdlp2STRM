@@ -4,6 +4,7 @@ from sanitize_filename import sanitize
 import os
 import json
 import subprocess
+import requests
 
 #Reading config file
 config_file = './plugins/twitch/config.json'
@@ -20,6 +21,9 @@ with open(
 media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
 source_platform = "twitch"
+sha256_channelShell = "580ab410bcd0c1ad194224957ae2241e5d252b2c5173d8e0cce9d32d5bb14efe"
+client_id = "kimne78kx3ncx6brgo4mv6wki5h1ko"
+client_version = "6be53def-6400-451b-b9c9-7855eee04345"
 
 if 'days_dateafter' in config:
     days_after = config["days_dateafter"]
@@ -148,7 +152,7 @@ def to_nfo(params):
                 '--no-warnings',
                 '--no-download',
                 '--playlist-items', '1']
-    print("Command: \n {}".format(' '.join(command)))
+    #print("Command: \n {}".format(' '.join(command)))
     #The madness begins... 
     #No comments between lines, smoke a joint if you want understand it
     lines = subprocess.getoutput(' '.join(command)).split('\n')
@@ -171,16 +175,22 @@ def to_nfo(params):
 
     #get images
     #print(thumbnails)
-    poster = ""
+    preview = ""
     try:
         url_avatar_uncropped_index = next((index for (index, d) in enumerate(thumbnails) if d["ID"] == "0"), None)
-        poster = thumbnails[url_avatar_uncropped_index]['URL']
+        preview = thumbnails[url_avatar_uncropped_index]['URL'].replace('320x180','1920x1080')
         #print("Poster found")
     except:
         print("No poster detected")
 
+    pictures = get_pictures(params['twitch_channel'])
+    print(pictures)
+    poster = ""
+    landscape = ""
 
-
+    for picture in pictures:
+        poster = picture['data']['userOrError']['profileImageURL'].replace('70x70','300x300')
+        landscape = picture['data']['userOrError']['bannerImageURL']
     #get channel or playlist name
     command = ['yt-dlp', 
             'https://www.twitch.tv/{}'.format(params['twitch_channel']), 
@@ -207,9 +217,9 @@ def to_nfo(params):
         channel_name,
         description,
         poster, poster,
-        poster, poster,
-        poster, poster,
-        "",
+        landscape, landscape,
+        preview, preview,
+        "-",
         "Twitch",
         "Twitch"
     )
@@ -219,6 +229,24 @@ def to_nfo(params):
         file_path = "{}/{}/{}.{}".format(media_folder, "{}".format(params['twitch_channel_folder']), "tvshow", "nfo")
         write_file(file_path, output_nfo)
 
+def get_pictures(twitch_channel):
+    headers = {
+        'Accept': '*/*',
+        'Client-Id': '{}'.format(client_id),
+        'Client-Version': '{}'.format(client_version),
+        'Connection': 'keep-alive',
+        'Content-Type': 'text/plain;charset=UTF-8',
+        'Origin': 'https://www.twitch.tv',
+        'Referer': 'https://www.twitch.tv/',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site',
+    }
+    data = [{"operationName":"ChannelShell","variables":{"login":"{}".format(twitch_channel)},"extensions":{"persistedQuery":{"versions":1,"sha256Hash":"{}".format(sha256_channelShell)}}}]
+
+    response = requests.post('https://gql.twitch.tv/gql', headers=headers, json=data)
+    #print(data)
+    return response.json()
 
 ##Video data stream | direct, bridge and download mode
 def direct(twitch_id): #Sponsorblock doesn't work in this mode
