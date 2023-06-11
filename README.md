@@ -2,7 +2,7 @@
 * See Youtube / Twitch / Crunchyroll to STRM files
 * Watch Youtube / Twitch / Crunchyroll with Jellyfin/Emby 
 * I recommend YoutubeMetadata plugin for Jellyfin
-![image](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/6c10e9a7-ae46-4ef1-a9f3-da86dbb9a780)
+![ytdlp2STRM](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/cc31ee7c-5e4b-450b-9a3b-526f191d18d8)
 
 ## Requierments
 * Python 3
