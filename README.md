@@ -36,7 +36,7 @@ mkdir /media/Crunchyroll
 * EDIT plugins/crunchyroll/channel_list.example.json with your series URL path (you can see this  after first / (slash) in Crunchyroll URL). Save it as channel_list.json (delete .example sufix).
 * EDIT plugins/crunchyroll/config.json with your preferences
 * EDIT config/config.json [and ytdlp2strm.service with your preferences and copy ytdlp2strm.service to /etc/systemd/system]*Between brackets only Linux.
-* You can leave the list empty to "deactivate" the plugin. If you do this don't remove the square brackets, your file should look like this: []
+* You can leave the channel_list.json empty to "deactivate" the plugin. If you do this don't remove the square brackets, your file should look like this: []
 * ytdlp2strm_keep_old_strm in config/config.json is true by default, this options keep in filesystem all strm files,  with false all strm will be cleaned in each ytdlp2strm execution
 * I'm testing SponsorBlock. Requieres ffmpeg custom build from yt-dlp. https://github.com/yt-dlp/FFmpeg-Builds#ffmpeg-static-auto-builds (Download your version Linux x64 or LinuxARM64, Windows x64 or Windows x86), extract an replace binaries in bin folder in your system. Normaly ffmpeg, ffprobe and ffplay binaries are installed in /usr/bin/ , back up orginials before replace. 
 * SponsorBlock is disabled by default in config.json
