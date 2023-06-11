@@ -6,6 +6,7 @@ import json
 import time
 import platform
 import subprocess
+import fnmatch
 
 
 # yt-dlp --sub-lang es-419 --cookies "D:\Crunchyroll\www.crunchyroll.com_cookies.txt" https://www.crunchyroll.com/es/series/GRMG8ZQZR/one-piece --print "%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s" --extractor-args "crunchyrollbeta:hardsub=jp-JP,es-ES" --no-download
@@ -77,9 +78,22 @@ def to_strm(method):
         #Make seasons folders Get all videos and subtitle from serie
         print("Processing videos in channel")
 
+        last_episode_file = "{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(crunchyroll_channel_folder)), "last_episode", "txt")
+        last_episode = 0
+        new_content = False
+        if not os.path.isfile(last_episode_file):
+            new_content = True
+            write_file(last_episode_file, "0")
+        else:
+            with open(last_episode_file) as f:
+                last_episode = f.readlines()
+                f.close()
+            
+            last_episode = last_episode[0]
+
         command = ['yt-dlp', 
                     '--cookies', '{}'.format(cookies_file),
-                    '--print', '%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s', 
+                    '--print', '%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s;%(playlist_autonumber)s', 
                     '--no-download',
                     '--no-warnings',
                     '--match-filter', 'language={}'.format(audio_language),
@@ -87,6 +101,12 @@ def to_strm(method):
                     '{}'.format(crunchyroll_channel_url)]
     
         set_proxy(command)
+
+        if not new_content:
+            next_episode = int(last_episode) + 1
+            command.append('--playlist-start')
+            command.append('{}'.format(next_episode))
+
 
         #print("Command \n {}".format(' '.join(command)))
         #lines = subprocess.getoutput(' '.join(command)).split('\n')
@@ -102,8 +122,10 @@ def to_strm(method):
                     episode_number = (line).rstrip().split(';')[2].zfill(4)
                     episode = (line).rstrip().split(';')[3]
                     url = (line).rstrip().split(';')[4].replace('https://www.crunchyroll.com/','').replace('/','_')
+                    playlist_count = (line).rstrip().split(';')[5]
 
-
+                    #print(playlist_count)
+               
                     video_name = "{} - {}".format("S{}E{}".format(season_number, episode_number), episode)
 
 
@@ -115,8 +137,12 @@ def to_strm(method):
                     }
                     if not os.path.isfile(file_path):
                         write_file(file_path, file_content)
-
-                    print(data)
+                    if new_content:
+                        write_file(last_episode_file, playlist_count)
+                    else:
+                        sum_episode = int(last_episode) + int(playlist_count)
+                        write_file(last_episode_file,str(sum_episode))
+                    #print(data)
 
                 if not line: break
                 

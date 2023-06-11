@@ -86,11 +86,12 @@ sudo systemctl status ytdlp2strm.service
 
 ## Crunchyroll
 
-* Example cron.d file to create strm files in **direct mode** from channel_list every 4 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
+* Example cron.d file to create strm files in **direct mode** from channel_list every 24 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
 * Requieres a cookie file from Premium user login (you can extract the cookie file from Crunchyroll with browser extension like https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
 * I'm using a filter language *your crunchyroll_audio_language config value* and extractor crunchyrollbeta:hardsub=*your crunchyroll_subtitle_language config value* to get a version with one language and subs embedded
+* To avoid constant rewriting of the strm files, a file called last_episode.txt is generated in the series directory, it contains the playlist position of the last strm downloaded, this will only generate strm for new episodes.
 > ``` console
-> cd /etc/cron.d && sudo echo "0 */4 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --media crunchyroll --params direct" > ytdlp2STRM_crunchyroll_direct
+> cd /etc/cron.d && sudo echo "0 1 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --media crunchyroll --params direct" > ytdlp2STRM_crunchyroll_direct
 > ```
 
 ## main.py 
