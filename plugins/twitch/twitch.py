@@ -184,7 +184,7 @@ def to_nfo(params):
         print("No poster detected")
 
     pictures = get_pictures(params['twitch_channel'])
-    print(pictures)
+    #print(pictures)
     poster = ""
     landscape = ""
 
