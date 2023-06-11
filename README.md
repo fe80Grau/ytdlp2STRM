@@ -1,6 +1,7 @@
 # ytdlp2STRM
-* Youtube / Twitch to STRM files
-* Youtube / Twitch integration with Jellyfin/Emby (Requires YoutubeMetadata plugin)
+* See Youtube / Twitch / Crunchyroll to STRM files
+* Watch Youtube / Twitch / Crunchyroll with Jellyfin/Emby 
+* I recommend YoutubeMetadata plugin for Jellyfin
 ![image](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/6c10e9a7-ae46-4ef1-a9f3-da86dbb9a780)
 
 ## Requierments
@@ -25,11 +26,17 @@ mkdir /media/Youtube
 ```console
 mkdir /media/Twitch
 ```
+```console
+mkdir /media/Crunchyroll
+```
 * EDIT plugins/youtube/channel_list.example.json with your channels names (you can see channel name (or ID or USER)  after first / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix).
 * EDIT plugins/youtube/config.json with your preferences
 * EDIT plugins/twitch/channel_list.example.json with your channels names (you can see channel name after first / (slash) in twitch channel URL). Save it as channel_list.json (delete .example sufix).
 * EDIT plugins/twitch/config.json with your preferences
+* EDIT plugins/crunchyroll/channel_list.example.json with your series URL path (you can see this  after first / (slash) in Crunchyroll URL). Save it as channel_list.json (delete .example sufix).
+* EDIT plugins/crunchyroll/config.json with your preferences
 * EDIT config/config.json [and ytdlp2strm.service with your preferences and copy ytdlp2strm.service to /etc/systemd/system]*Between brackets only Linux.
+* You can leave the list empty to "deactivate" the plugin. If you do this don't remove the square brackets, your file should look like this: []
 * ytdlp2strm_keep_old_strm in config/config.json is true by default, this options keep in filesystem all strm files,  with false all strm will be cleaned in each ytdlp2strm execution
 * I'm testing SponsorBlock. Requieres ffmpeg custom build from yt-dlp. https://github.com/yt-dlp/FFmpeg-Builds#ffmpeg-static-auto-builds (Download your version Linux x64 or LinuxARM64, Windows x64 or Windows x86), extract an replace binaries in bin folder in your system. Normaly ffmpeg, ffprobe and ffplay binaries are installed in /usr/bin/ , back up orginials before replace. 
 * SponsorBlock is disabled by default in config.json
@@ -50,7 +57,8 @@ sudo systemctl start ytdlp2strm.service
 sudo systemctl status ytdlp2strm.service
 ```
 
-* [YOUTUBE] Example cron.d file to create strm files in **direct mode** from channel_list every 2 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct youtube url with video/audio merged, faster mode)
+## Youtube
+* Example cron.d file to create strm files in **direct mode** from channel_list every 2 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct youtube url with video/audio merged, faster mode)
 * SponsorBlock not works on redirect mode
 > ``` console
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --media youtube --params direct" > ytdlp2STRM_youtube_direct
@@ -64,14 +72,25 @@ sudo systemctl status ytdlp2strm.service
 > cd /etc/cron.d && sudo echo "0 */2 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --media youtube --params bridge" > ytdlp2STRM_youtube_bridge
 > ```
 
-* After that you can see all channels folders under /media/Youtube and strm files inside them. If you are using Jellyfin/Emby, add /media/Youtube and /media/Twitch as folder in Library and enjoy it!
+* After that you can see all channels folders under /media/Youtube and strm files inside them. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch and /media/Crunchyroll as folder in Library and enjoy it!
 
+## Twitch
 
-* [TWITCH] Example cron.d file to create strm files in **direct mode** from channel_list every 10 minutes (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
+* Example cron.d file to create strm files in **direct mode** from channel_list every 10 minutes (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
 * If a live video is on air the !000-live-revenant.strm will be created. Any way the script will download strm for each video in /videos channel tab. See plugins/twitch/config.json videos limits and daterange values.
 * SponsorBlock not works on redirect mode, Twitch only works over direct mode at the moment.
 > ``` console
 > cd /etc/cron.d && sudo echo "*/10 * * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --media twitch --params direct" > ytdlp2STRM_twitch_direct
+> ```
+
+
+## Crunchyroll
+
+* Example cron.d file to create strm files in **direct mode** from channel_list every 4 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
+* Requieres a cookie file from Premium user login (you can extract the cookie file from Crunchyroll with browser extension like https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
+* I'm using a filter language *your crunchyroll_audio_language config value* and extractor crunchyrollbeta:hardsub=*your crunchyroll_subtitle_language config value* to get a version with one language and subs embedded
+> ``` console
+> cd /etc/cron.d && sudo echo "0 */4 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --media crunchyroll --params direct" > ytdlp2STRM_crunchyroll_direct
 > ```
 
 ## main.py 
@@ -90,16 +109,20 @@ A little script to list N videos (by default 10) from N days (by default 10) ago
 * channels_list_file
 * days_dateafter
 * videos_limit
-* [YOUTUBE] proxy
-* [YOUTUBE] proxy_url
 * [YOUTUBE] sponsorblock
 * [YOUTUBE] sponsorblock_cats
+* [YOUTUBE] [CRUNCHYROLL] proxy
+* [YOUTUBE] [CRUNCHYROLL] proxy_url
+* [CRUNCHYROLL] crunchyroll_cookies_file
+* [CRUNCHYROLL] crunchyroll_audio_language
+* [CRUNCHYROLL] crunchyroll_subtitle_language <- embedded in video
 
 ## plugins/*media*/channel_list.json
 * [YOUTUBE] With "keyword-" prefix you can search for a keyword and this script will create the folders of channels founds dinamically and put inside them the strm files for each video. See an exaple in channel_list.example.json
 * [YOUTUBE] Playlist needs "list-" prefix before playlist id, you can see an exaple in channel_list.example.json
 * [YOUTUBE] If you want to get livestream from /streams youtube channel tab you need to add a new channel in channel_list with /streams (Check an example in ./plugins/youtube/channel_list.example.json)
 * [TWITCH] This script makes a NFO file (tvshow.nfo) for each youtube or twitch channel (to get name, description and images). *Description only works in Linux systems at the moment
+* [CRUNCHYROLL] Only support path from URL series (not episodes), the script will create a folder for each seria, and subfolders for each season, inside season folder the strm episodes files  will be created 
 
 ## Service
 ytdlp2strm.service example service to run main.py with systemctl. 
