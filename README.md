@@ -19,7 +19,7 @@ cd /opt && git clone https://github.com/fe80Grau/ytdlp2STRM.git
 ```console
 cd /opt/ytdlp2STRM && pip install -r requierments.txt
 ```
-* Create folder to store .strm files (by default /media/Youtube and /media/Twitch)
+* Create folder to store .strm files (by default /media/Youtube and /media/Twitch and /media/Crunchyroll)
 ```console
 mkdir /media/Youtube
 ```
