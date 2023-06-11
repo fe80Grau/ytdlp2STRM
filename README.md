@@ -1,5 +1,5 @@
 # ytdlp2STRM
-* See Youtube / Twitch / Crunchyroll to STRM files
+* Youtube / Twitch / Crunchyroll to STRM files
 * Watch Youtube / Twitch / Crunchyroll with Jellyfin/Emby 
 * I recommend YoutubeMetadata plugin for Jellyfin
 ![ytdlp2STRM](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/cc31ee7c-5e4b-450b-9a3b-526f191d18d8)
