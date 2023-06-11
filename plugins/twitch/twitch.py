@@ -148,7 +148,7 @@ def to_nfo(params):
                 '--no-warnings',
                 '--no-download',
                 '--playlist-items', '1']
-    #print("Command: \n {}".format(' '.join(command)))
+    print("Command: \n {}".format(' '.join(command)))
     #The madness begins... 
     #No comments between lines, smoke a joint if you want understand it
     lines = subprocess.getoutput(' '.join(command)).split('\n')
