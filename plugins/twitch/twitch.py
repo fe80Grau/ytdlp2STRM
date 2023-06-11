@@ -189,8 +189,8 @@ def to_nfo(params):
     landscape = ""
 
     for picture in pictures:
-        poster = picture['data']['userOrError']['profileImageURL'].replace('70x70','300x300')
-        landscape = picture['data']['userOrError']['bannerImageURL']
+        landscape = picture['data']['userOrError']['profileImageURL'].replace('70x70','300x300')
+        poster = picture['data']['userOrError']['bannerImageURL']
     #get channel or playlist name
     command = ['yt-dlp', 
             'https://www.twitch.tv/{}'.format(params['twitch_channel']), 
