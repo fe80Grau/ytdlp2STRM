@@ -225,12 +225,12 @@ def direct(twitch_id): #Sponsorblock doesn't work in this mode
     channel = twitch_id.split("@")[0]
     video_id = twitch_id.split("@")[1]
     twitch_url = subprocess.getoutput("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id))
-    print("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id))
+    #print("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id))
     if 'ERROR' in twitch_url:
         twitch_url = subprocess.getoutput("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id.replace('v','')))
-        print("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id.replace('v','')))
+        #print("yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(video_id.replace('v','')))
         if 'ERROR' in twitch_url:
             twitch_url = subprocess.getoutput("yt-dlp -f best --no-warnings https://www.twitch.tv/{} --get-url".format(channel))
-            print("yt-dlp -f best --no-warnings https://www.twitch.tv/{} --get-url".format(channel))
+            #print("yt-dlp -f best --no-warnings https://www.twitch.tv/{} --get-url".format(channel))
 
     return redirect(twitch_url, code=301)
