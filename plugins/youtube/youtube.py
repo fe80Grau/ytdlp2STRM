@@ -278,13 +278,24 @@ def to_nfo(params):
                     '--ignore-errors',
                     '--no-warnings',
                     '--playlist-items', '1',
-                    '--compat-options', 'no-youtube-channel-redirect',
-                    '--no-warnings']
+                    '--compat-options', 'no-youtube-channel-redirect']
     set_proxy(command)
 
     #print("Command {}".format(' '.join(command)))
     channel_name = subprocess.getoutput(' '.join(command))
-    #print("Output: \n {}".format(channel_name))
+
+    if 'ERROR' in channel_name:
+        command = ['yt-dlp', 
+                    'https://www.youtube.com/{}'.format(params['youtube_channel']),
+                    '--compat-options', 'no-youtube-unavailable-videos',
+                    '--print', '"%(channel)s"',
+                    '--restrict-filenames',
+                    '--ignore-errors',
+                    '--no-warnings',
+                    '--playlist-items', '1']
+        
+        channel_name = subprocess.getoutput(' '.join(command))
+
     #get description
     description = ""
     if platform.system() == "Linux":

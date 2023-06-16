@@ -19,7 +19,7 @@ keep_downloaded = 1800 #in seconds for clean_old_videos function
 
 
 def make_clean_folder(folder):
-    print("Cleaning {} folder...".format(folder))
+    #print("Cleaning {} folder...".format(folder))
     try:
         if(os.path.isdir(folder)):
             if not config['ytdlp2strm_keep_old_strm']:
