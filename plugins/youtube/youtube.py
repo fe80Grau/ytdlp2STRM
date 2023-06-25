@@ -144,6 +144,9 @@ def keyword_strm(keyword, method):
                 '-f', 'best', 'ytsearch10:["{}"]'.format(keyword),
                 '--compat-options', 'no-youtube-channel-redirect',
                 '--compat-options', 'no-youtube-unavailable-videos',
+                '--dateafter', "today-{}days".format(days_dateafter), 
+                '--playlist-start', '1', 
+                '--playlist-end', videos_limit, 
                 '--no-warning',
                 '--print', '"%(id)s;%(channel_id)s;%(uploader_id)s;%(title)s"']
                 

@@ -15,7 +15,6 @@ source_platform = "crunchyroll"
 #Reading config file
 config_file = './plugins/crunchyroll/config.json'
 if not os.path.isfile(config_file):
-    print(config_file)
     print("No config.json detected, using config.example.json. Please check this in current plugin folder")
     config_file = './plugins/crunchyroll/config.example.json'
 
