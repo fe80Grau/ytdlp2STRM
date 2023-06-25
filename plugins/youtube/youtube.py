@@ -153,6 +153,10 @@ def keyword_strm(keyword, method):
     set_proxy(command)
     #print(' '.join(command))
 
+    if config['days_dateafter'] == "0":
+        command.pop(8)
+        command.pop(8)
+
     lines = subprocess.getoutput(' '.join(command)).split('\n')
     for line in lines:
         if line != "" and not 'ERROR' in line:
