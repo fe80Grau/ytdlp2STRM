@@ -94,6 +94,15 @@ sudo systemctl status ytdlp2strm.service
 > cd /etc/cron.d && sudo echo "0 1 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --media crunchyroll --params direct" > ytdlp2STRM_crunchyroll_direct
 > ```
 
+## SX3 - Anime en Català (Catalan Anime)
+
+* Example cron.d file to create strm files in **direct mode** from channel_list every 24 hours (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
+
+> ``` console
+> cd /etc/cron.d && sudo echo "0 1 * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --media sx3 --params direct" > ytdlp2STRM_sx3_direct
+> ```
+
+
 ## main.py 
 A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/direct/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
 
