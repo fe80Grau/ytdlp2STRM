@@ -1,3 +1,5 @@
 flask==2.2.3
 yt-dlp>=2023.3.4
 sanitize_filename
+beautifulsoup4
+isodate
