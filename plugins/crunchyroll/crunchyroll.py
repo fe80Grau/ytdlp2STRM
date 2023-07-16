@@ -9,6 +9,8 @@ import subprocess
 import fnmatch
 
 
+os.environ["YT_DLP_CCI_IMPERSONATE"] = "chrome110"
+
 # yt-dlp --sub-lang es-419 --cookies "D:\Crunchyroll\www.crunchyroll.com_cookies.txt" https://www.crunchyroll.com/es/series/GRMG8ZQZR/one-piece --print "%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s" --extractor-args "crunchyrollbeta:hardsub=jp-JP,es-ES" --no-download
 
 source_platform = "crunchyroll"
@@ -101,6 +103,8 @@ def to_strm(method):
                     '{}'.format(crunchyroll_channel_url)]
     
         set_proxy(command)
+
+        #print(' '.join(command))
 
         if not new_content:
             next_episode = int(last_episode) + 1

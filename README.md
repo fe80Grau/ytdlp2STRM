@@ -29,6 +29,9 @@ mkdir /media/Twitch
 ```console
 mkdir /media/Crunchyroll
 ```
+```console
+mkdir /media/SX3
+```
 * EDIT plugins/youtube/channel_list.example.json with your channels names (you can see channel name (or ID or USER)  after first / (slash) in youtube channel URL). Save it as channel_list.json (delete .example sufix).
 * EDIT plugins/youtube/config.json with your preferences
 * EDIT plugins/twitch/channel_list.example.json with your channels names (you can see channel name after first / (slash) in twitch channel URL). Save it as channel_list.json (delete .example sufix).
@@ -77,7 +80,7 @@ sudo systemctl status ytdlp2strm.service
 ## Twitch
 
 * Example cron.d file to create strm files in **direct mode** from channel_list every 10 minutes (duration info, no download/disk usage, fast first loading, no cpu usage, redirect to direct twitch url with video/audio merged, faster mode)
-* If a live video is on air the !000-live-revenant.strm will be created. Any way the script will download strm for each video in /videos channel tab. See plugins/twitch/config.json videos limits and daterange values.
+* If a live video is on air the !000-live-channel.strm will be created. Any way the script will download strm for each video in /videos channel tab. See plugins/twitch/config.json videos limits and daterange values.
 * SponsorBlock not works on redirect mode, Twitch only works over direct mode at the moment.
 > ``` console
 > cd /etc/cron.d && sudo echo "*/10 * * * * root cd /opt/ytdlp2STRM && /usr/bin/python3 /opt/ytdlp2STRM/cli.py --media twitch --params direct" > ytdlp2STRM_twitch_direct

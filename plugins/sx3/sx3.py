@@ -62,15 +62,55 @@ def parse_duration_from_mpd(mpd_data):
     return duration
 
 def to_nfo(params):
-    pass
+    #api_serie_response_data from to_strm function
+    channel_name = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['titol']
+    description = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['desc']
+    images = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['imatges']
+    poster = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['imatges'][0]['text']
+    landscape = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['imatges'][0]['text']
+    preview = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['imatges'][0]['text']
+
+    for image in images:
+        if image['mida'] == "320x466":
+            poster = image['text']
+        if image['mida'] == "1600x284":
+            landscape = image['text']
+        if image['mida'] == "320x466":
+            preview = image['text']
+
+    output_nfo = tvinfo_scheme().format(
+        channel_name,
+        channel_name,
+        channel_name,
+        description,
+        poster, poster,
+        landscape, landscape,
+        preview, preview,
+        "-",
+        "SX3",
+        "SX3"
+    )
+
+    
+    if params['sx3_channel_folder']:
+        file_path = "{}/{}/{}.{}".format(media_folder, "{}".format(params['sx3_channel_folder']), "tvshow", "nfo")
+        write_file(file_path, output_nfo)
 
 def to_strm(method):
     for channel in channels():
         #Clearing channel folder name
         sx3_channel_folder = channel.split('/')[-2]
         #Make a folder and inflate nfo file
-        make_clean_folder("{}/{}".format(media_folder,  sanitize("{}".format(sx3_channel_folder))))
-
+        make_clean_folder(
+            "{}/{}".format(
+                media_folder,
+                sanitize(
+                    "{}".format(
+                        sx3_channel_folder
+                    )
+                )
+            )
+        )
 
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         page = requests.get(channel, headers=headers)
@@ -91,6 +131,18 @@ def to_strm(method):
         api_serie_response = requests.get(api_serie, headers=headers)
         api_serie_response_data = json.loads(api_serie_response.text)
 
+        to_nfo(
+            {
+                'data' : api_serie_response_data,
+                'sx3_channel_folder' : sanitize(
+                    "{}".format(
+                        sx3_channel_folder
+                    )
+                )
+            }
+        )
+        
+        print(api_serie)
 
         
         last_capitol = False
@@ -115,6 +167,7 @@ def to_strm(method):
                 "id": item['id'],
                 "id_serie": serie_id,
             }
+            print(capitol)
             capitols.append(capitol)
 
             last_capitol = capitol
