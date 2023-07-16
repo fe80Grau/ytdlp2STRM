@@ -154,10 +154,11 @@ def to_strm(method):
             if 'temporades' in item:
                 temporada = item['temporades'][0]['desc']
             else:
-                if 'temporada' in last_capitol:
-                    temporada = last_capitol['temporada']
-                else:
-                    temporada = False
+                if last_capitol:
+                    if 'temporada' in last_capitol:
+                        temporada = last_capitol['temporada']
+                    else:
+                        temporada = False
 
             capitol = {
                 "capitol" : item['capitol'],
