@@ -195,7 +195,20 @@ def to_strm(method):
 def direct(sx3_id): #Sponsorblock doesn't work in this mode
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
     api_video = "https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint={}&profile=pc&producte=sx3&broadcast=false&format=dm".format(sx3_id.split('_')[0])
-    api_video_response = requests.get(api_video, headers=headers)
+    
+    if not config['proxy']:
+        api_video_response = requests.get(api_video, headers=headers)
+    else:
+        api_video_response = requests.get(
+            api_video, 
+            headers=headers, 
+            proxies=dict(
+                http=config['proxy_url'],
+                https=config['proxy_url']
+            )
+        )
+
+    
     api_video_response_data = json.loads(api_video_response.text)
     #print(api_video)
     mpd_url = api_video_response_data['media']['url'][0]['file']
@@ -203,7 +216,7 @@ def direct(sx3_id): #Sponsorblock doesn't work in this mode
     for url in urls:
         if url['label'] == "720p":
             mpd_url = url["file"]
-
+    print(mpd_url)
     return redirect(mpd_url, code=301)
 
 def bridge(sx3_id):

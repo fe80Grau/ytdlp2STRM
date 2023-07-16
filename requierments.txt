@@ -3,3 +3,4 @@ yt-dlp>=2023.3.4
 sanitize_filename
 beautifulsoup4
 isodate
+requests[socks]

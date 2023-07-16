@@ -1,4 +1,6 @@
 {
     "strm_output_folder" : "/media/SX3",
-    "channels_list_file" : "./plugins/sx3/channel_list.json"
+    "channels_list_file" : "./plugins/sx3/channel_list.json",
+    "proxy" : false,
+    "proxy_url" : ""
 }
