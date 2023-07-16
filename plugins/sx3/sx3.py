@@ -197,7 +197,12 @@ def direct(sx3_id): #Sponsorblock doesn't work in this mode
     api_video = "https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint={}&profile=pc&producte=sx3&broadcast=false&format=dm".format(sx3_id.split('_')[0])
     api_video_response = requests.get(api_video, headers=headers)
     api_video_response_data = json.loads(api_video_response.text)
-    mpd_url = api_video_response_data['media']['url'][0]["file"]
+    #print(api_video)
+    mpd_url = api_video_response_data['media']['url'][0]['file']
+    urls = api_video_response_data['media']['url']
+    for url in urls:
+        if url['label'] == "720p":
+            mpd_url = url["file"]
 
     return redirect(mpd_url, code=301)
 
