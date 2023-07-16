@@ -196,19 +196,7 @@ def direct(sx3_id): #Sponsorblock doesn't work in this mode
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
     api_video = "https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint={}&profile=pc&producte=sx3&broadcast=false&format=dm".format(sx3_id.split('_')[0])
     
-    if not config['proxy']:
-        api_video_response = requests.get(api_video, headers=headers)
-    else:
-        api_video_response = requests.get(
-            api_video, 
-            headers=headers, 
-            proxies=dict(
-                http=config['proxy_url'],
-                https=config['proxy_url']
-            )
-        )
-
-    
+    api_video_response = requests.get(api_video, headers=headers)    
     api_video_response_data = json.loads(api_video_response.text)
     #print(api_video)
     mpd_url = api_video_response_data['media']['url'][0]['file']
@@ -216,57 +204,32 @@ def direct(sx3_id): #Sponsorblock doesn't work in this mode
     for url in urls:
         if url['label'] == "720p":
             mpd_url = url["file"]
-    print(mpd_url)
+    #print(mpd_url)
     return redirect(mpd_url, code=301)
 
 def bridge(sx3_id):
-    mpd_url = "https://adaptive-es.ccma.cat/0/3/{}/{}/stream.mpd".format(sx3_id.split('_')[0],sx3_id.split('_')[1])
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+    api_video = "https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint={}&profile=pc&producte=sx3&broadcast=false&format=dm".format(sx3_id.split('_')[0])
+    
+    api_video_response = requests.get(api_video, headers=headers)    
+    api_video_response_data = json.loads(api_video_response.text)
+    #print(api_video)
+    mpd_url = api_video_response_data['media']['url'][0]['file']
+    urls = api_video_response_data['media']['url']
+    for url in urls:
+        if url['label'] == "720p":
+            mpd_url = url["file"]
 
-    # Fetch the MPD file to get the duration
-    mpd_data = requests.get(mpd_url).text
-    duration = parse_duration_from_mpd(mpd_data)  # Implement this function to parse the duration from the MPD
-    print(duration)
+    if not config['proxy']:
+        req = requests.get(mpd_url, stream = True)
+    else:
+        req = requests.get(
+            mpd_url, 
+            headers=headers, 
+            proxies=dict(
+                http=config['proxy_url'],
+                https=config['proxy_url']
+            )
+        )
 
-    # Set the Content-Length header with the video duration
-
-    def generate():
-        startTime = time.time()
-        buffer = []
-        sentBurst = False
-        
-
-        #command = ['yt-dlp', '-o', '-', '-f', 'best', '--restrict-filenames', youtube_id]
-        command = ['ffmpeg', '-i', mpd_url, '-f', 'mpegts', '-']
-        #print(' '.join(command))
-
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        try:
-            while True:
-                # Get some data from ffmpeg
-                line = process.stdout.read(1024)
-
-                # We buffer everything before outputting it
-                buffer.append(line)
-
-                # Minimum buffer time, 3 seconds
-                if sentBurst is False and time.time() > startTime + 3 and len(buffer) > 0:
-                    sentBurst = True
-
-                    for i in range(0, len(buffer) - 2):
-                        #print("Send initial burst #", i)
-                        yield buffer.pop(0)
-
-                elif time.time() > startTime + 3 and len(buffer) > 0:
-                    yield buffer.pop(0)
-
-                process.poll()
-                if isinstance(process.returncode, int):
-                    if process.returncode > 0:
-                        print('yt-dlp Error', process.returncode)
-                    break
-        finally:
-            process.kill()
-
-    rv = Response(stream_with_context(generate()), mimetype='video/mp2t', direct_passthrough=True)
-
-    return rv 
+    return Response(stream_with_context(req.iter_content(chunk_size=1024)), content_type = req.headers['content-type'])
