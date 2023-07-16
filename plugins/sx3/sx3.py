@@ -83,8 +83,8 @@ def to_nfo(params):
         channel_name,
         channel_name,
         description,
-        poster, poster,
         landscape, landscape,
+        poster, poster,
         preview, preview,
         "-",
         "SX3",
@@ -142,7 +142,7 @@ def to_strm(method):
             }
         )
         
-        print(api_serie)
+        #print(api_serie)
 
         
         last_capitol = False
