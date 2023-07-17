@@ -207,7 +207,74 @@ def direct(sx3_id): #Sponsorblock doesn't work in this mode
     #print(mpd_url)
     return redirect(mpd_url, code=301)
 
+
 def bridge(sx3_id):
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+    api_video = "https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint={}&profile=pc&producte=sx3&broadcast=false&format=dm".format(sx3_id.split('_')[0])
+    
+    api_video_response = requests.get(api_video, headers=headers)    
+    api_video_response_data = json.loads(api_video_response.text)
+    #print(api_video)
+    mpd_url = api_video_response_data['media']['url'][0]['file']
+    urls = api_video_response_data['media']['url']
+    for url in urls:
+        if url['label'] == "720p":
+            mpd_url = url["file"]
+    v_headers = {}
+    if not config['proxy']:
+        v_headers = requests.head(mpd_url).headers.items()
+    else:
+        v_headers = requests.head(mpd_url,
+            headers=headers, 
+            proxies=dict(
+                http=config['proxy_url'],
+                https=config['proxy_url']
+            )
+        ).headers.items()
+
+    def generate():
+        startTime = time.time()
+        buffer = []
+        sentBurst = False
+
+        if not config['proxy']:
+            command = ["ffmpeg", "-i", mpd_url, "-codec", "copy", "-movflags", "frag_keyframe+faststart", "-f", "mp4", "-"]
+        else:
+            command = ["ffmpeg", "-i", mpd_url, "-vcodec", "copy", "-movflags", "frag_keyframe+faststart", "-f", "mp4", "-http_proxy", config['proxy_url'], "-"]
+
+
+        process = subprocess.Popen(command, stdout=subprocess.PIPE)
+        try:
+            while True:
+                # Get some data from ffmpeg
+                line = process.stdout.read(1024)
+
+                # We buffer everything before outputting it
+                buffer.append(line)
+
+                # Minimum buffer time, 3 seconds
+                if sentBurst is False and time.time() > startTime + 3 and len(buffer) > 0:
+                    sentBurst = True
+
+                    for i in range(0, len(buffer) - 2):
+                        #print("Send initial burst #", i)
+                        yield buffer.pop(0)
+
+                elif time.time() > startTime + 3 and len(buffer) > 0:
+                    yield buffer.pop(0)
+
+                process.poll()
+                if isinstance(process.returncode, int):
+                    if process.returncode > 0:
+                        print('ffmpeg Error', process.returncode)
+                    break
+        finally:
+            process.kill()
+
+    print(v_headers)
+    return Response(stream_with_context(generate()), mimetype = "video/mp4") 
+
+def download(sx3_id):
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
     api_video = "https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint={}&profile=pc&producte=sx3&broadcast=false&format=dm".format(sx3_id.split('_')[0])
     
