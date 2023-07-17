@@ -205,6 +205,9 @@ def direct(sx3_id): #Sponsorblock doesn't work in this mode
         if url['label'] == "720p":
             mpd_url = url["file"]
     #print(mpd_url)
+    if config['http_get_proxy']:
+        mpd_url = "{}{}".format(config['http_get_proxy_url'], mpd_url)
+        
     return redirect(mpd_url, code=301)
 
 
