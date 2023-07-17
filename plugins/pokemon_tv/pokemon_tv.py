@@ -71,8 +71,9 @@ def to_strm(method):
         )
 
         make_clean_folder(
-            "{}/{}".format(
-                media_folder,
+            "{}/{}/{}".format(
+                media_folder, 
+                "Pokemon",
                 sanitize(
                     "{} - {}".format(
                         pokemon_channel_folder,
@@ -93,10 +94,11 @@ def to_strm(method):
                 )
             )
 
-            file_content = item["offline_url"]
+            file_content = item["stream_url"]
             file_path = (
-                "{}/{}/{}.{}".format(
-                    media_folder,  
+                "{}/{}/{}/{}.{}".format(
+                    media_folder,
+                    "Pokemon",
                     sanitize(
                         "{} - {}".format(
                             pokemon_channel_folder,
@@ -109,10 +111,12 @@ def to_strm(method):
             )
 
             make_clean_folder(
-                "{}/{}".format(
+                "{}/{}/{}".format(
                     media_folder, 
+                    "Pokemon",
                     sanitize(
-                        "{} - {}".format(
+                        "{} {} - {}".format(
+                            "Pokemon",
                             pokemon_channel_folder,
                             seasson_api["channel_name"]
                         )
