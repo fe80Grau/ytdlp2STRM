@@ -42,13 +42,13 @@ def channels():
     databases = json.loads(result.text)
     databases_json_files = []
     for i in databases['payload']['tree']['items']:
-            databases_json_files.append(
-                "{}{}/{}".format(
-                    github_raw_base_url, 
-                    config["pokemon_tv_language"], 
-                    i['name']
-                )
+        databases_json_files.append(
+            "{}{}/{}".format(
+                github_raw_base_url, 
+                config["pokemon_tv_language"], 
+                i['name']
             )
+        )
 
     return databases_json_files
 
