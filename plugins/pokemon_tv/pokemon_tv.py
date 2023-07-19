@@ -60,28 +60,37 @@ def to_nfo(params):
 
 def to_strm(method):
     for channel in channels():
+        print(channel)
+
+        seasson_type = "serie/Pokemon"
+        if 'movies' in channel:
+            seasson_type = "movies"
+
         pokemon_channel_folder = (
              channel
              .split('/')[-1]
              .split('-',1)[1]
              .split('.json')[0]
+        ) if seasson_type != "movies" else (
+             "{} {}".format(
+                "Pokemon",
+                channel
+                .split('/')[-1]
+                .split('-',1)[1]
+                .split('.json')[0]
+             )
         )
-        print(channel)
-
+        
         seasson_api = json.loads(
              requests.get(channel)
              .text
         )
 
-        season_type = "serie/Pokemon"
-        if 'movies' in channel:
-            season_type = "movies"
-
         make_clean_folder(
             "{}/{}/{}/{}".format(
                 media_folder, 
                 "Pokemon",
-                season_type,
+                seasson_type,
                 sanitize(
                     "{} - {}".format(
                         pokemon_channel_folder,
@@ -100,6 +109,11 @@ def to_strm(method):
                     ), 
                     item['title']
                 )
+            ) if seasson_type != "movies" else (
+                "{} - {}".format(
+                    "Pokemon", 
+                    item['title']
+                )
             )
 
             file_content = item["stream_url"]
@@ -107,7 +121,7 @@ def to_strm(method):
                 "{}/{}/{}/{}/{}.{}".format(
                     media_folder,
                     "Pokemon",
-                    season_type,
+                    seasson_type,
                     sanitize(
                         "{} - {}".format(
                             pokemon_channel_folder,
@@ -123,7 +137,7 @@ def to_strm(method):
                 "{}/{}/{}/{}".format(
                     media_folder, 
                     "Pokemon",
-                    season_type,
+                    seasson_type,
                     sanitize(
                         "{} - {}".format(
                             pokemon_channel_folder,
