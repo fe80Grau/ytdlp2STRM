@@ -68,6 +68,7 @@ def to_strm(method):
     for crunchyroll_channel in channels():
         print("Preparing channel {}".format(crunchyroll_channel))
 
+        crunchyroll_channel = crunchyroll_channel.replace("https://www.crunchyroll.com/","")
         #formating crunchyroll URL and init channel_id
         crunchyroll_channel_url = "https://www.crunchyroll.com/{}".format(crunchyroll_channel)
 
