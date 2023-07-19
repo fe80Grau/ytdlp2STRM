@@ -73,7 +73,7 @@ def to_strm(method):
              .text
         )
 
-        season_type = "serie"
+        season_type = "Pokemon"
         if 'movies' in channel:
             season_type = "movies"
 
