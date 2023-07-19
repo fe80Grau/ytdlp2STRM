@@ -116,7 +116,7 @@ def to_strm(method):
                 )
             )
 
-            file_content = item["offline_url"]
+            file_content = item["stream_url"]
             file_path = (
                 "{}/{}/{}/{}/{}.{}".format(
                     media_folder,
