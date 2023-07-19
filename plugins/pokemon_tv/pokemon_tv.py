@@ -30,6 +30,7 @@ media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
 
 def channels():
+    
     github_base_url = "https://github.com/seiya-dev/pokemon-tv/tree/master/database/"
     github_raw_base_url = "https://raw.githubusercontent.com/seiya-dev/pokemon-tv/master/database/"
     # URL on the Github where the csv files are stored
@@ -42,13 +43,15 @@ def channels():
     databases = json.loads(result.text)
     databases_json_files = []
     for i in databases['payload']['tree']['items']:
-        databases_json_files.append(
-            "{}{}/{}".format(
-                github_raw_base_url, 
-                config["pokemon_tv_language"], 
-                i['name']
+        if ('series' in i['name']
+            or 'movies' in i['name']):
+            databases_json_files.append(
+                "{}{}/{}".format(
+                    github_raw_base_url, 
+                    config["pokemon_tv_language"], 
+                    i['name']
+                )
             )
-        )
 
     return databases_json_files
 
