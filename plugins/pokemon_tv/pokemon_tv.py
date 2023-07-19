@@ -73,10 +73,15 @@ def to_strm(method):
              .text
         )
 
+        season_type = "serie"
+        if 'movies' in channel:
+            season_type = "movies"
+
         make_clean_folder(
-            "{}/{}/{}".format(
+            "{}/{}/{}/{}".format(
                 media_folder, 
                 "Pokemon",
+                season_type,
                 sanitize(
                     "{} - {}".format(
                         pokemon_channel_folder,
@@ -99,9 +104,10 @@ def to_strm(method):
 
             file_content = item["stream_url"]
             file_path = (
-                "{}/{}/{}/{}.{}".format(
+                "{}/{}/{}/{}/{}.{}".format(
                     media_folder,
                     "Pokemon",
+                    season_type,
                     sanitize(
                         "{} - {}".format(
                             pokemon_channel_folder,
@@ -114,12 +120,12 @@ def to_strm(method):
             )
 
             make_clean_folder(
-                "{}/{}/{}".format(
+                "{}/{}/{}/{}".format(
                     media_folder, 
                     "Pokemon",
+                    season_type,
                     sanitize(
-                        "{} {} - {}".format(
-                            "Pokemon",
+                        "{} - {}".format(
                             pokemon_channel_folder,
                             seasson_api["channel_name"]
                         )
