@@ -71,15 +71,7 @@ def to_strm(method):
              .split('/')[-1]
              .split('-',1)[1]
              .split('.json')[0]
-        ) if seasson_type != "movies" else (
-             "{} {}".format(
-                "Pokemon",
-                channel
-                .split('/')[-1]
-                .split('-',1)[1]
-                .split('.json')[0]
-             )
-        )
+        ) if seasson_type != "movies" else "Pokemon"
         
         seasson_api = json.loads(
              requests.get(channel)
