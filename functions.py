@@ -18,11 +18,11 @@ port = config["ytdlp2strm_port"]
 keep_downloaded = 1800 #in seconds for clean_old_videos function
 
 
-def make_clean_folder(folder):
+def make_clean_folder(folder, forceclean=False):
     #print("Cleaning {} folder...".format(folder))
     try:
         if(os.path.isdir(folder)):
-            if not config['ytdlp2strm_keep_old_strm']:
+            if not config['ytdlp2strm_keep_old_strm'] and not forceclean:
                 items = glob.glob(  "{}/*".format(glob.escape(folder)) )
                 for r in items:
                     os.remove(r)
@@ -42,7 +42,15 @@ def write_file(file, content):
         print(e)
         return False
     return True
-
+def write_binary_file(file, content):
+    try:
+        f = open(file, "wb")
+        f.write(content)
+        f.close()
+    except Exception as e:
+        print(e)
+        return False
+    return True
 def tvinfo_scheme():
     tvinfo_scheme = """<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
     <tvshow>
