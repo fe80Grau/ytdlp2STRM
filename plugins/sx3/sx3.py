@@ -109,7 +109,8 @@ def to_strm(method):
                         sx3_channel_folder
                     )
                 )
-            )
+            ),
+            True
         )
 
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
@@ -149,7 +150,12 @@ def to_strm(method):
         capitols = []
         for item in api_serie_response_data['resposta']['items']['item']:
             #get serie id from first_episode_id
-
+            item['capitol_temporada'] = str(item['capitol_temporada']).zfill(2)
+            item['titol'] = item['titol'].split('-')
+            if len(item['titol']) > 1:
+                item['titol'] = item['titol'][1]
+            else:
+                item['titol'] = item['titol'][0]
 
             if 'temporades' in item:
                 temporada = item['temporades'][0]['desc']
@@ -179,12 +185,58 @@ def to_strm(method):
             except:
                 sn = 0
 
-            video_name = "{} - {}".format("S{}E{}".format(sn, item['capitol_temporada']), item['titol'])
+            sn = str(sn).zfill(2)
+            
+            video_name = "{} - {}".format(
+                "S{}E{}".format(
+                    sn, 
+                    item['capitol_temporada']
+                ), 
+                item['titol']
+            )
             url = "{}_{}".format(item['id'], serie_id)
 
-            file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, url)
-            file_path = "{}/{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(sx3_channel_folder)),  sanitize("S{} - {}".format(sn, temporada)), sanitize(video_name), "strm")
-            make_clean_folder("{}/{}/{}".format(media_folder,  sanitize("{}".format(sx3_channel_folder)),  sanitize("S{} - {}".format(sn, temporada))))
+            file_content = "http://{}:{}/{}/{}/{}".format(
+                host, 
+                port, 
+                source_platform, 
+                method, 
+                url
+            )
+            file_path = "{}/{}/{}/{}.{}".format(
+                media_folder,  
+                sanitize(
+                    "{}".format(
+                    sx3_channel_folder
+                    )
+                ),  
+                sanitize(
+                    "S{} - {}".format(
+                        sn,
+                        temporada
+                    )
+                ), 
+                sanitize(
+                    video_name
+                ), 
+                "strm"
+            )
+            make_clean_folder(
+                "{}/{}/{}".format(
+                    media_folder,  
+                    sanitize(
+                        "{}".format(
+                            sx3_channel_folder
+                        )
+                    ),  
+                    sanitize(
+                        "S{} - {}".format(
+                            sn, 
+                            temporada
+                        )
+                    )
+                )
+            )
             data = {
                 "video_name" : video_name
             }
@@ -196,9 +248,10 @@ def direct(sx3_id): #Sponsorblock doesn't work in this mode
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
     api_video = "https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint={}&profile=pc&producte=sx3&broadcast=false&format=dm".format(sx3_id.split('_')[0])
     
+    
     api_video_response = requests.get(api_video, headers=headers)    
     api_video_response_data = json.loads(api_video_response.text)
-    #print(api_video)
+    print(api_video)
     mpd_url = api_video_response_data['media']['url'][0]['file']
     urls = api_video_response_data['media']['url']
     for url in urls:

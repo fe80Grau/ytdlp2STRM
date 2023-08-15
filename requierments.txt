@@ -4,3 +4,10 @@ sanitize_filename
 beautifulsoup4
 isodate
 requests[socks]
+requests_html
+selenium==4.9.0
+selenium-wire
+webdriver_manager
+chromedriver-autoinstaller
+wget
+vtt_to_srt3
