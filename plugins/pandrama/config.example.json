@@ -1,0 +1,8 @@
+{
+    "strm_output_folder" : "D:/pandrama",
+    "channels_list_file" : "./plugins/pluto_tv/channel_list.json",
+    "proxy" : false,
+    "proxy_url" : "",
+    "http_get_proxy" : false,
+    "http_get_proxy_url" : ""
+}
