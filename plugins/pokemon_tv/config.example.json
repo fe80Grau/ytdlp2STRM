@@ -1,5 +1,6 @@
 {
     "strm_output_folder" : "/media/pokemon_tv",
+    "ytdlp2strm_keep_old_strm": true,
     "channels_list_file" : "./plugins/pokemon_tv/channel_list.json",
     "proxy" : false,
     "proxy_url" : "",

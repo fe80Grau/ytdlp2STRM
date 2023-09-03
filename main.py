@@ -1,15 +1,20 @@
 from flask import Flask, stream_with_context, request, Response, send_from_directory, send_file, redirect
 from threading import Thread
-from functions import host, port, clean_old_videos
-app = Flask(__name__)
+app = Flask(__name__, template_folder='ui/html')
+from clases.config import config as c
+from clases.folders import folders as f
 import config.routes
+
+ytdlp2strm_config = c.config(
+    './config/config.json'
+).get_config()
 
 
 if __name__ == "__main__":
     #Thread for clean_old_videos
-    thread = Thread(target=clean_old_videos)
+    thread = Thread(target=f.folders().clean_old_videos)
     #Set as daemon to keep run behavior sync with main thread (by default)
     thread.daemon = True
     thread.start()
     #Run Flask server
-    app.run(host='0.0.0.0',port=port)
+    app.run(host='0.0.0.0',port=ytdlp2strm_config['ytdlp2strm_port'])

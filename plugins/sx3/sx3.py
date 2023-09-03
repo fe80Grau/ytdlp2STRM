@@ -1,120 +1,40 @@
-from flask import Flask, stream_with_context, request, Response, send_from_directory, send_file, redirect
-from functions import make_clean_folder, write_file, tvinfo_scheme, host, port
+from flask import stream_with_context, Response, redirect
 from sanitize_filename import sanitize
 import os
 import json
 import time
-import platform
 import subprocess
-import fnmatch
-import xml.etree.ElementTree as ET
 import requests
-from isodate import parse_duration
 from bs4 import BeautifulSoup
+from clases.config import config as c
+from clases.worker import worker as w
+from clases.folders import folders as f
+from clases.nfo import nfo as n
 
-source_platform = "sx3"
-#Reading config file
-config_file = './plugins/sx3/config.json'
-if not os.path.isfile(config_file):
-    print("No config.json detected, using config.example.json. Please check this in current plugin folder")
-    config_file = './plugins/sx3/config.example.json'
+## -- SX3 CLASS
+class Sx3:
+    def __init__(self, channel=False):
+        self.channel = channel
+        self.channel_folder = self.channel.split('/')[-2]
+        self.id = self.get_id()
+        self.api_data = self.get_api_response_data()
+        self.name = self.api_data['resposta']['items']['item'][0]['programes_tv'][0]['titol']
+        self.description = self.api_data['resposta']['items']['item'][0]['programes_tv'][0]['desc']
+        self.poster = self.get_images()['poster']
+        self.landscape = self.get_images()['landscape']
+        
 
-with open(
-        config_file, 
-        'r'
-    ) as f:
-    config = json.load(f)
-
-media_folder = config["strm_output_folder"]
-channels_list = config["channels_list_file"]
-
-def channels():
-    channels_list_local = channels_list
-
-    if not os.path.isfile(channels_list_local):
-        print("No channel_list.json detected, using channel_list.example.json. Please check this in current plugin folder")
-        channels_list_local = './plugins/sx3/channel_list.example.json'
-
-    with open(
-            channels_list_local, 
-            'r'
-        ) as f:
-        channels = json.load(f)
-    return channels
-
-def get_bitrate_from_mpd(mpd_data):
-    root = ET.fromstring(mpd_data)
-    representations = root.findall('Representation')
-    
-    bitrates = []
-    
-    for rep in representations:
-        print("Test")
-        bitrate = int(rep.attrib.get('bandwidth'))
-        bitrates.append(bitrate)
-    
-    return bitrates
-
-def parse_duration_from_mpd(mpd_data):
-    root = ET.fromstring(mpd_data)
-    duration_str = root.attrib.get("mediaPresentationDuration")
-    duration = parse_duration(duration_str).total_seconds()
-    return duration
-
-def to_nfo(params):
-    #api_serie_response_data from to_strm function
-    channel_name = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['titol']
-    description = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['desc']
-    images = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['imatges']
-    poster = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['imatges'][0]['text']
-    landscape = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['imatges'][0]['text']
-    preview = params['data']['resposta']['items']['item'][0]['programes_tv'][0]['imatges'][0]['text']
-
-    for image in images:
-        if image['mida'] == "320x466":
-            poster = image['text']
-        if image['mida'] == "1600x284":
-            landscape = image['text']
-        if image['mida'] == "320x466":
-            preview = image['text']
-
-    output_nfo = tvinfo_scheme().format(
-        channel_name,
-        channel_name,
-        channel_name,
-        description,
-        landscape, landscape,
-        poster, poster,
-        preview, preview,
-        "-",
-        "SX3",
-        "SX3"
-    )
-
-    
-    if params['sx3_channel_folder']:
-        file_path = "{}/{}/{}.{}".format(media_folder, "{}".format(params['sx3_channel_folder']), "tvshow", "nfo")
-        write_file(file_path, output_nfo)
-
-def to_strm(method):
-    for channel in channels():
-        #Clearing channel folder name
-        sx3_channel_folder = channel.split('/')[-2]
-        #Make a folder and inflate nfo file
-        make_clean_folder(
-            "{}/{}".format(
-                media_folder,
-                sanitize(
-                    "{}".format(
-                        sx3_channel_folder
-                    )
-                )
-            ),
-            True
-        )
-
+    def get_api_response_data(self):
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-        page = requests.get(channel, headers=headers)
+        api_serie = "https://api.ccma.cat/videos?version=2.0&_format=json&items_pagina=5000&tipus_contingut=PPD&ordre=capitol&idioma=PU_CATALA&programatv_id={}&perfil=default".format(self.id)
+        api_serie_response = requests.get(api_serie, headers=headers)
+        api_serie_response_data = json.loads(api_serie_response.text)
+
+        return api_serie_response_data
+
+    def get_id(self):
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+        page = requests.get(self.channel, headers=headers)
         #print(page.content)
         soup = BeautifulSoup(page.content, 'html.parser')
         element = soup.find('div', {'class': 'titolMedia'}).find('a')
@@ -127,28 +47,84 @@ def to_strm(method):
         api_video_response_data = json.loads(api_video_response.text)
         serie_id = api_video_response_data['informacio']['programa_id']
 
-        api_serie = "https://api.ccma.cat/videos?version=2.0&_format=json&items_pagina=5000&tipus_contingut=PPD&ordre=capitol&idioma=PU_CATALA&programatv_id={}&perfil=default".format(serie_id)
-        
-        api_serie_response = requests.get(api_serie, headers=headers)
-        api_serie_response_data = json.loads(api_serie_response.text)
+        return serie_id
 
-        to_nfo(
-            {
-                'data' : api_serie_response_data,
-                'sx3_channel_folder' : sanitize(
+    def get_images(self):
+        for image in self.api_data['resposta']['items']['item'][0]['programes_tv'][0]['imatges']:
+            if image['mida'] == "320x466":
+                poster = image['text']
+            if image['mida'] == "1600x284":
+                landscape = image['text']
+
+        return {
+            "poster" : poster,
+            "landscape" : landscape
+        }
+## -- END
+
+
+## -- LOAD CONFIG AND CHANNELS FILES
+ytdlp2strm_config = c.config(
+    './config/config.json'
+).get_config()
+
+config = c.config(
+    './plugins/sx3/config.json'
+).get_config()
+
+channels = c.config(
+    config["channels_list_file"]
+).get_channels()
+
+source_platform = "sx3"
+media_folder = config["strm_output_folder"]
+channels_list = config["channels_list_file"]
+## -- END
+
+## -- MANDATORY TO_STRM FUNCTION 
+def to_strm(method):
+    for channel in channels:
+        #Clearing channel folder name
+        sx3 = Sx3(channel)
+        #Make a folder and inflate nfo file
+        f.folders().make_clean_folder(
+            "{}/{}".format(
+                media_folder,
+                sanitize(
                     "{}".format(
-                        sx3_channel_folder
+                        sx3.channel_folder
                     )
                 )
-            }
+            ),
+            True,
+            config
         )
-        
-        #print(api_serie)
 
-        
+        ## -- BUILD CHANNEL NFO FILE
+        n.nfo(
+            "tvshow",
+            "{}/{}".format(
+                media_folder, 
+                "{}".format(
+                    sx3.channel_folder,
+                )
+            ),
+            {
+                "title" : sx3.name,
+                "plot" : sx3.description,
+                "season" : "1",
+                "episode" : "-1",
+                "landscape" : sx3.landscape,
+                "poster" : sx3.poster,
+                "studio" : "SX3"
+            }
+        ).make_nfo()
+        ## -- END 
+
+        ## -- BUILD STRM
         last_capitol = False
         capitols = []
-        for item in api_serie_response_data['resposta']['items']['item']:
+        for item in sx3.api_data['resposta']['items']['item']:
             #get serie id from first_episode_id
             item['capitol_temporada'] = str(item['capitol_temporada']).zfill(2)
             item['titol'] = item['titol'].split('-')
@@ -172,14 +148,12 @@ def to_strm(method):
                 "capitol_temporada": item['capitol_temporada'],
                 "titol": item['titol'],
                 "id": item['id'],
-                "id_serie": serie_id,
+                "id_serie": sx3.id,
             }
-            print(capitol)
             capitols.append(capitol)
 
             last_capitol = capitol
 
-            #print(capitol)
             try:
                 sn = ''.join([n for n in temporada if n.isdigit()])[0]
             except:
@@ -194,11 +168,11 @@ def to_strm(method):
                 ), 
                 item['titol']
             )
-            url = "{}_{}".format(item['id'], serie_id)
+            url = "{}_{}".format(item['id'], sx3.id)
 
             file_content = "http://{}:{}/{}/{}/{}".format(
-                host, 
-                port, 
+                ytdlp2strm_config['ytdlp2strm_host'], 
+                ytdlp2strm_config['ytdlp2strm_port'], 
                 source_platform, 
                 method, 
                 url
@@ -207,7 +181,7 @@ def to_strm(method):
                 media_folder,  
                 sanitize(
                     "{}".format(
-                    sx3_channel_folder
+                        sx3.channel_folder
                     )
                 ),  
                 sanitize(
@@ -221,12 +195,12 @@ def to_strm(method):
                 ), 
                 "strm"
             )
-            make_clean_folder(
+            f.folders().make_clean_folder(
                 "{}/{}/{}".format(
                     media_folder,  
                     sanitize(
                         "{}".format(
-                            sx3_channel_folder
+                            sx3.channel_folder
                         )
                     ),  
                     sanitize(
@@ -235,34 +209,33 @@ def to_strm(method):
                             temporada
                         )
                     )
-                )
+                ),
+                False,
+                config
             )
-            data = {
-                "video_name" : video_name
-            }
-            if not os.path.isfile(file_path):
-                write_file(file_path, file_content)
 
-                
-def direct(sx3_id): #Sponsorblock doesn't work in this mode
+            if not os.path.isfile(file_path):
+                f.folders().write_file(file_path, file_content)
+        ## -- END
+## -- END
+
+## -- EXTRACT / REDIRECT VIDEO DATA 
+def direct(sx3_id): 
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
     api_video = "https://api-media.ccma.cat/pvideo/media.jsp?media=video&versio=vast&idint={}&profile=pc&producte=sx3&broadcast=false&format=dm".format(sx3_id.split('_')[0])
     
     
     api_video_response = requests.get(api_video, headers=headers)    
     api_video_response_data = json.loads(api_video_response.text)
-    print(api_video)
     mpd_url = api_video_response_data['media']['url'][0]['file']
     urls = api_video_response_data['media']['url']
     for url in urls:
         if url['label'] == "720p":
             mpd_url = url["file"]
-    #print(mpd_url)
     if config['http_get_proxy']:
         mpd_url = "{}{}".format(config['http_get_proxy_url'], mpd_url)
         
     return redirect(mpd_url, code=301)
-
 
 def bridge(sx3_id):
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
@@ -270,7 +243,6 @@ def bridge(sx3_id):
     
     api_video_response = requests.get(api_video, headers=headers)    
     api_video_response_data = json.loads(api_video_response.text)
-    #print(api_video)
     mpd_url = api_video_response_data['media']['url'][0]['file']
     urls = api_video_response_data['media']['url']
     for url in urls:
@@ -356,3 +328,4 @@ def download(sx3_id):
         )
 
     return Response(stream_with_context(req.iter_content(chunk_size=1024)), content_type = req.headers['content-type'])
+## -- END

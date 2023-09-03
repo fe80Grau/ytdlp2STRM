@@ -1,33 +1,25 @@
-from flask import Flask, stream_with_context, request, Response, send_from_directory, send_file, redirect
-from functions import make_clean_folder, write_file, tvinfo_scheme, host, port
 from sanitize_filename import sanitize
 import os
 import json
-import time
-import re
-import platform
-import subprocess
-import fnmatch
-import xml.etree.ElementTree as ET
 import requests
-from isodate import parse_duration
-from bs4 import BeautifulSoup
+from clases.config import config as c
+from clases.folders import folders as f
+
+
+## -- LOAD CONFIG AND CHANNELS FILES
+ytdlp2strm_config = c.config(
+    './config/config.json'
+).get_config()
+
+config = c.config(
+    './plugins/pokemon_tv/config.json'
+).get_config()
+
 
 source_platform = "pokemon_tv"
-#Reading config file
-config_file = './plugins/pokemon_tv/config.json'
-if not os.path.isfile(config_file):
-    print("No config.json detected, using config.example.json. Please check this in current plugin folder")
-    config_file = './plugins/pokemon_tv/config.example.json'
-
-with open(
-        config_file, 
-        'r'
-    ) as f:
-    config = json.load(f)
-
 media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
+## -- END
 
 def channels():
     
@@ -55,8 +47,6 @@ def channels():
 
     return databases_json_files
 
-def to_nfo(params):
-    pass
 
 def to_strm(method):
     for channel in channels():
@@ -78,7 +68,7 @@ def to_strm(method):
              .text
         )
 
-        make_clean_folder(
+        f.folders().make_clean_folder(
             "{}/{}/{}/{}".format(
                 media_folder, 
                 "Pokemon",
@@ -89,7 +79,9 @@ def to_strm(method):
                         seasson_api["channel_name"]
                     )
                 )
-            )
+            ),
+            False,
+            config
         )
 
         for item in seasson_api["media"]:
@@ -125,7 +117,7 @@ def to_strm(method):
                 )
             )
 
-            make_clean_folder(
+            f.folders().make_clean_folder(
                 "{}/{}/{}/{}".format(
                     media_folder, 
                     "Pokemon",
@@ -136,11 +128,13 @@ def to_strm(method):
                             seasson_api["channel_name"]
                         )
                     )
-                )
+                ),
+                False,
+                config
             )
 
             if not os.path.isfile(file_path):
-                write_file(file_path, file_content)
+                f.folders().write_file(file_path, file_content)
 
                 
 def direct(pokemon_tv_id): #Sponsorblock doesn't work in this mode

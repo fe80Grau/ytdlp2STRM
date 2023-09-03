@@ -1,31 +1,140 @@
-from flask import Flask, stream_with_context, request, Response, send_from_directory, send_file, redirect
-from functions import make_clean_folder, write_file, tvinfo_scheme, host, port
+from flask import redirect
 from sanitize_filename import sanitize
 import os
-import json
-import time
-import platform
-import subprocess
-import fnmatch
+from clases.config import config as c
+from clases.worker import worker as w
+from clases.folders import folders as f
+from clases.nfo import nfo as n
 
+## -- CRUNCHYROLL CLASS
+class Crunchyroll:
+    def __init__(self, channel=False):
+        if channel:
+            self.channel = channel.replace("https://www.crunchyroll.com/","")
+            self.channel_url = "https://www.crunchyroll.com/{}".format(self.channel)
+            self.channel_folder = self.channel.split('/')[-1]
+            self.last_episode_file = "{}/{}/{}.{}".format(
+                media_folder, 
+                sanitize(
+                    "{}".format(
+                        self.channel_folder
+                    )
+                ), 
+                "last_episode", 
+                "txt"
+            )
+            self.new_content = False
+            self.last_episode = self.get_start_episode()
+            self.videos = self.get_videos()
+    
+    def get_videos(self):
+        command = [
+            'yt-dlp', 
+            '--print', '%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s;%(playlist_autonumber)s', 
+            '--no-download',
+            '--no-warnings',
+            '--match-filter', 'language={}'.format(audio_language),
+            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
+            '{}'.format(self.channel_url)
+        ]
+        
+        self.set_auth(command)
+        self.set_proxy(command)
+        self.set_start_episode(command)
 
-os.environ["YT_DLP_CCI_IMPERSONATE"] = "chrome110"
+        #print(' '.join(command))
+        return w.worker(command).pipe() 
 
-# yt-dlp --sub-lang es-419 --cookies "D:\Crunchyroll\www.crunchyroll.com_cookies.txt" https://www.crunchyroll.com/es/series/GRMG8ZQZR/one-piece --print "%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s" --extractor-args "crunchyrollbeta:hardsub=jp-JP,es-ES" --no-download
+    def get_start_episode(self):
+        last_episode = 0
+        if not os.path.isfile(self.last_episode_file):
+            self.new_content = True
+            f.folders().write_file(self.last_episode_file, "0")
+        else:
+            with open(self.last_episode_file) as fl:
+                last_episode = fl.readlines()
+                fl.close()
+            
+            last_episode = last_episode[0]
+        
+        return last_episode
+
+    def set_start_episode(self, command):
+        if not self.new_content:
+            next_episode = int(self.last_episode) + 1
+            command.append('--playlist-start')
+            command.append('{}'.format(next_episode))
+
+    def set_last_episode(self, playlist_count):
+        if self.new_content:
+            f.folders().write_file(
+                self.last_episode_file, 
+                playlist_count
+            )
+        else:
+            sum_episode = int(self.last_episode) + int(playlist_count)
+            f.folders().write_file(
+                self.last_episode_file,
+                str(sum_episode)
+            )
+
+    def set_auth(self, command, quotes=False):
+        if config['crunchyroll_auth'] == "browser":
+            command.append('--cookies-from-browser')
+            if quotes:
+                command.append(
+                    '"{}"'.format(
+                        config['crunchyroll_browser']
+                    )
+                )
+            else:
+                command.append(config['crunchyroll_browser'])
+
+        if config['crunchyroll_auth'] == "cookies":
+            command.append('--cookies')
+            command.append(config['crunchyroll_cookies_file'])
+
+        if config['crunchyroll_auth'] == "login":
+            command.append('--username')
+            command.append(config['crunchyroll_username'])
+            command.append('--password')
+            command.append(config['crunchyroll_password'])
+
+        command.append('--user-agent')
+        if quotes:
+            command.append(
+                '"{}"'.format(
+                    config['crunchyroll_useragent']
+                )
+            )
+        else:
+            command.append(
+                '{}'.format(
+                    config['crunchyroll_useragent']
+                )
+            )
+
+    def set_proxy(self, command):
+        if proxy:
+            if proxy_url != "":
+                command.append('--proxy')
+                command.append(proxy_url)
+## -- END
+
+## -- LOAD CONFIG AND CHANNELS FILES
+ytdlp2strm_config = c.config(
+    './config/config.json'
+).get_config()
+
+config = c.config(
+    './plugins/crunchyroll/config.json'
+).get_config()
+
+channels = c.config(
+    config["channels_list_file"]
+).get_channels()
 
 source_platform = "crunchyroll"
-#Reading config file
-config_file = './plugins/crunchyroll/config.json'
-if not os.path.isfile(config_file):
-    print("No config.json detected, using config.example.json. Please check this in current plugin folder")
-    config_file = './plugins/crunchyroll/config.example.json'
-
-with open(
-        config_file, 
-        'r'
-    ) as f:
-    config = json.load(f)
-
 media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
 cookies_file = config["crunchyroll_cookies_file"]
@@ -37,143 +146,138 @@ if 'proxy' in config:
 else:
     proxy = False
     proxy_url = ""
+## -- END
 
-##Utils | Read and download full channels, generate nfo and strm files
-def set_proxy(command):
-    if proxy:
-        if proxy_url != "":
-            command.append('--proxy')
-            command.append(proxy_url)
-        else:
-            print("Proxy setted true but no proxy url, please check it in plugin config.json")
-
-
-
-def channels():
-    channels_list_local = channels_list
-
-    if not os.path.isfile(channels_list_local):
-        print("No channel_list.json detected, using channel_list.example.json. Please check this in current plugin folder")
-        channels_list_local = './plugins/crunchyroll/channel_list.example.json'
-
-    with open(
-            channels_list_local, 
-            'r'
-        ) as f:
-        channels = json.load(f)
-    return channels
-
-#¡¡¡¡¡ to_strm is mandatory start function, forced in cli.py under run function !!!!!
+## -- MANDATORY TO_STRM FUNCTION 
 def to_strm(method):
-    for crunchyroll_channel in channels():
+    for crunchyroll_channel in channels:
         print("Preparing channel {}".format(crunchyroll_channel))
 
-        crunchyroll_channel = crunchyroll_channel.replace("https://www.crunchyroll.com/","")
-        #formating crunchyroll URL and init channel_id
-        crunchyroll_channel_url = "https://www.crunchyroll.com/{}".format(crunchyroll_channel)
+        crunchyroll = Crunchyroll(crunchyroll_channel)
 
+        # -- MAKES CHANNEL DIR (AND SUBDIRS) IF NOT EXIST, REMOVE ALL STRM IF KEEP_OLDER_STRM IS SETTED TO FALSE IN GENERAL CONFIG
+        f.folders().make_clean_folder(
+            "{}/{}".format(
+                media_folder,  
+                sanitize(
+                    "{}".format(
+                        crunchyroll.channel_folder
+                    )
+                )
+            ),
+            False,
+            config
+        )
+        ## -- END
 
-        #Clearing channel folder name
-        crunchyroll_channel_folder = crunchyroll_channel.split('/')[-1]
-        #Make a folder and inflate nfo file
-        make_clean_folder("{}/{}".format(media_folder,  sanitize("{}".format(crunchyroll_channel_folder))))
+        # -- GET VIDEOS
+        process = crunchyroll.videos
 
-        #Make seasons folders Get all videos and subtitle from serie
-        print("Processing videos in channel")
-
-        last_episode_file = "{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(crunchyroll_channel_folder)), "last_episode", "txt")
-        last_episode = 0
-        new_content = False
-        if not os.path.isfile(last_episode_file):
-            new_content = True
-            write_file(last_episode_file, "0")
-        else:
-            with open(last_episode_file) as f:
-                last_episode = f.readlines()
-                f.close()
-            
-            last_episode = last_episode[0]
-
-        command = ['yt-dlp', 
-                    '--cookies', '{}'.format(cookies_file),
-                    '--print', '%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s;%(playlist_autonumber)s', 
-                    '--no-download',
-                    '--no-warnings',
-                    '--match-filter', 'language={}'.format(audio_language),
-                    '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-                    '{}'.format(crunchyroll_channel_url)]
-    
-        set_proxy(command)
-
-        #print(' '.join(command))
-
-        if not new_content:
-            next_episode = int(last_episode) + 1
-            command.append('--playlist-start')
-            command.append('{}'.format(next_episode))
-
-
-        #print("Command \n {}".format(' '.join(command)))
-        #lines = subprocess.getoutput(' '.join(command)).split('\n')
-
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True)
         try:
             for line in iter(process.stdout.readline, b''):
-                #print(line)
                 if line != "" and not 'ERROR' in line and not 'WARNING' in line:
                     
                     season_number = str(line).rstrip().split(';')[0].zfill(2)
                     season = str(line).rstrip().split(';')[1]
                     episode_number = (line).rstrip().split(';')[2].zfill(4)
                     episode = (line).rstrip().split(';')[3]
-                    url = (line).rstrip().split(';')[4].replace('https://www.crunchyroll.com/','').replace('/','_')
+                    url = (line).rstrip().split(';')[4].replace(
+                        'https://www.crunchyroll.com/',
+                        ''
+                    ).replace('/','_')
                     playlist_count = (line).rstrip().split(';')[5]
-
-                    #print(playlist_count)
                
-                    video_name = "{} - {}".format("S{}E{}".format(season_number, episode_number), episode)
+                    video_name = "{} - {}".format(
+                        "S{}E{}".format(
+                            season_number, 
+                            episode_number
+                        ), 
+                        episode
+                    )
 
+                    file_content = "http://{}:{}/{}/{}/{}".format(
+                        ytdlp2strm_config['ytdlp2strm_host'], 
+                        ytdlp2strm_config['ytdlp2strm_port'], 
+                        source_platform, 
+                        method, 
+                        url
+                    )
 
-                    file_content = "http://{}:{}/{}/{}/{}".format(host, port, source_platform, method, url)
-                    file_path = "{}/{}/{}/{}.{}".format(media_folder,  sanitize("{}".format(crunchyroll_channel_folder)),  sanitize("S{} - {}".format(season_number, season)), sanitize(video_name), "strm")
-                    make_clean_folder("{}/{}/{}".format(media_folder,  sanitize("{}".format(crunchyroll_channel_folder)),  sanitize("S{} - {}".format(season_number, season))))
+                    file_path = "{}/{}/{}/{}.{}".format(
+                        media_folder,  
+                        sanitize(
+                            "{}".format(
+                                crunchyroll.channel_folder
+                            )
+                        ),  
+                        sanitize(
+                            "S{} - {}".format(
+                                season_number, 
+                                season
+                            )
+                        ), 
+                        sanitize(video_name), 
+                        "strm"
+                    )
+
+                    f.folders().make_clean_folder(
+                        "{}/{}/{}".format(
+                            media_folder,  
+                            sanitize(
+                                "{}".format(
+                                    crunchyroll.channel_folder
+                                )
+                            ),  
+                            sanitize(
+                                "S{} - {}".format(
+                                    season_number, 
+                                    season
+                                )
+                            )
+                        ),
+                        False,
+                        config
+                    )
+
                     data = {
                         "video_name" : video_name
                     }
+                    
                     if not os.path.isfile(file_path):
-                        write_file(file_path, file_content)
-                    if new_content:
-                        write_file(last_episode_file, playlist_count)
+                        f.folders().write_file(
+                            file_path, 
+                            file_content
+                        )
+
+                    if crunchyroll.new_content:
+                        crunchyroll.set_last_episode(playlist_count)
                     else:
-                        sum_episode = int(last_episode) + int(playlist_count)
-                        write_file(last_episode_file,str(sum_episode))
-                    #print(data)
+                        sum_episode = int(crunchyroll.last_episode) + int(playlist_count)
+                        crunchyroll.set_last_episode(
+                            str(sum_episode)
+                        )
 
                 if not line: break
                 
         finally:
             process.kill()
-
-
+        ## -- END
     return True 
+## -- END
 
-
-##Video data stream | direct, bridge and download mode
-def direct(crunchyroll_id): #Sponsorblock doesn't work in this mode
-    #crunchyroll_url = subprocess.getoutput("yt-dlp -f best --cookies {} --no-warnings --match-filter language={} --extractor-args crunchyrollbeta:hardsub={} https://www.crunchyroll.com/{} --get-url".format(cookies_file, audio_language, subtitle_language, crunchyroll_id.replace('_','/')))
-    
-    command = ['yt-dlp', 
-                '-f', 'best',
-                '--cookies', '"{}"'.format(cookies_file),
-                '--no-warnings',
-                '--match-filter', '"language={}"'.format(audio_language),
-                '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(subtitle_language),
-                'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
-                '--get-url']
-    
-    set_proxy(command)
-    #print(' '.join(command))
-    crunchyroll_url = subprocess.getoutput(' '.join(command))
-    #print(crunchyroll_url)
-    #print(crunchyroll_url)
+## -- EXTRACT / REDIRECT VIDEO DATA 
+def direct(crunchyroll_id): 
+    command = [
+        'yt-dlp', 
+        '-f', 'best',
+        '--no-warnings',
+        '--match-filter', '"language={}"'.format(audio_language),
+        '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(subtitle_language),
+        'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+        '--get-url'
+    ]
+    Crunchyroll().set_auth(command,True)
+    Crunchyroll().set_proxy(command)
+    crunchyroll_url = w.worker(command).output()
     return redirect(crunchyroll_url, code=301)
+## -- END

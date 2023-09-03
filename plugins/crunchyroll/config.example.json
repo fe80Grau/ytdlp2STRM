@@ -5,5 +5,11 @@
     "crunchyroll_subtitle_language" : "es-ES",
     "crunchyroll_audio_language" : "ja-JP",
     "proxy" : false,
-    "proxy_url" : ""
+    "proxy_url" : "",
+    "crunchyroll_auth" : "cookies",
+    "crunchyroll_browser" : "",
+    "crunchyroll_useragent" : "",
+    "crunchyroll_username" : "",
+    "crunchyroll_password" : ""
+
 }

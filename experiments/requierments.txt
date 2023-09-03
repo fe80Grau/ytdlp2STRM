@@ -1,0 +1,8 @@
+selenium==4.9.0
+selenium-wire
+webdriver_manager
+chromedriver-autoinstaller
+wget
+vtt_to_srt3
+requests[socks]
+requests_html
