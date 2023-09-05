@@ -4,6 +4,7 @@ app = Flask(__name__, template_folder='ui/html')
 from clases.config import config as c
 from clases.folders import folders as f
 import config.routes
+from clases.cron import cron as cron
 
 ytdlp2strm_config = c.config(
     './config/config.json'
@@ -11,10 +12,14 @@ ytdlp2strm_config = c.config(
 
 
 if __name__ == "__main__":
-    #Thread for clean_old_videos
-    thread = Thread(target=f.folders().clean_old_videos)
-    #Set as daemon to keep run behavior sync with main thread (by default)
+    crons = cron.Cron()
+    crons.start()
+
+    thread = Thread(
+        target=f.folders().clean_old_videos
+    )
     thread.daemon = True
     thread.start()
+    
     #Run Flask server
     app.run(host='0.0.0.0',port=ytdlp2strm_config['ytdlp2strm_port'])

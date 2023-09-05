@@ -170,7 +170,7 @@ def to_strm(method):
         )
         ## -- END
 
-        # -- GET VIDEOS
+        # -- BUILD STRM
         process = crunchyroll.videos
 
         try:
@@ -239,10 +239,6 @@ def to_strm(method):
                         config
                     )
 
-                    data = {
-                        "video_name" : video_name
-                    }
-                    
                     if not os.path.isfile(file_path):
                         f.folders().write_file(
                             file_path, 

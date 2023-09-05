@@ -4,3 +4,4 @@ __pycache__/
 *$py.class
 channel_list.json
 config.json
+crons.json

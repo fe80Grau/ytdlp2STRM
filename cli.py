@@ -3,8 +3,7 @@ import argparse
 import config.plugins as  plugins
 from sanitize_filename import sanitize
 
-
-if __name__ == "__main__":
+def main(raw_args=None):
     parser=argparse.ArgumentParser()
 
     parser.add_argument('-m', '--media', help='Media platform')
@@ -14,7 +13,7 @@ if __name__ == "__main__":
     parser.add_argument('--p', help='Params to media platform mode (old)')
     # --
 
-    args=parser.parse_args()
+    args=parser.parse_args(raw_args)
     method = args.media if args.media != None else "error"
     params = args.params.split(',') if args.params != None else None
 
@@ -44,3 +43,6 @@ if __name__ == "__main__":
     r = False
     if params != None:
         r = eval("{}.{}.{}".format("plugins",method,"to_strm"))(*params)
+
+if __name__ == "__main__":
+    main()

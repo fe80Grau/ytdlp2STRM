@@ -1,0 +1,4 @@
+[
+    {"every" : "day", "qty" : "", "at" : "00:58", "do" : ["--media", "sx3", "--params", "direct"]},
+    {"every" : "hours", "qty" : "4", "at" : ":15", "do" : ["--media", "youtube", "--params", "direct"]}
+]

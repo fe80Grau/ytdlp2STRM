@@ -17,7 +17,7 @@ class config:
 
             # Comprobar si existe el archivo de ejemplo
             if os.path.exists(example_config_file):
-                print("No config.json detected, using config.example.json. Please check this in config folder")
+                print(f"No {self.config_file} detected, {example_config_file}. Please check this in config folder")
 
                 # Leer el archivo de ejemplo de configuración JSON
                 with open(example_config_file, "r") as file:
@@ -40,7 +40,7 @@ class config:
 
             # Comprobar si existe el archivo de ejemplo
             if os.path.exists(example_config_file):
-                print("No channles.json detected, using channles.example.json. Please check this in config folder")
+                print(f"No {self.config_file} detected, using {example_config_file}. Please check this in config folder")
 
                 # Leer el archivo de ejemplo de configuración JSON
                 with open(example_config_file, "r") as file:
