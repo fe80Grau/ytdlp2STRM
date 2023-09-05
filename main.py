@@ -4,7 +4,7 @@ app = Flask(__name__, template_folder='ui/html')
 from clases.config import config as c
 from clases.folders import folders as f
 import config.routes
-from clases.cron import cron as cron
+#from clases.cron import cron as cron
 
 ytdlp2strm_config = c.config(
     './config/config.json'
@@ -12,8 +12,8 @@ ytdlp2strm_config = c.config(
 
 
 if __name__ == "__main__":
-    crons = cron.Cron()
-    crons.start()
+    #crons = cron.Cron()
+    #crons.start()
 
     thread = Thread(
         target=f.folders().clean_old_videos

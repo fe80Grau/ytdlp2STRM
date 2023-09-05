@@ -36,7 +36,7 @@ class Cron(threading.Thread):
         while True:
             try:
                 schedule.run_pending()
-                time.sleep(60)
+                time.sleep(1)
             except:
                 continue
         pass
