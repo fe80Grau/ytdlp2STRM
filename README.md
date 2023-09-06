@@ -68,7 +68,7 @@ schtasks.exe /run /tn "ytdlp2STRM"
 http://localhost:5000/
 ```
 
-## Docker
+# Docker
 If you want to deploy this as Docker container follow this steps.
 
 * Build Docker image 
@@ -87,7 +87,7 @@ docker run -p 5005:5000 --restart=always -d -v D:\media:/media --volumes-from yt
 ```console
 http://localhost:5005/
 ```
-
+# Additional info
 ## Youtube
 * SponsorBlock not works on redirect mode
 * After that you can see all channels folders under /media/Youtube and strm files inside them. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch and /media/Crunchyroll as folder in Library and enjoy it!
