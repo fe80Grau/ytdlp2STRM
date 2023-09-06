@@ -36,5 +36,6 @@ class Cron(threading.Thread):
             try:
                 schedule.run_pending()
                 time.sleep(1)
-            except:
+            except Exception as e:
+                print(e)
                 continue
