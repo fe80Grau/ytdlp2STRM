@@ -215,6 +215,7 @@ else:
 def to_strm(method):
     for twitch_channel in channels:
         print("Preparing channel {}".format(twitch_channel))
+        twitch_channel = twitch_channel.replace('https://www.twitch.tv/', '')
         twitch = Twitch(twitch_channel)
 
         # -- MAKES CHANNEL DIR IF NOT EXIST,

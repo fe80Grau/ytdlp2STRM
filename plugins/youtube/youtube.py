@@ -494,6 +494,11 @@ def to_strm(method):
     for youtube_channel in channels:
         print("Preparing channel {}".format(youtube_channel))
 
+        youtube_channel = (
+            youtube_channel.replace('https://www.youtube.com/', '') if not '/user/' in youtube_channel 
+            else youtube_channel.replace('https://www.youtube.com', '')
+        )
+        
         #formating youtube URL and init channel_id
         youtube_channel_url = "https://www.youtube.com/{}/videos".format(
             youtube_channel

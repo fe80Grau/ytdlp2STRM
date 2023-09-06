@@ -5,8 +5,9 @@
     <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container mt-5">
-        <h1>ytdlp2STRM - General Settings</h1>
+    <div class="col-lg-8 mx-auto p-3 py-md-5">
+        <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - General Settings</h1>
+        <label class="form-label">./config/config.json</label>
         <form method="post">
             {% for key, value in config_data.items() %}
                 <div class="mb-3">
@@ -20,7 +21,7 @@
         {% if request == "POST": %}
             {% if result: %}
                 <div class="alert alert-success mt-5" role="alert">
-                    Config saved.
+                    ./config/config.json saved.
                 </div>
             {% else %}
                 <iv class="alert alert-danger mt-5" role="alert">

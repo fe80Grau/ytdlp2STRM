@@ -16,6 +16,7 @@ class Cron(threading.Thread):
         )
 
     def run(self):
+        #print("Loading crons:")
         for cron in crons:     
             call_constructor = "schedule.every({}).{}.at('{}').do(main_cli, {})".format(
                 cron['qty'],
@@ -26,9 +27,7 @@ class Cron(threading.Thread):
                 '.at()',
                 ''
             )
-            #schedule.every().day.at('10:30').do(main_cli, ['--media', 'sx3', '--params', 'direct'])
-            print("Reading crons:")
-            print(call_constructor)
+            #print(call_constructor)
             r = eval(
                 call_constructor
             )
@@ -39,4 +38,3 @@ class Cron(threading.Thread):
                 time.sleep(1)
             except:
                 continue
-        pass

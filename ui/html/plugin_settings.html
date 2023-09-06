@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ytdlp2STRM - {{ plugin.name }} Settings</title>
+    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="col-lg-8 mx-auto p-3 py-md-5">
+        <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - {{ plugin.name }} Settings</h1>
+        <label class="form-label">{{ plugin.path }}/config.json</label>
+        <form method="post">
+            {% for key, value in plugin.config.items() %}
+                <div class="mb-3">
+                    <label class="form-label">{{ key }}</label>
+                    <input class="form-control" type="text" name="{{ key }}" value="{{ value }}">
+                </div>
+            {% endfor %}
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a href="/" class="btn btn-primary">Go back</a>
+        </form>
+        {% if request == "POST": %}
+            {% if result: %}
+                <div class="alert alert-success mt-5" role="alert">
+                    {{ plugin.path }}/config.json saved.
+                </div>
+            {% else %}
+                <iv class="alert alert-danger mt-5" role="alert">
+                    Error
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>

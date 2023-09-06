@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ytdlp2STRM - Enable/Disable Plugins</title>
+    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="col-lg-8 mx-auto p-3 py-md-5">
+        <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - Enable/Disable Plugins</h1>
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label">./config/plugins.py</label>
+                <textarea class="form-control" name="plugin_code" rows="10">{{ plugin_code }}</textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a href="/" class="btn btn-primary">Go back</a>
+        </form>
+        {% if request == "POST": %}
+            {% if result: %}
+                <div class="alert alert-success mt-5" role="alert">
+                    ./config/plugins.py saved.
+                </div>
+            {% else %}
+                <div class="alert alert-danger mt-5" role="alert">
+                    Error
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
