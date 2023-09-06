@@ -1,6 +1,6 @@
 # ytdlp2STRM
 * Remember, if you like this
-<a href="https://www.buymeacoffee.com/fe80grau" target="_blank"><img width="150" src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=fe80grau&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
+<a href="https://www.buymeacoffee.com/fe80grau" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="width: 90px !important;" ></a>
 * Youtube / Twitch / Crunchyroll  to STRM files
 * Watch Youtube / Twitch / Crunchyroll with Jellyfin/Emby 
 * I recommend YoutubeMetadata plugin for Jellyfin
