@@ -1,0 +1,12 @@
+@media (prefers-color-scheme: dark) {
+    body {
+        color: var(--bs-secondary-bg-subtle);
+        background-color: var(--bs-dark);
+    }
+    h1 {
+        color: var(--bs-secondary-bg-subtle);
+    }
+    .text-muted {
+        color: var(--bs-secondary-bg-subtle) !important;
+    }
+}
