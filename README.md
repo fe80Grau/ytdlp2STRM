@@ -127,8 +127,8 @@ Controller that loads plugins functions, used to set cronjobs to manage strm fil
 * [CRUNCHYROLL] Only support URL series (not episodes), the script will create a folder for each serie, and subfolders for each season, inside season folder the strm episodes files  will be created 
 
 ## Service
-LINUX: ytdlp2strm.service example service to run main.py with systemctl. 
-WINDOWS: MS-TASK-ytdlp2STRM.xml example scheduled task with schtasks.
+* LINUX: ytdlp2strm.service example service to run main.py with systemctl. 
+* WINDOWS: MS-TASK-ytdlp2STRM.xml example scheduled task with schtasks.
 
 ## Pendings
 * Include subtitles
