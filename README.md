@@ -68,6 +68,25 @@ schtasks.exe /run /tn "ytdlp2STRM"
 http://localhost:5000/
 ```
 
+## Docker
+If you want to deploy this as Docker container follow this steps.
+
+* Build Docker image 
+```console
+docker build . -t "ytdlp2strm" 
+```
+* Create a volume to data persist
+```console
+docker create --name ytdlp2strm-data ytdlp2strm 
+```
+* Run conainer with volume and mounting D:\media in /media (container folder)
+```console
+docker run -p 5005:5000 --restart=always -d -v D:\media:/media --volumes-from ytdlp2strm-data --name ytdlp2STRM ytdlp2strm
+```
+* Check GUI in browser
+```console
+http://localhost:5005/
+```
 
 ## Youtube
 * SponsorBlock not works on redirect mode
@@ -131,25 +150,6 @@ Controller that loads plugins functions, used to set cronjobs to manage strm fil
 * LINUX: ytdlp2strm.service example service to run main.py with systemctl. 
 * WINDOWS: MS-TASK-ytdlp2STRM.xml example scheduled task with schtasks.
 
-## Dockerfile
-If you want to deploy this as Docker container follow this steps.
-
-* Build Docker image 
-```console
-docker build . -t "ytdlp2strm" 
-```
-* Create a volume to data persist
-```console
-docker create --name ytdlp2strm-data ytdlp2strm 
-```
-* Run conainer with volume and mounting D:\media in /media (container folder)
-```console
-docker run -p 5005:5000 --restart=always -d -v D:\media:/media --volumes-from ytdlp2strm-data --name ytdlp2STRM ytdlp2strm
-```
-* Check GUI in browser
-```console
-http://localhost:5005/
-```
 
 ## Pendings
 * Include subtitles
