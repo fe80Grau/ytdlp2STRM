@@ -4,6 +4,7 @@
 * I recommend YoutubeMetadata plugin for Jellyfin
 ![ytdlp2STRM](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/cc31ee7c-5e4b-450b-9a3b-526f191d18d8)
 ![Captura de pantalla 2023-09-06 170858](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/d3fa6b5a-ca75-4dc3-b9e6-354ddf9b1fdf)
+![Captura de pantalla 2023-09-06 170858](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/1d0d8a1f-8b12-4928-b0b1-eb5038716048)
 
 ## Prerequisite
 * Python 3 https://www.python.org/downloads/
