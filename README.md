@@ -23,6 +23,7 @@ cd /opt && git clone https://github.com/fe80Grau/ytdlp2STRM.git
 ```console
 cd /opt/ytdlp2STRM && pip install -r requierments.txt
 ```
+* Copy service to system services folder
 ```console
 sudo cp config/ytdlp2strm.service /etc/systemd/system/ytdlp2strm.service
 ```
@@ -89,6 +90,7 @@ docker run -p 5005:5000 --restart=always -d -v D:\media:/media --volumes-from yt
 ```console
 http://localhost:5005/
 ```
+
 # Additional info
 ## Youtube
 * SponsorBlock not works on redirect mode
