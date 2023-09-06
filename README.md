@@ -142,9 +142,9 @@ docker build . -t "ytdlp2strm"
 ```console
 docker create --name ytdlp2strm-data ytdlp2strm 
 ```
-* Run conainer
+* Run conainer with volume and mounting D:\media in /media (container folder)
 ```console
-docker run -p 5000:5000 --restart=always --volumes-from ytdlp2strm-data --name ytdlp2STRM ytdlp2strm
+docker run -p 5005:5000 --restart=always -d -v D:\media:/media --volumes-from ytdlp2strm-data --name ytdlp2STRM ytdlp2strm
 ```
 * Check GUI in browser
 ```console
