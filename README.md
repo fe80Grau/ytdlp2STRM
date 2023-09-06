@@ -79,7 +79,7 @@ docker build . -t "ytdlp2strm"
 ```console
 docker create --name ytdlp2strm-data ytdlp2strm 
 ```
-* Run conainer with volume and mounting D:\media in /media (container folder)
+* Run conainer with volume and mounting D:\media (host folder to access strm files, change it in your convenience) in /media (container folder) 
 ```console
 docker run -p 5005:5000 --restart=always -d -v D:\media:/media --volumes-from ytdlp2strm-data --name ytdlp2STRM ytdlp2strm
 ```
