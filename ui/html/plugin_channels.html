@@ -1,8 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme=”auto”>
 <head>
     <title>ytdlp2STRM - {{ plugin.name }} Channels</title>
-    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css" integrity="sha384-b6lVK+yci+bfDmaY1u0zE8YYJt0TZxLEAFyYSLHId4xoVvsrQu3INevFKo+Xir8e" crossorigin="anonymous">
+    <style>
+        @media (prefers-color-scheme: dark) {
+          body {
+            color: var(--bs-secondary-bg-subtle);
+            background-color: var(--bs-dark);
+          }
+          h1 {
+            color: var(--bs-secondary-bg-subtle);
+          }
+        }
+      </style>
 </head>
 <body>
     <div class="col-lg-8 mx-auto p-3 py-md-5">
@@ -27,5 +40,22 @@
             {% endif %}
         {% endif %}
     </div>
+    <script>
+        (function () {
+        const htmlElement = document.querySelector("html")
+        if(htmlElement.getAttribute("data-bs-theme") === 'auto') {
+            function updateTheme() {
+              document.querySelector("html").setAttribute(
+                "data-bs-theme",
+                window.matchMedia(
+                  "(prefers-color-scheme: dark)"
+                ).matches ? "dark" : "light"
+              )
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme)
+            updateTheme()
+        }
+        })()
+    </script>
 </body>
 </html>
