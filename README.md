@@ -98,7 +98,7 @@ http://localhost:5005/
 
 ## Twitch
 * If a live video is on air the !000-live-channel.strm will be created. The script will download the strm for each video in the /videos channel tab in any manner. Take a look at the limits and daterange values for videos in ./plugins/twitch/config.json.
-* SponsorBlock not works on redirect mode, Twitch only works over direct mode at the moment.
+* SponsorBlock doesn't work in redirect mode, Twitch only works over direct mode at the moment.
 
 ## Crunchyroll
 * Requieres a cookie file from Premium user login (you can extract the cookie file from Crunchyroll with browser extension like https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) or load a fresh cookie from browser (check discusion in https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1685036245).
