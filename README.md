@@ -12,10 +12,10 @@
 * Python 3 https://www.python.org/downloads/
 
 ## Installation and usage
-* I recommend /opt/ in Linux or C:\ProgramData in Windows, to allocate ytdlp2STRM.
+* To allocate ytdlp2STRM, I suggest using /opt/ in Linux or C:\ProgramData in Windows.
 
 # Linux
-* The next steps are tested over Ubuntu 22.04 LTS. In terminal:
+* The next steps have been tested on Ubuntu 22.04 LTS. In terminal:
 ```console
 cd /opt && git clone https://github.com/fe80Grau/ytdlp2STRM.git
 ```
@@ -23,7 +23,7 @@ cd /opt && git clone https://github.com/fe80Grau/ytdlp2STRM.git
 ```console
 cd /opt/ytdlp2STRM && pip install -r requierments.txt
 ```
-* Copy service to system services folder
+* Copy service file to system services folder
 ```console
 sudo cp config/ytdlp2strm.service /etc/systemd/system/ytdlp2strm.service
 ```
@@ -46,7 +46,7 @@ http://localhost:5000/
 
 
 # Windows
-* The next steps are tested over Windows 11 Pro 22H2. In Powershell or Windows Terminal with Administrator privileges:
+* The next steps have been tested on Windows 11 Pro 22H2. Using Powershell or Windows Terminal with Administrator privileges:
 ```console
 cd C:\ProgramData; git clone https://github.com/fe80Grau/ytdlp2STRM.git;
 ```
@@ -54,7 +54,7 @@ cd C:\ProgramData; git clone https://github.com/fe80Grau/ytdlp2STRM.git;
 ```console
 cd C:\ProgramData\ytdlp2STRM; pip install -r requierments.txt
 ```
-* Add an scheduled task to run main.py on startup. Edit ./config/MS-TASK-ytdlp2STRM.xml if you are installing ytdlp2STRM in different folder that C:\ProgramData\ytdlp2STRM\
+* Create a task that is scheduled to run main.py at startup. If you plan to install ytdlp2STRM in a different folder than C:\ProgramData\ytdlp2STRM, edit ./config/MS-TASK-ytdlp2STRM.xml
 ```console
 schtasks.exe /create /tn "ytdlp2STRM" /xml C:\ProgramData\ytdlp2STRM\config\MS-TASK-ytdlp2STRM.xml
 ```
@@ -62,42 +62,42 @@ schtasks.exe /create /tn "ytdlp2STRM" /xml C:\ProgramData\ytdlp2STRM\config\MS-T
 ```console
 schtasks.exe /run /tn "ytdlp2STRM"
 ```
-* Check task status (If all is working, this commands will return "Running")
+* In case everything is working, these commands will return "Running"
 ```console
 (Get-ScheduledTask | Where TaskName -eq ytdlp2STRM ).State
 ```
-* Check GUI in browser
+* Check the GUI in the browser.
 ```console
 http://localhost:5000/
 ```
 
 # Docker
-If you want to deploy this as Docker container follow this steps.
+To deploy this as a Docker container, follow these steps in the ytdlp2STRM root folder.
 
 * Build Docker image 
 ```console
 docker build . -t "ytdlp2strm" 
 ```
-* Create a volume to data persist
+* Create a volume to preserve data.
 ```console
 docker create --name ytdlp2strm-data ytdlp2strm 
 ```
-* Run conainer with volume and mounting D:\media (host folder to access strm files, change it in your convenience) in /media (container folder) 
+* Run the container with volume and mount D:\media (host folder for accessing strm files, change it as you prefer) in /media (container folder).
 ```console
 docker run -p 5005:5000 --restart=always -d -v D:\media:/media --volumes-from ytdlp2strm-data --name ytdlp2STRM ytdlp2strm
 ```
-* Check GUI in browser
+* Check the GUI in the browser
 ```console
 http://localhost:5005/
 ```
 
 # Additional info
 ## Youtube
-* SponsorBlock not works on redirect mode
-* After that you can see all channels folders under /media/Youtube and strm files inside them. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch and /media/Crunchyroll as folder in Library and enjoy it!
+* SponsorBlock doesn't work in redirect mode.
+* After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch and /media/Crunchyroll as folders in Library and enjoy it!
 
 ## Twitch
-* If a live video is on air the !000-live-channel.strm will be created. Any way the script will download strm for each video in /videos channel tab. See plugins/twitch/config.json videos limits and daterange values.
+* If a live video is on air the !000-live-channel.strm will be created. The script will download the strm for each video in the /videos channel tab in any manner. Take a look at the limits and daterange values for ./plugins/twitch/config.json videos.
 * SponsorBlock not works on redirect mode, Twitch only works over direct mode at the moment.
 
 ## Crunchyroll
