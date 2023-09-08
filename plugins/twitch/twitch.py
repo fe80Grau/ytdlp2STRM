@@ -392,30 +392,62 @@ def to_strm(method):
 
 ## --  REDIRECT VIDEO DATA 
 def direct(twitch_id): 
+    print(twitch_id)
     channel = twitch_id.split("@")[0]
     video_id = twitch_id.split("@")[1]
-    twitch_url = w.worker(
-        "yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(
+    command = [
+        'yt-dlp', 
+        '-f', 'best',
+        '--no-warnings',
+        'https://www.twitch.tv/videos/{}'.format(
             video_id
-        )
+        ),
+        '--get-url'
+    ]
+
+    twitch_url = w.worker(
+        [
+            'yt-dlp', 
+            '-f', 'best',
+            '--no-warnings',
+            'https://www.twitch.tv/videos/{}'.format(
+                video_id
+            ),
+            '--get-url'
+        ]   
     ).output()
 
     if 'ERROR' in twitch_url:
+
+
+
         twitch_url = w.worker(
-            "yt-dlp -f best --no-warnings https://www.twitch.tv/videos/{} --get-url".format(
-                video_id.replace(
-                    'v',
-                    ''
-                )
-            )
+            [
+                'yt-dlp', 
+                '-f', 'best',
+                '--no-warnings',
+                'https://www.twitch.tv/videos/{}'.format(
+                    video_id.replace(
+                        'v',
+                        ''
+                    )            
+                ),
+                '--get-url'
+            ]   
         ).output()
 
         if 'ERROR' in twitch_url:
             twitch_url = w.worker(
-                "yt-dlp -f best --no-warnings https://www.twitch.tv/{} --get-url".format(
-                    channel
-                )
-            )
+                [
+                    'yt-dlp', 
+                    '-f', 'best',
+                    '--no-warnings',
+                    'https://www.twitch.tv/{}'.format(
+                        channel          
+                    ),
+                    '--get-url'
+                ]   
+            ).output()
 
     return redirect(
         twitch_url, 
