@@ -114,6 +114,11 @@ A little script to serve yt-dlp video/audio as HTTP data throught Flask and dyna
 
 ## cli.py  
 Controller that loads plugins functions, used to set cronjobs to manage strm files
+Build Youtube strms manually:
+```console
+cd /opt/ytdlp2STRM/ && python3 cli.py --media youtube --params direct
+```
+You can change --media value for another plugin
 
 ## config/config.json
 * ytdlp2strm_host 
@@ -153,7 +158,6 @@ Controller that loads plugins functions, used to set cronjobs to manage strm fil
 ## Service
 * LINUX: ytdlp2strm.service example service to run main.py with systemctl. 
 * WINDOWS: MS-TASK-ytdlp2STRM.xml example scheduled task with schtasks.
-
 
 ## Pendings
 * Include subtitles

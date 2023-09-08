@@ -45,11 +45,12 @@ def plugin_py_settings():
     result = False
     if request.method == 'POST':
         # Obtener el código de plugins desde el formulario
-        plugin_code = request.form.get('plugin_code')
+        plugin_code = request.form.getlist('plugin_field')
         # Guardar el código en el archivo de plugins
-        _ui.plugins_py = plugin_code
+        _ui.plugins_py = '\n'.join(plugin_code)
+        
 
-    plugin_code = _ui.plugins_py
+    plugin_code = _ui.plugins_py.splitlines()
 
     if plugin_code:
         result = True
