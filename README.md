@@ -111,8 +111,8 @@ http://localhost:5005/
 A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/direct/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
 
 ## cli.py  
-Controller that loads plugins functions, used to set cronjobs to manage strm files
-Build Youtube strms manually:
+* Controller that loads plugins functions, used in crons to manage strm files
+* Build Youtube strms manually:
 ```console
 cd /opt/ytdlp2STRM/ && python3 cli.py --media youtube --params direct
 ```
