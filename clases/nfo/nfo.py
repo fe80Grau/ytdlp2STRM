@@ -35,7 +35,7 @@ class nfo:
             <season>{season}</season>
             <episode>{episode}</episode>
             <thumb spoof="" cache="" aspect="landscape" preview="{landscape}">{landscape}</thumb>
-            <thumb spoof="" cache="" aspect="landscape" preview="{poster}">{poster}</thumb>
+            <thumb spoof="" cache="" aspect="poster" preview="{poster}">{poster}</thumb>
             <studio>{studio}</studio>
             <!-- Agregar más campos según sea necesario -->
         </tvshow>
