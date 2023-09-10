@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html data-bs-theme=”auto”>
 <head>
-    <title>ytdlp2STRM - Enable/Disable Plugins</title>
+    <title>ytdlp2STRM - CRONS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,12 +11,37 @@
 </head>
 <body>
     <div class="col-lg-8 mx-auto p-3 py-md-5">
-        <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - Enable/Disable Plugins</h1>
+        <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - CRONS</h1>
         <form method="post">
             <div class="mb-3">
                 <label class="form-label">./config/crons.json</label>
-                <textarea class="form-control" name="crons" rows="10">{{ crons }}</textarea>
+                <div id="plugin-fields">
+                    <div style="display:flex;">
+                        <span style="flex: 1 1 auto; width: 1%;padding-left:12px;">Plugin</span>
+                        <span style="flex: 1 1 auto; width: 1%;padding-left:12px;">Param</span>
+                        <span style="flex: 1 1 auto; width: 1%;padding-left:12px;">Quantity (default 1)</span>
+                        <span style="flex: 1 1 auto; width: 1%;padding-left:12px;">Every</span>
+                        <span style="flex: 1 1 auto; width: 1%;padding-left:12px;">At</span>
+                        <span style="width: 41px;"></span>
+
+                    </div>
+                    {% for field in crons %}
+                        <div class="mb-3 input-group">
+                            <input class="form-control" type="text" name="plugin[]" value="{{ field.do[1] }}">
+                            <input class="form-control" type="text" name="param[]" value="{{ field.do[3] }}">
+                            <input class="form-control" type="text" name="qty[]" value="{{ field.qty }}">
+                            <input class="form-control" type="text" name="every[]" value="{{ field.every }}">
+                            <input class="form-control" type="text" name="at[]" value="{{ field.at }}">
+
+                            <button class="btn btn-danger" type="button" onclick="this.parentNode.parentNode.removeChild(this.parentNode);">
+                                <i class="bi bi-trash"></i>
+                            </button>                        
+                        </div>
+                    {% endfor %}
+                </div>
+
             </div>
+            <button class="btn btn-primary" type="button" id="add-field">Add CRON</button>
             <button class="btn btn-primary" type="submit">Save</button>
             <a href="/" class="btn btn-primary">Go back</a>
         </form>
@@ -36,6 +61,56 @@
             <a style="float:right" href="https://www.buymeacoffee.com/fe80grau" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="width: 90px !important;" ></a>
           </footer>
     </div>
-    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var addFieldButton = document.getElementById('add-field');
+            var pluginFields = document.getElementById('plugin-fields');
+
+            addFieldButton.addEventListener('click', function() {
+                var newField = document.createElement('div');
+                newField.className = 'mb-3 input-group';
+
+                var newInput = document.createElement('input');
+                newInput.className = 'form-control';
+                newInput.type = 'text';
+                newInput.name = 'plugin[]';
+                var newInput2 = document.createElement('input');
+                newInput2.className = 'form-control';
+                newInput2.type = 'text';
+                newInput2.name = 'param[]';
+                var newInput3 = document.createElement('input');
+                newInput3.className = 'form-control';
+                newInput3.type = 'text';
+                newInput3.name = 'qty[]';
+                var newInput4 = document.createElement('input');
+                newInput4.className = 'form-control';
+                newInput4.type = 'text';
+                newInput4.name = 'every[]';
+                var newInput5 = document.createElement('input');
+                newInput5.className = 'form-control';
+                newInput5.type = 'text';
+                newInput5.name = 'at[]';
+
+                var deleteButton = document.createElement('button');
+                deleteButton.className = 'btn btn-danger';
+                var trashIcon = document.createElement('i');
+                trashIcon.className = 'bi bi-trash';
+                deleteButton.appendChild(trashIcon);
+
+                deleteButton.addEventListener('click', function() {
+                    newField.remove();
+                });
+
+                newField.appendChild(newInput);
+                newField.appendChild(newInput2);
+                newField.appendChild(newInput3);
+                newField.appendChild(newInput4);
+                newField.appendChild(newInput5);
+
+                newField.appendChild(deleteButton);
+                pluginFields.appendChild(newField);
+            });
+        });
+    </script>
 </body>
 </html>

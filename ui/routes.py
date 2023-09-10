@@ -12,7 +12,7 @@ def index():
     return render_template(
         'index.html',
         plugins=_ui.plugins,
-        crons=json.loads(crons)
+        crons=crons
     )
 
 # Ruta para las opciones generales
@@ -61,15 +61,35 @@ def plugin_py_settings():
         plugin_code=plugin_code, 
         request=request.method
     )
+
 # Ruta para la edición de plugins
 @app.route('/crons', methods=['GET', 'POST'])
 def crons_settings():
     result = False
     if request.method == 'POST':
         # Obtener el código de plugins desde el formulario
-        crons = request.form.get('crons')
+        headers = ('every', 'qty', 'at', 'plugin', 'param')
+        values = (
+            request.form.getlist('every[]'),
+            request.form.getlist('qty[]'),
+            request.form.getlist('at[]'),
+            request.form.getlist('plugin[]'),
+            request.form.getlist('param[]'),
+        )
+        crons = [{} for i in range(len(values[0]))]
+        for x,i in enumerate(values):
+            for _x,_i in enumerate(i):
+                if not headers[x] == 'plugin' and not headers[x] == 'param':
+                    crons[_x][headers[x]] = _i
+                elif headers[x] == 'plugin':
+                    crons[_x]['do'] = ['--media', _i]
+                elif headers[x] == 'param':
+                    crons[_x]['do'].append('--param')
+                    crons[_x]['do'].append(_i)
+
+        print(crons)
         # Guardar el código en el archivo de plugins
-        _ui.crons = crons
+        _ui.crons = json.dumps(crons)
 
     crons = _ui.crons
     if crons:

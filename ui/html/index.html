@@ -52,7 +52,10 @@
               <ul class="icon-list">
                 {% for value in crons %}
                   <li class="text-muted">
-                    <span class="badge bg-secondary">{{ value.do[1] }}</span> in <span class="badge bg-secondary">{{ value.do[3] }}</span> mode, every <span class="badge bg-secondary">{{ value.qty }} {{ value.every }}</span> at <span class="badge bg-secondary">{{ value.at }}h</span>
+                    <span class="badge bg-secondary">{{ value.do[1] }}</span> in <span class="badge bg-secondary">{{ value.do[3] }}</span> mode, every <span class="badge bg-secondary">{{ value.qty }} {{ value.every }}</span> 
+                    {% if value.at != "" %}
+                      at <span class="badge bg-secondary">{{ value.at }}h</span>
+                    {% endif %}
                   </li>
                 {% endfor %}
               </ul>

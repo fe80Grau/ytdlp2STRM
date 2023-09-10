@@ -17,7 +17,7 @@ class Cron(threading.Thread):
 
     def run(self):
         #print("Loading crons:")
-        for cron in crons:     
+        for cron in crons:
             call_constructor = "schedule.every({}).{}.at('{}').do(main_cli, {})".format(
                 cron['qty'],
                 cron['every'],

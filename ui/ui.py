@@ -87,7 +87,7 @@ class Ui:
     def crons(self):
         data = []
         with open(self.crons_file, 'r') as file:
-            data = file.read()
+            data = json.load(file)
         return data
     
     @crons.setter
