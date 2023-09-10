@@ -87,7 +87,6 @@ def crons_settings():
                     crons[_x]['do'].append('--param')
                     crons[_x]['do'].append(_i)
 
-        print(crons)
         # Guardar el código en el archivo de plugins
         _ui.crons = json.dumps(crons)
 
