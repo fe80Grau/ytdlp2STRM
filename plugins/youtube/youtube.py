@@ -109,35 +109,79 @@ class Youtube:
     def get_description(self):
         #get description
         if platform.system() == "Linux":
-            command = ['yt-dlp', 
-                        'https://www.youtube.com/{}'.format(self.channel), 
-                        '--write-description', 
-                        '--playlist-items', '0',
-                        '--output', '"{}/{}.description"'.format(media_folder, self.channel_name)
-                        ]
+            command = [
+                'yt-dlp', 
+                'https://www.youtube.com/{}'.format(
+                    self.channel
+                ), 
+                '--write-description', 
+                '--playlist-items', '0',
+                '--output', '"{}/{}.description"'.format(
+                    media_folder, 
+                    sanitize(self.channel_name)
+                )
+            ]
             self.set_proxy(command)
 
-            command = command + ['>', '/dev/null', '2>&1','&&', 'cat', '"{}/{}.description"'.format(media_folder, self.channel_name)]
+            command = (
+                command 
+                + [
+                    '>', 
+                    '/dev/null', 
+                    '2>&1',
+                    '&&', 
+                    'cat', 
+                    '"{}/{}.description"'.format(
+                        media_folder, 
+                        sanitize(
+                            self.channel_name
+                        )
+                    )
+                ]
+            )
             
             #print("Command \n {}".format(' '.join(command)))
             #self.channel_description = subprocess.getoutput(' '.join(command))
             self.channel_description = w.worker(command).output()
             #print("Output \n {}".format(description))
             try:
-                os.remove("{}/{}.description".format(media_folder,self.channel_name))
+                os.remove("{}/{}.description".format(media_folder,sanitize(self.channel_name)))
             except:
                 pass
 
         else:
-            command = ['yt-dlp', 
-                        'https://www.youtube.com/{}'.format(self.channel), 
-                        '--write-description', 
-                        '--playlist-items', '0',
-                        '--output', '"{}/{}.description"'.format(media_folder, self.channel_name)
-                        ]
+            command = [
+                'yt-dlp', 
+                'https://www.youtube.com/{}'.format(
+                    self.channel
+                ), 
+                '--write-description', 
+                '--playlist-items', '0',
+                '--output', '"{}/{}.description"'.format(
+                    media_folder, 
+                    sanitize(
+                        self.channel_name
+                    )
+                )
+            ]
             self.set_proxy(command)
 
-            command = command + ['>', 'nul', '2>&1', '&&', 'more', '"{}/{}.description"'.format(media_folder, self.channel_name)]
+            command = (
+                command 
+                + [
+                    '>', 
+                    'nul', 
+                    '2>&1', 
+                    '&&', 
+                    'more', 
+                    '"{}/{}.description"'.format(
+                        media_folder,
+                        sanitize(
+                            self.channel_name
+                        )
+                    )
+                ]
+            )
             
             #print("Command \n {}".format(' '.join(command)))
             try:
@@ -146,7 +190,9 @@ class Youtube:
                 d_file = open(
                     "{}/{}.description".format(
                         media_folder,
-                        self.channel_name
+                        sanitize(
+                            self.channel_name
+                        )
                     ),
                     'r',
                     encoding='utf-8'
@@ -161,7 +207,9 @@ class Youtube:
                 os.remove(
                     "{}/{}.description".format(
                         media_folder,
-                        self.channel_name
+                        sanitize(
+                            self.channel_name
+                        )
                     )
                 )
             except:
@@ -371,7 +419,7 @@ def channel_strm(youtube_channel, youtube_channel_url, method):
 
     ## -- BUILD STRM
     for line in yt.videos:
-        if line != "":
+        if line != "" and not 'ERROR:' in line:
             video_id = str(line).rstrip().split(';')[0]
             video_upload_name = str(line).rstrip().split(';')[1]
             video_upload_date = str(line).rstrip().split(';')[2]

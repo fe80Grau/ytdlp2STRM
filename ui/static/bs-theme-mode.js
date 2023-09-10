@@ -9,7 +9,13 @@
             ).matches ? "dark" : "light"
           )
         }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme)
+        window.matchMedia(
+          '(prefers-color-scheme: dark)'
+        ).addEventListener(
+          'change', 
+          updateTheme
+        )
         updateTheme()
     }
-    })()
+  }
+)()
