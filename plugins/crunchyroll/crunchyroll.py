@@ -72,10 +72,10 @@ class Crunchyroll:
                 playlist_count
             )
         else:
-            sum_episode = int(self.last_episode) + int(playlist_count)
+            #sum_episode = int(self.last_episode) + int(playlist_count)
             f.folders().write_file(
                 self.last_episode_file,
-                str(sum_episode)
+                str(playlist_count)
             )
 
     def set_auth(self, command, quotes=False):
@@ -176,7 +176,7 @@ def to_strm(method):
         try:
             for line in iter(process.stdout.readline, b''):
                 if line != "" and not 'ERROR' in line and not 'WARNING' in line:
-                    
+                    #print(line)
                     season_number = str(line).rstrip().split(';')[0].zfill(2)
                     season = str(line).rstrip().split(';')[1]
                     episode_number = (line).rstrip().split(';')[2].zfill(4)
@@ -248,7 +248,10 @@ def to_strm(method):
                     if crunchyroll.new_content:
                         crunchyroll.set_last_episode(playlist_count)
                     else:
+                        #print(int(playlist_count))
                         sum_episode = int(crunchyroll.last_episode) + int(playlist_count)
+                        #print(int(crunchyroll.last_episode))
+                        #print(sum_episode)
                         crunchyroll.set_last_episode(
                             str(sum_episode)
                         )
