@@ -51,12 +51,9 @@ class Ui:
                     )
                 ).get_config()
 
-                channels = json.dumps(
-                    c.config(
-                        config['channels_list_file']
-                    ).get_channels(),
-                    indent=4
-                )
+                channels = c.config(
+                    config['channels_list_file']
+                ).get_channels()
 
                 plugins.append(
                     {
@@ -77,7 +74,12 @@ class Ui:
 
         if 'channels' in data:
             with open(config_file, 'w', newline="") as file:
-                file.write(data['channels'])
+                file.write(
+                    json.dumps(
+                        data['channels'],
+                        indent=4
+                    )
+                )
         else:
             with open(config_file, 'w') as file:
                 json.dump(data, file)

@@ -24,7 +24,7 @@ class Cron(threading.Thread):
                 cron['at'],
                 cron['do']
             ).replace(
-                '.at()',
+                '.at(\'\')',
                 ''
             )
             #print(call_constructor)

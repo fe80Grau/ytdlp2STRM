@@ -10,7 +10,7 @@
     <script src="/bs-theme-mode.js"></script>
   </head>
 <body>
-    <div class="col-lg-8 mx-auto p-3 py-md-5">
+    <div class="col-lg-10 mx-auto p-3 py-md-5">
         <header class="d-flex align-items-center pb-3 mb-5 border-bottom">
           <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
             <h1>ytdlp2STRM - Settings</h1>
@@ -39,7 +39,7 @@
                       <span class="badge bg-danger">DISABLED</span>
                     {% endif %}
                     <a href="/plugin/{{ value.name }}"><span class="badge bg-primary">Settings</span></a>
-                    {% if value.channels != 'null' %}
+                    {% if value.channels != None %}
                       <a href="/plugin/{{ value.name }}/channels"><span class="badge bg-primary">Channels</span></a>
                     {% endif %}
                   </li>

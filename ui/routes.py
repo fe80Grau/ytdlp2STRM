@@ -138,6 +138,7 @@ def plugin(plugin):
 def plugin_channels(plugin):
     result=False
     plugins = _ui.plugins
+
     selected_plugin = list(filter(lambda p: p['name'] == plugin, plugins))
 
     if request.method == 'POST':
@@ -148,7 +149,7 @@ def plugin_channels(plugin):
             selected_plugin[0]['name'],
             'channel_list.json'
         )
-        config_data['channels'] = request.form.get('channels')
+        config_data['channels'] = request.form.getlist('channels')
         _ui.plugins = config_data
 
         if config_data['channels']:

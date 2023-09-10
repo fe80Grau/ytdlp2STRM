@@ -10,13 +10,21 @@
     <script src="/bs-theme-mode.js"></script>
 </head>
 <body>
-    <div class="col-lg-8 mx-auto p-3 py-md-5">
+    <div class="col-lg-10 mx-auto p-3 py-md-5">
         <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - {{ plugin.name }} Channels</h1>
         <form method="post">
-            <div class="mb-3">
+            <div class="mb-3" id="plugin-fields">
                 <label class="form-label">{{ plugin.path }}/channels_list.json</label>
-                <textarea class="form-control" name="channels" rows="10">{{ plugin.channels }}</textarea>
+                {% for field in plugin.channels %}
+                    <div class="mb-3 input-group">
+                        <input class="form-control" type="text" name="channels" value="{{ field }}">
+                        <button class="btn btn-danger" type="button" onclick="this.parentNode.parentNode.removeChild(this.parentNode);">
+                            <i class="bi bi-trash"></i>
+                        </button>                        
+                    </div>
+                {% endfor %}
             </div>
+            <button class="btn btn-primary" type="button" id="add-field">Add channel</button>
             <button class="btn btn-primary" type="submit">Save</button>
             <a href="/" class="btn btn-primary">Go back</a>
         </form>
@@ -36,5 +44,35 @@
             <a style="float:right" href="https://www.buymeacoffee.com/fe80grau" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="width: 90px !important;" ></a>
           </footer>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var addFieldButton = document.getElementById('add-field');
+            var pluginFields = document.getElementById('plugin-fields');
+
+            addFieldButton.addEventListener('click', function() {
+                var newField = document.createElement('div');
+                newField.className = 'mb-3 input-group';
+
+                var newInput = document.createElement('input');
+                newInput.className = 'form-control';
+                newInput.type = 'text';
+                newInput.name = 'channels';
+
+                var deleteButton = document.createElement('button');
+                deleteButton.className = 'btn btn-danger';
+                var trashIcon = document.createElement('i');
+                trashIcon.className = 'bi bi-trash';
+                deleteButton.appendChild(trashIcon);
+
+                deleteButton.addEventListener('click', function() {
+                    newField.remove();
+                });
+
+                newField.appendChild(newInput);
+                newField.appendChild(deleteButton);
+                pluginFields.appendChild(newField);
+            });
+        });
+    </script>
 </body>
 </html>
