@@ -1,10 +1,10 @@
 # ytdlp2STRM
-* Youtube / Twitch / Crunchyroll  to STRM files
-* Watch Youtube / Twitch / Crunchyroll with Jellyfin/Emby 
-* I recommend YoutubeMetadata plugin for Jellyfin
+* Youtube / Twitch / Crunchyroll etc. to STRM files
+* Watch Youtube through Jellyfin or Emby 
+* Watch Twitch through Jellyfin or Emby 
+* Watch Crunchyroll through Jellyfin or Emby 
 ![ytdlp2STRM](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/cc31ee7c-5e4b-450b-9a3b-526f191d18d8)
 ![Captura de pantalla 2023-09-06 170858](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/d3fa6b5a-ca75-4dc3-b9e6-354ddf9b1fdf)
-![Captura de pantalla 2023-09-06 170858](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/1d0d8a1f-8b12-4928-b0b1-eb5038716048)
 
 ## Prerequisite
 * Python 3 https://www.python.org/downloads/
@@ -90,9 +90,11 @@ http://localhost:5005/
 ```
 
 # Additional info
+* After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch and /media/Crunchyroll as folders in Library and enjoy it!
+
 ## Youtube
 * SponsorBlock doesn't work in redirect mode.
-* After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch and /media/Crunchyroll as folders in Library and enjoy it!
+* Local NFO for each video
 
 ## Twitch
 * If a live video is on air the !000-live-channel.strm will be created. The script will download the strm for each video in the /videos channel tab in any manner. Take a look at the limits and daterange values for videos in ./plugins/twitch/config.json.
@@ -104,15 +106,20 @@ http://localhost:5005/
 * To avoid constant rewriting of the strm files, a file called last_episode.txt is generated in the series directory, it contains the playlist position of the last strm downloaded, this will only generate strm for new episodes.
 * Patch yt-dlp if Crunchyroll not works https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1637748442
 
+## Pokemon TV 
+* Thank you https://github.com/seiya-dev 
+* Thank you https://github.com/seiya-dev 
+
 ## SX3 - Anime en Català (Catalan Anime)
 * Last mp4 url only works if it's requested from Spain IP. This plugin have http_get_proxy and http_get_proxy_url to set an http get proxy , for example http://proxy/?address=
+* This doesn't need a channel_list.json file
 
 ## main.py 
 A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/direct/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
 
 ## cli.py  
 * Controller that loads plugins functions, used in crons to manage strm files
-* Build Youtube strms manually:
+* Build strms manually:
 ```console
 cd /opt/ytdlp2STRM/ && python3 cli.py --media youtube --params direct
 ```
@@ -140,7 +147,12 @@ You can change --media value for another plugin
 * [YOUTUBE] sponsorblock_cats
 * [YOUTUBE] [CRUNCHYROLL] proxy
 * [YOUTUBE] [CRUNCHYROLL] proxy_url
-* [CRUNCHYROLL] crunchyroll_cookies_file
+* [CRUNCHYROLL] crunchyroll_auth (browser, cookies or login), browser option in addition with background task opening firefox is the best way to keep unatended workflow.
+* [CRUNCHYROLL] crunchyroll_browser (set if your choice in curnchyroll_auth is browser) You can read more about this searching --cookies-from-browser in https://github.com/yt-dlp/yt-dlp
+* [CRUNCHYROLL] crunchyroll_useragent (set if your choice in curnchyroll_auth is browser) Needs the same user agent that your browser. If you search current user-agent in Google you can see your user-agent, copy it.
+* [CRUNCHYROLL] crunchyroll_username (set if your choice in curnchyroll_auth is login)
+* [CRUNCHYROLL] crunchyroll_password (set if your choice in curnchyroll_auth is login)
+* [CRUNCHYROLL] crunchyroll_cookies_file (set if your choice in curnchyroll_auth is cookies)
 * [CRUNCHYROLL] crunchyroll_audio_language
 * [CRUNCHYROLL] crunchyroll_subtitle_language <- embedded in video
 * [SX3] http_get_proxy
