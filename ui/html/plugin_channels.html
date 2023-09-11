@@ -14,6 +14,18 @@
         <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - {{ plugin.name }} Channels</h1>
         <form method="post">
             <div class="mb-3" id="plugin-fields">
+                {% if request == "POST": %}
+                    {% if result: %}
+                        <div class="alert alert-success mt-5" role="alert">
+                            {{ plugin.path }}/channels.json saved.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger mt-5" role="alert">
+                            Error
+                        </div>
+                    {% endif %}
+                {% endif %}
+
                 <label class="form-label">{{ plugin.path }}/channels_list.json</label>
                 {% for field in plugin.channels %}
                     <div class="mb-3 input-group">
@@ -28,17 +40,6 @@
             <button class="btn btn-primary" type="submit">Save</button>
             <a href="/" class="btn btn-primary">Go back</a>
         </form>
-        {% if request == "POST": %}
-            {% if result: %}
-                <div class="alert alert-success mt-5" role="alert">
-                    {{ plugin.path }}/channels.json saved.
-                </div>
-            {% else %}
-                <div class="alert alert-danger mt-5" role="alert">
-                    Error
-                </div>
-            {% endif %}
-        {% endif %}
         <footer class="pt-5 my-5 text-muted border-top">
             <a href="https://github.com/fe80Grau/ytdlp2STRM" target="_blank"><i class="bi bi-github"></i> fe80grau / ytdlp2STRM</a>
             <a style="float:right" href="https://www.buymeacoffee.com/fe80grau" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="width: 90px !important;" ></a>

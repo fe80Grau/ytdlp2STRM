@@ -22,8 +22,8 @@ class Youtube:
                 self.channel_name = self.get_name()
                 self.channel_description = self.get_description()
                 self.thumbs = self.get_thumbs()
-                self.channel_poster = self.thumbs['landscape']
-                self.channel_landscape = self.thumbs['poster']
+                self.channel_poster = self.thumbs['poster']
+                self.channel_landscape = self.thumbs['landscape']
                 self.videos = self.get_videos()
 
     def get_id(self):
@@ -95,7 +95,9 @@ class Youtube:
         #print("Command {}".format(' '.join(command)))
         #self.channel_name = subprocess.getoutput(' '.join(command))
         self.channel_name = w.worker(command).output()
-        return self.channel_name
+        return sanitize(
+            self.channel_name
+        )
 
     def get_name_folder(self):
         self.channel_name_folder = (
@@ -288,7 +290,7 @@ class Youtube:
         command = ['yt-dlp', 
                     '--compat-options', 'no-youtube-channel-redirect',
                     '--compat-options', 'no-youtube-unavailable-videos',
-                    '--print', '"%(id)s;%(title)s;%(upload_date)s"', 
+                    '--print', '"%(id)s;%(title)s;%(upload_date)s;%(thumbnail)s;%(description)s;@#"', 
                     '--dateafter', "today-{}days".format(days_dateafter), 
                     '--playlist-start', '1', 
                     '--playlist-end', videos_limit, 
@@ -303,7 +305,7 @@ class Youtube:
             w.worker(
                 command
             ).output()
-            .split('\n')
+            .split(';@#')
         )
 
         return self.videos
@@ -408,8 +410,8 @@ def channel_strm(youtube_channel, youtube_channel_url, method):
         {
             "title" : yt.channel_name,
             "plot" : yt.channel_description,
-            "season" : "1",
-            "episode" : "-1",
+            "season" : "",
+            "episode" : "",
             "landscape" : yt.channel_landscape,
             "poster" : yt.channel_poster,
             "studio" : "Youtube"
@@ -423,6 +425,8 @@ def channel_strm(youtube_channel, youtube_channel_url, method):
             video_id = str(line).rstrip().split(';')[0]
             video_upload_name = str(line).rstrip().split(';')[1]
             video_upload_date = str(line).rstrip().split(';')[2]
+            video_thumbnail = str(line).rstrip().split(';')[3]
+            video_description = str(line).rstrip().split(';')[4]
 
             video_name = "{} - {} [{}]".format(
                 video_upload_date,
@@ -449,6 +453,27 @@ def channel_strm(youtube_channel, youtube_channel_url, method):
                 sanitize(video_name), 
                 "strm"
             )
+
+            ## -- BUILD VIDEO NFO FILE
+            n.nfo(
+                "episode",
+                "{}/{}".format(
+                    media_folder, 
+                    "{} [{}]".format(
+                        yt.channel_name_folder,
+                        yt.channel_id
+                    )
+                ),
+                {
+                    "item_name" : sanitize(video_name),
+                    "title" : sanitize(video_name),
+                    "plot" : video_description,
+                    "season" : "",
+                    "episode" : "",
+                    "preview" : video_thumbnail
+                }
+            ).make_nfo()
+            ## -- END 
 
             if not os.path.isfile(file_path):
                 f.folders().write_file(

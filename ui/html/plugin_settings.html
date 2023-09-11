@@ -12,17 +12,6 @@
 <body>
     <div class="col-lg-10 mx-auto p-3 py-md-5">
         <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - {{ plugin.name }} Settings</h1>
-        <label class="form-label">{{ plugin.path }}/config.json</label>
-        <form method="post">
-            {% for key, value in plugin.config.items() %}
-                <div class="mb-3">
-                    <label class="form-label">{{ key }}</label>
-                    <input class="form-control" type="text" name="{{ key }}" value="{{ value }}">
-                </div>
-            {% endfor %}
-            <button class="btn btn-primary" type="submit">Save</button>
-            <a href="/" class="btn btn-primary">Go back</a>
-        </form>
         {% if request == "POST": %}
             {% if result: %}
                 <div class="alert alert-success mt-5" role="alert">
@@ -34,6 +23,17 @@
                 </div>
             {% endif %}
         {% endif %}
+        <label class="form-label">{{ plugin.path }}/config.json</label>
+        <form method="post">
+            {% for key, value in plugin.config.items() %}
+                <div class="mb-3">
+                    <label class="form-label">{{ key }}</label>
+                    <input class="form-control" type="text" name="{{ key }}" value="{{ value }}">
+                </div>
+            {% endfor %}
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a href="/" class="btn btn-primary">Go back</a>
+        </form>
         <footer class="pt-5 my-5 text-muted border-top">
             <a href="https://github.com/fe80Grau/ytdlp2STRM" target="_blank"><i class="bi bi-github"></i> fe80grau / ytdlp2STRM</a>
             <a style="float:right" href="https://www.buymeacoffee.com/fe80grau" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="width: 90px !important;" ></a>

@@ -151,11 +151,11 @@ class Twitch:
         landscape = ""
 
         for picture in pictures:
-            landscape = picture['data']['userOrError']['profileImageURL'].replace(
+            poster = picture['data']['userOrError']['profileImageURL'].replace(
                 '70x70',
                 '300x300'
             )
-            poster = picture['data']['userOrError']['bannerImageURL']
+            landscape = picture['data']['userOrError']['bannerImageURL']
 
         return {
             "poster" : poster,

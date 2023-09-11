@@ -24,7 +24,7 @@ class nfo:
 
         # Crear el archivo NFO
         with open(f"{self.nfo_path}/{nfo_filename}", "w", encoding="utf-8") as nfo_file:
-            nfo_file.write(nfo_content)
+            nfo_file.write(nfo_content.strip())
 
 
     tvshow_template = """
@@ -56,9 +56,8 @@ class nfo:
         <episodedetails>
             <title>{title}</title>
             <plot>{plot}</plot>
-            <genre>{genre}</genre>
             <season>{season}</season>
             <episode>{episode}</episode>
-            <!-- Agregar más campos según sea necesario -->
+            <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
         </episodedetails>
     """
