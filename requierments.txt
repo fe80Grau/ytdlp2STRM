@@ -5,3 +5,4 @@ beautifulsoup4
 requests[socks]
 requests_html
 schedule
+Werkzeug==2.2.2
