@@ -30,8 +30,8 @@ class folders:
     def write_file(self, file_path, content):
         # Escribir el contenido en el archivo
         try:
-            with open(file_path.replace('\n',''), "w") as file:
-                file.write(content)
+            with open(file_path, "w") as file:
+                file.write(content.replace('\n',''))
 
             print(f"File created: {file_path}")
         except:
