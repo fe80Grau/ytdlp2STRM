@@ -1,11 +1,14 @@
-from flask import redirect
+from flask import stream_with_context, Response, send_file, redirect
 from sanitize_filename import sanitize
 import os
 import requests
+import time
+import sys
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
+
 
 ## -- TWITCH CLASS
 class Twitch:
@@ -453,4 +456,109 @@ def direct(twitch_id):
         twitch_url, 
         code=301
     )
+
+def bridge(twitch_id):
+    channel = twitch_id.split("@")[0]
+    video_id = twitch_id.split("@")[1]
+
+    turl = 'https://www.twitch.tv/videos/{}'.format(
+        video_id
+    )
+    twitch_url = w.worker(
+        [
+            'yt-dlp', 
+            '-f', 'best',
+            '--no-warnings',
+            turl,
+            '--get-url'
+        ]   
+    ).output()
+
+    if 'ERROR' in twitch_url:
+
+        turl = 'https://www.twitch.tv/videos/{}'.format(
+            video_id.replace(
+                'v',
+                ''
+            )
+        )
+
+        twitch_url = w.worker(
+            [
+                'yt-dlp', 
+                '-f', 'best',
+                '--no-warnings',
+                turl,
+                '--get-url'
+            ]   
+        ).output()
+
+        if 'ERROR' in twitch_url:
+
+            turl = 'https://www.twitch.tv/{}'.format(
+                channel          
+            )
+
+            twitch_url = w.worker(
+                [
+                    'yt-dlp', 
+                    '-f', 'best',
+                    '--no-warnings',
+                    'https://www.twitch.tv/{}'.format(
+                        channel          
+                    ),
+                    '--get-url'
+                ]   
+            ).output()
+
+
+
+    def generate():
+        startTime = time.time()
+        buffer = []
+        sentBurst = False
+        command = [
+            'yt-dlp', 
+            '-o', '-',
+            '-f', 'best',
+            '--no-warnings',
+            '--restrict-filenames',
+            turl
+        ]
+
+        print(' '.join(command))
+        process = w.worker(command).pipe()
+        try:
+            while True:
+                # Get some data from ffmpeg
+                line = process.stdout.read(1024)
+
+                # We buffer everything before outputting it
+                buffer.append(line)
+
+                # Minimum buffer time, 3 seconds
+                if sentBurst is False and time.time() > startTime + 3 and len(buffer) > 0:
+                    sentBurst = True
+
+                    for i in range(0, len(buffer) - 2):
+                        print("Send initial burst #", i)
+                        yield buffer.pop(0)
+
+                elif time.time() > startTime + 3 and len(buffer) > 0:
+                    yield buffer.pop(0)
+
+                process.poll()
+                if isinstance(process.returncode, int):
+                    if process.returncode > 0:
+                        print('yt-dlp Error', process.returncode)
+                    break
+        finally:
+            process.kill()
+
+    return Response(
+        stream_with_context(generate()), 
+        mimetype = "video/mp4"
+    ) 
+
+
 ## -- END

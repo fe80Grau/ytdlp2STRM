@@ -110,11 +110,10 @@ http://localhost:5005/
 
 ## Pokemon TV 
 * Thank you https://github.com/seiya-dev 
-* Thank you https://github.com/seiya-dev 
+* This doesn't need a channel_list.json file
 
 ## SX3 - Anime en Català (Catalan Anime)
 * Last mp4 url only works if it's requested from Spain IP. This plugin have http_get_proxy and http_get_proxy_url to set an http get proxy , for example http://proxy/?address=
-* This doesn't need a channel_list.json file
 
 ## main.py 
 A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/direct/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)

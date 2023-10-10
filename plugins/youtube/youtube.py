@@ -322,8 +322,6 @@ class Youtube:
                         '--no-warning',
                         '--print', '"%(id)s;%(channel_id)s;%(uploader_id)s;%(title)s"']
                     
-        self.set_proxy(command)
-        #print(' '.join(command))
 
         if config['days_dateafter'] == "0":
             command.pop(8)
@@ -335,6 +333,7 @@ class Youtube:
             ).output()
             .split('\n')
         )
+
         return self.videos
     
     def set_proxy(self, command):
@@ -501,6 +500,8 @@ def keyword_strm(keyword, method):
                 method, 
                 video_id
             )
+
+
             file_path = "{}/{}/{}.{}".format(
                 media_folder, 
                 sanitize(
@@ -555,7 +556,7 @@ def keyword_strm(keyword, method):
             ).make_nfo()
 
             if not os.path.isfile(file_path):
-                f.folders.write_file(
+                f.folders().write_file(
                     file_path, 
                     file_content
                 )

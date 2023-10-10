@@ -15,7 +15,8 @@ class worker:
         return subprocess.Popen(
             self.command, 
             stdout=subprocess.PIPE,
-            universal_newlines=True
+            universal_newlines=True,
+            encoding='latin-1'
         )
 
     def call(self):
