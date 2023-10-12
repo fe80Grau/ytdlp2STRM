@@ -24,7 +24,10 @@ class Youtube:
                 self.thumbs = self.get_thumbs()
                 self.channel_poster = self.thumbs['poster']
                 self.channel_landscape = self.thumbs['landscape']
-                self.videos = self.get_videos()
+                if 'novideo' in channel:
+                    self.videos = []
+                else:
+                    self.videos = self.get_videos()
 
     def get_id(self):
         command = [
@@ -530,7 +533,7 @@ def keyword_strm(keyword, method):
 
             channel = Youtube(
                 youtube_channel_folder, 
-                "https://www.youtube.com/channel/{}".format(
+                "https://www.youtube.com/channel/{}?novideo".format(
                     channel_id
                 )
             )
