@@ -12,21 +12,32 @@ from clases.nfo import nfo as n
 class Youtube:
     def __init__(self, channel=False, channel_url=False):
         if channel:
+            
             self.channel = channel
             self.channel_url = channel_url
             if  'keyword-' in channel:
+                print("Searching {}...".format(channel))
                 self.videos = self.get_search()
             else:
+                print("Working channel URL: {}".format(channel_url))
+                print('Getting channel ID...')
                 self.channel_id = self.get_id()
+                print('Generating name folder...')
                 self.channel_name_folder = self.get_name_folder()
+                print('Getting name...')
                 self.channel_name = self.get_name()
+                print('Getting description...')
                 self.channel_description = self.get_description()
+                print('Getting thumbnails...')
                 self.thumbs = self.get_thumbs()
                 self.channel_poster = self.thumbs['poster']
                 self.channel_landscape = self.thumbs['landscape']
-                if 'novideo' in channel:
+
+                if 'novideo' in channel_url:
+                    print('novideo flag, only channel info...')
                     self.videos = []
                 else:
+                    print('Getting videos...')
                     self.videos = self.get_videos()
 
     def get_id(self):
