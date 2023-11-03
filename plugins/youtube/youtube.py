@@ -54,6 +54,8 @@ class Youtube:
             self.channel_url
         ]
 
+        #print(' '.join(command))
+
         self.set_proxy(command)
 
         output = (
@@ -586,6 +588,7 @@ def to_strm(method):
             youtube_channel.replace('https://www.youtube.com/', '') if not '/user/' in youtube_channel 
             else youtube_channel.replace('https://www.youtube.com', '')
         )
+        print(youtube_channel)
         
         #formating youtube URL and init channel_id
         youtube_channel_url = "https://www.youtube.com/{}/videos".format(

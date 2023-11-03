@@ -46,8 +46,7 @@ class nfo:
         <movie>
             <title>{title}</title>
             <plot>{plot}</plot>
-            <genre>{genre}</genre>
-            <!-- Agregar más campos según sea necesario -->
+            <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
         </movie>
     """
 

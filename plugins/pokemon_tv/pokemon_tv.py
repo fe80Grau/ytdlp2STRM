@@ -4,6 +4,7 @@ import json
 import requests
 from clases.config import config as c
 from clases.folders import folders as f
+from clases.nfo import nfo as n
 
 
 ## -- LOAD CONFIG AND CHANNELS FILES
@@ -56,6 +57,8 @@ def to_strm(method):
         if 'movies' in channel:
             seasson_type = "movies"
 
+        nfo_type = "episode" if seasson_type != "movies" else "movie"
+
         pokemon_channel_folder = (
              channel
              .split('/')[-1]
@@ -88,8 +91,8 @@ def to_strm(method):
             video_name = (
                 "{} - {}".format(
                     "S{}E{}".format(
-                        item['season'], 
-                        item['episode']
+                        item['season'].zfill(2), 
+                        item['episode'].zfill(2)
                     ), 
                     item['title']
                 )
@@ -100,7 +103,10 @@ def to_strm(method):
                 )
             )
 
-            file_content = item["stream_url"]
+            if 'stream_url' in item:
+                file_content = item['stream_url']
+            else:
+                file_content = item["offline_url"]
             file_path = (
                 "{}/{}/{}/{}/{}.{}".format(
                     media_folder,
@@ -132,6 +138,30 @@ def to_strm(method):
                 False,
                 config
             )
+            ## -- BUILD VIDEO NFO FILE
+            n.nfo(
+                nfo_type,
+                "{}/{}/{}/{}".format(
+                    media_folder, 
+                    "Pokemon",
+                    seasson_type,
+                    sanitize(
+                        "{} - {}".format(
+                            pokemon_channel_folder,
+                            seasson_api["channel_name"]
+                        )
+                    )
+                ),
+                {
+                    "item_name" : sanitize(video_name),
+                    "title" : item['title'],
+                    "plot" : item['description'],
+                    "season" : item['season'],
+                    "episode" : item['episode'],
+                    "preview" : item['images']['large']
+                }
+            ).make_nfo()
+
 
             if not os.path.isfile(file_path):
                 f.folders().write_file(file_path, file_content)

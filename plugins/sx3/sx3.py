@@ -84,119 +84,101 @@ channels_list = config["channels_list_file"]
 ## -- MANDATORY TO_STRM FUNCTION 
 def to_strm(method):
     for channel in channels:
-        #Clearing channel folder name
-        sx3 = Sx3(channel)
-        #Make a folder and inflate nfo file
-        f.folders().make_clean_folder(
-            "{}/{}".format(
-                media_folder,
-                sanitize(
-                    "{}".format(
-                        sx3.channel_folder
-                    )
-                )
-            ),
-            True,
-            config
-        )
-
-        ## -- BUILD CHANNEL NFO FILE
-        n.nfo(
-            "tvshow",
-            "{}/{}".format(
-                media_folder, 
-                "{}".format(
-                    sx3.channel_folder,
-                )
-            ),
-            {
-                "title" : sx3.name,
-                "plot" : sx3.description,
-                "season" : "1",
-                "episode" : "-1",
-                "landscape" : sx3.landscape,
-                "poster" : sx3.poster,
-                "studio" : "SX3"
-            }
-        ).make_nfo()
-        ## -- END 
-
-        ## -- BUILD STRM
-        last_capitol = False
-        capitols = []
-        for item in sx3.api_data['resposta']['items']['item']:
-            #get serie id from first_episode_id
-            item['capitol_temporada'] = str(item['capitol_temporada']).zfill(2)
-            item['titol'] = item['titol'].split('-')
-            if len(item['titol']) > 1:
-                item['titol'] = item['titol'][1]
-            else:
-                item['titol'] = item['titol'][0]
-
-            if 'temporades' in item:
-                temporada = item['temporades'][0]['desc']
-            else:
-                if last_capitol:
-                    if 'temporada' in last_capitol:
-                        temporada = last_capitol['temporada']
-                    else:
-                        temporada = False
-
-            capitol = {
-                "capitol" : item['capitol'],
-                "temporada": temporada,
-                "capitol_temporada": item['capitol_temporada'],
-                "titol": item['titol'],
-                "id": item['id'],
-                "id_serie": sx3.id,
-            }
-            capitols.append(capitol)
-
-            last_capitol = capitol
-
-            try:
-                sn = ''.join([n for n in temporada if n.isdigit()])[0]
-            except:
-                sn = 0
-
-            sn = str(sn).zfill(2)
-            
-            video_name = "{} - {}".format(
-                "S{}E{}".format(
-                    sn, 
-                    item['capitol_temporada']
-                ), 
-                item['titol']
-            )
-            url = "{}_{}".format(item['id'], sx3.id)
-
-            file_content = "http://{}:{}/{}/{}/{}".format(
-                ytdlp2strm_config['ytdlp2strm_host'], 
-                ytdlp2strm_config['ytdlp2strm_port'], 
-                source_platform, 
-                method, 
-                url
-            )
-            file_path = "{}/{}/{}/{}.{}".format(
-                media_folder,  
-                sanitize(
-                    "{}".format(
-                        sx3.channel_folder
-                    )
-                ),  
-                sanitize(
-                    "S{} - {}".format(
-                        sn,
-                        temporada
-                    )
-                ), 
-                sanitize(
-                    video_name
-                ), 
-                "strm"
-            )
+        try:
+            #Clearing channel folder name
+            sx3 = Sx3(channel)
+            #Make a folder and inflate nfo file
             f.folders().make_clean_folder(
-                "{}/{}/{}".format(
+                "{}/{}".format(
+                    media_folder,
+                    sanitize(
+                        "{}".format(
+                            sx3.channel_folder
+                        )
+                    )
+                ),
+                True,
+                config
+            )
+
+            ## -- BUILD CHANNEL NFO FILE
+            n.nfo(
+                "tvshow",
+                "{}/{}".format(
+                    media_folder, 
+                    "{}".format(
+                        sx3.channel_folder,
+                    )
+                ),
+                {
+                    "title" : sx3.name,
+                    "plot" : sx3.description,
+                    "season" : "1",
+                    "episode" : "-1",
+                    "landscape" : sx3.landscape,
+                    "poster" : sx3.poster,
+                    "studio" : "SX3"
+                }
+            ).make_nfo()
+            ## -- END 
+
+            ## -- BUILD STRM
+            last_capitol = False
+            capitols = []
+            for item in sx3.api_data['resposta']['items']['item']:
+                #get serie id from first_episode_id
+                item['capitol_temporada'] = str(item['capitol_temporada']).zfill(2)
+                item['titol'] = item['titol'].split('-')
+                if len(item['titol']) > 1:
+                    item['titol'] = item['titol'][1]
+                else:
+                    item['titol'] = item['titol'][0]
+
+                if 'temporades' in item:
+                    temporada = item['temporades'][0]['desc']
+                else:
+                    if last_capitol:
+                        if 'temporada' in last_capitol:
+                            temporada = last_capitol['temporada']
+                        else:
+                            temporada = False
+
+                capitol = {
+                    "capitol" : item['capitol'],
+                    "temporada": temporada,
+                    "capitol_temporada": item['capitol_temporada'],
+                    "titol": item['titol'],
+                    "id": item['id'],
+                    "id_serie": sx3.id,
+                }
+                capitols.append(capitol)
+
+                last_capitol = capitol
+
+                try:
+                    sn = ''.join([n for n in temporada if n.isdigit()])[0]
+                except:
+                    sn = 0
+
+                sn = str(sn).zfill(2)
+                
+                video_name = "{} - {}".format(
+                    "S{}E{}".format(
+                        sn, 
+                        item['capitol_temporada']
+                    ), 
+                    item['titol']
+                )
+                url = "{}_{}".format(item['id'], sx3.id)
+
+                file_content = "http://{}:{}/{}/{}/{}".format(
+                    ytdlp2strm_config['ytdlp2strm_host'], 
+                    ytdlp2strm_config['ytdlp2strm_port'], 
+                    source_platform, 
+                    method, 
+                    url
+                )
+                file_path = "{}/{}/{}/{}.{}".format(
                     media_folder,  
                     sanitize(
                         "{}".format(
@@ -205,17 +187,38 @@ def to_strm(method):
                     ),  
                     sanitize(
                         "S{} - {}".format(
-                            sn, 
+                            sn,
                             temporada
                         )
-                    )
-                ),
-                False,
-                config
-            )
+                    ), 
+                    sanitize(
+                        video_name
+                    ), 
+                    "strm"
+                )
+                f.folders().make_clean_folder(
+                    "{}/{}/{}".format(
+                        media_folder,  
+                        sanitize(
+                            "{}".format(
+                                sx3.channel_folder
+                            )
+                        ),  
+                        sanitize(
+                            "S{} - {}".format(
+                                sn, 
+                                temporada
+                            )
+                        )
+                    ),
+                    False,
+                    config
+                )
 
-            if not os.path.isfile(file_path):
-                f.folders().write_file(file_path, file_content)
+                if not os.path.isfile(file_path):
+                    f.folders().write_file(file_path, file_content)
+        except:
+            continue
         ## -- END
 ## -- END
 
