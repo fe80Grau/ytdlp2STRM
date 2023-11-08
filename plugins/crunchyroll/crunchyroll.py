@@ -62,6 +62,8 @@ class Crunchyroll:
     def set_start_episode(self, command):
         if not self.new_content:
             next_episode = int(self.last_episode)
+            if next_episode < 1:
+                next_episode = 1
             command.append('--playlist-start')
             command.append('{}'.format(next_episode))
 
