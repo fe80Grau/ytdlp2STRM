@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css" integrity="sha384-b6lVK+yci+bfDmaY1u0zE8YYJt0TZxLEAFyYSLHId4xoVvsrQu3INevFKo+Xir8e" crossorigin="anonymous">
     <link rel="stylesheet" href="/styles.css" crossorigin="anonymous">
     <script src="/bs-theme-mode.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.min.js"></script>
+
   </head>
 <body>
     <div class="col-lg-10 mx-auto p-3 py-md-5">
@@ -60,6 +62,17 @@
                 {% endfor %}
               </ul>
             </div>
+            <!--
+            <div class="col-md-12">
+              <form id="command-form">
+                  <textarea id="command-input" name="code" rows="10" cols="50"></textarea><br>
+                  <input type="submit" value="Ejecutar">
+              </form>
+              
+              <h3>Resultado:</h3>
+              <pre id="output"></pre>
+            </div>
+            -->
           </div>
         </main>
         <footer class="pt-5 my-5 text-muted border-top">
@@ -67,5 +80,37 @@
           <a style="float:right" href="https://www.buymeacoffee.com/fe80grau" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="width: 90px !important;" ></a>
         </footer>
       </div>
+    <script>
+      /*
+      document.addEventListener('DOMContentLoaded', function() {
+        var socket = io.connect('http://localhost:5000');
+        var outputPre = document.getElementById('output');
+        // Event handler for the 'connect' event
+        socket.on('connect', function() {
+          console.log('ytdlp2STRM IO connected');
+        });
+
+        // Event handler for the 'message' event
+        socket.on('message', function(data) {
+            outputPre.textContent += event.data;
+            outputPre.scrollTop = outputPre.scrollHeight;
+        });
+
+        document.getElementById('command-form').addEventListener('submit', function(e) {
+              e.preventDefault();
+
+              outputPre.textContent = '';
+
+              var command = document.getElementById('command-input').value;
+              sendMessage(command);
+          });
+
+        // Send a message to the server
+        function sendMessage(message) {
+          socket.emit('message', message);
+        }
+      });
+      */
+    </script>
 </body>
 </html>

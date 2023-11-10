@@ -1,8 +1,10 @@
 from __main__ import app
-from flask import request, render_template, send_from_directory
+from flask import request, render_template
+from subprocess import Popen, PIPE, STDOUT
+#from flask_socketio import emit
 import json
+from clases.worker import worker as w
 from ui.ui import Ui
-
 _ui = Ui()
 
 # Ruta principal
@@ -164,3 +166,19 @@ def plugin_channels(plugin):
         result=result,
         request=request.method
     )
+
+"""
+@socketio.on('connect')
+def on_connect():
+    print('ytdlp2STRM IO connected')
+
+@socketio.on('message')
+def execute(command): 
+    try:
+        print(command)
+        for path in w.worker(command).run_command():
+            print(path)
+    except:
+        print('except')
+        pass     
+"""

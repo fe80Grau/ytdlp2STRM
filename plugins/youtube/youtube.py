@@ -15,6 +15,7 @@ class Youtube:
             
             self.channel = channel
             self.channel_url = channel_url
+            self.channel_id = ""
             if  'keyword-' in channel:
                 print("Searching {}...".format(channel))
                 self.videos = self.get_search()
@@ -87,7 +88,7 @@ class Youtube:
         #get channel or playlist name
         if 'list-' in self.channel_name_folder:
             command = ['yt-dlp', 
-                    'https://www.youtube.com/{}'.format(self.channel), 
+                    'https://www.youtube.com/playlist?list={}'.format(self.channel.split('list-')[1]), 
                     '--compat-options', 'no-youtube-unavailable-videos',
                     '--print', '"%(playlist_title)s"', 
                     '--playlist-items', '1',
@@ -108,7 +109,7 @@ class Youtube:
                         '--compat-options', 'no-youtube-channel-redirect']
         self.set_proxy(command)
 
-        #print("Command {}".format(' '.join(command)))
+        print("Command {}".format(' '.join(command)))
         #self.channel_name = subprocess.getoutput(' '.join(command))
         self.channel_name = w.worker(command).output()
         return sanitize(
