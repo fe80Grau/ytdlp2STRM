@@ -55,7 +55,7 @@ class Youtube:
             self.channel_url
         ]
 
-        #print(' '.join(command))
+        print(' '.join(command))
 
         self.set_proxy(command)
 
@@ -76,11 +76,10 @@ class Youtube:
         
         if not self.channel_id:
             youtube_channel_url = "https://www.youtube.com/{}".format(
-                self.channel
+                self.channel.lstrip('/')
             )
-            self.get_id(
-                youtube_channel_url
-            )
+            self.channel_url = youtube_channel_url
+            self.get_id()
         
         return self.channel_id
 
