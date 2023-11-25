@@ -19,10 +19,10 @@ class worker:
             self.command, 
             stdout=subprocess.PIPE,
             universal_newlines=True,
-            encoding='latin-1',
-            cwd=self.wd,
-            bufsize=1,
-            shell=True
+            #encoding='latin-1',
+            cwd=self.wd
+            #bufsize=1,
+            #shell=True
         )
 
     def call(self):
