@@ -33,7 +33,7 @@ def to_strm(param):
         body.send_keys(Keys.PAGE_DOWN)
         time.sleep(1)  # Waiting time for loading, adjustable if needed
         new_links = driver.execute_script('''
-        let links = document.querySelectorAll('a.horizontal-card-hover__link--A-RZX');
+        let links = document.querySelectorAll('a');
         return Array.from(links)
             .filter(link => link.href.startsWith('https://www.crunchyroll.com/fr/series/') && !link.title.includes('VOSTA'))
             .map(link => link.href);
