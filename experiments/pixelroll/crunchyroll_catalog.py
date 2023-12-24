@@ -10,7 +10,7 @@ def to_strm(param):
     driver = Driver(uc=True)
 
     # Opening the Crunchyroll page
-    driver.get('https://www.crunchyroll.com/fr/videos/alphabetical')
+    driver.get('https://www.crunchyroll.com/es/videos/alphabetical')
 
     # Waiting for the page to load completely
     time.sleep(3)
@@ -35,7 +35,7 @@ def to_strm(param):
         new_links = driver.execute_script('''
         let links = document.querySelectorAll('a.horizontal-card-hover__link--A-RZX');
         return Array.from(links)
-            .filter(link => link.href.startsWith('https://www.crunchyroll.com/fr/series/') && !link.title.includes('VOSTA'))
+            .filter(link => link.href.startsWith('https://www.crunchyroll.com/es/series/'))
             .map(link => link.href);
         ''')
         links.update(new_links)

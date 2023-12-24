@@ -180,7 +180,6 @@ class Twitch:
                 "videos"
             )
         ]
-    
         return w.worker(
             command
         ).output().split('\n')
@@ -223,13 +222,29 @@ def to_strm(method):
 
         # -- MAKES CHANNEL DIR IF NOT EXIST,
         f.folders().make_clean_folder(
-            "{}/{}".format(
+            "{}/{}/{}".format(
                 media_folder,  
                 sanitize(
                     "{}".format(
                         twitch.channel
                     )
-                )
+                ),
+                'live'
+            ),
+            False,
+            config
+        )
+        ## -- END
+        # -- MAKES CHANNEL DIR IF NOT EXIST,
+        f.folders().make_clean_folder(
+            "{}/{}/{}".format(
+                media_folder,  
+                sanitize(
+                    "{}".format(
+                        twitch.channel
+                    )
+                ),
+                'videos'
             ),
             False,
             config
@@ -285,12 +300,13 @@ def to_strm(method):
                             )
                         )
                     
-                    file_path = "{}/{}/{}.{}".format(
+                    file_path = "{}/{}/{}/{}.{}".format(
                         media_folder,  
                         sanitize(
                             "{}".format(
                                 twitch_channel)
                             ), 
+                        'live',
                         sanitize(
                             "!000-live-{}".format(
                                 twitch_channel
@@ -362,13 +378,14 @@ def to_strm(method):
                         )
                     )
 
-                    file_path = "{}/{}/{}.{}".format(
+                    file_path = "{}/{}/{}/{}.{}".format(
                         media_folder,  
                         sanitize(
                             "{}".format(
                                 twitch_channel
                             )
                         ), 
+                        'videos',
                         sanitize(
                             "{}-{}".format(
                                 upload_date,

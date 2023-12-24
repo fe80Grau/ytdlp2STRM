@@ -61,7 +61,10 @@ class Crunchyroll:
 
     def set_start_episode(self, command):
         if not self.new_content:
-            next_episode = int(self.last_episode)
+            try:
+                next_episode = int(self.last_episode)
+            except:
+                next_episode = 1
             if next_episode < 1:
                 next_episode = 1
             command.append('--playlist-start')
@@ -191,41 +194,25 @@ def to_strm(method):
                     ).replace('/','_')
                     playlist_count = (line).rstrip().split(';')[5]
                
-                    video_name = "{} - {}".format(
-                        "S{}E{}".format(
-                            season_number, 
-                            episode_number
-                        ), 
-                        episode
-                    )
+                    if not episode_number == '0' and not episode_number  == 0:
 
-                    file_content = "http://{}:{}/{}/{}/{}".format(
-                        ytdlp2strm_config['ytdlp2strm_host'], 
-                        ytdlp2strm_config['ytdlp2strm_port'], 
-                        source_platform, 
-                        method, 
-                        url
-                    )
-
-                    file_path = "{}/{}/{}/{}.{}".format(
-                        media_folder,  
-                        sanitize(
-                            "{}".format(
-                                crunchyroll.channel_folder
-                            )
-                        ),  
-                        sanitize(
-                            "S{} - {}".format(
+                        video_name = "{} - {}".format(
+                            "S{}E{}".format(
                                 season_number, 
-                                season
-                            )
-                        ), 
-                        sanitize(video_name), 
-                        "strm"
-                    )
+                                episode_number
+                            ), 
+                            episode
+                        )
 
-                    f.folders().make_clean_folder(
-                        "{}/{}/{}".format(
+                        file_content = "http://{}:{}/{}/{}/{}".format(
+                            ytdlp2strm_config['ytdlp2strm_host'], 
+                            ytdlp2strm_config['ytdlp2strm_port'], 
+                            source_platform, 
+                            method, 
+                            url
+                        )
+
+                        file_path = "{}/{}/{}/{}.{}".format(
                             media_folder,  
                             sanitize(
                                 "{}".format(
@@ -237,28 +224,52 @@ def to_strm(method):
                                     season_number, 
                                     season
                                 )
+                            ), 
+                            sanitize(video_name), 
+                            "strm"
+                        )
+
+                        f.folders().make_clean_folder(
+                            "{}/{}/{}".format(
+                                media_folder,  
+                                sanitize(
+                                    "{}".format(
+                                        crunchyroll.channel_folder
+                                    )
+                                ),  
+                                sanitize(
+                                    "S{} - {}".format(
+                                        season_number, 
+                                        season
+                                    )
+                                )
+                            ),
+                            False,
+                            config
+                        )
+
+                        if not os.path.isfile(file_path):
+                            f.folders().write_file(
+                                file_path, 
+                                file_content
                             )
-                        ),
-                        False,
-                        config
-                    )
 
-                    if not os.path.isfile(file_path):
-                        f.folders().write_file(
-                            file_path, 
-                            file_content
-                        )
-
-                    if crunchyroll.new_content:
-                        crunchyroll.set_last_episode(playlist_count)
-                    else:
-                        #print(int(playlist_count))
-                        sum_episode = int(crunchyroll.last_episode) + int(playlist_count)
-                        #print(int(crunchyroll.last_episode))
-                        #print(sum_episode)
-                        crunchyroll.set_last_episode(
-                            str(sum_episode)
-                        )
+                        if crunchyroll.new_content:
+                            crunchyroll.set_last_episode(playlist_count)
+                        else:
+                            #print(int(playlist_count))
+                            try:
+                                sum_episode = int(crunchyroll.last_episode) + int(playlist_count)
+                            except:
+                                try:
+                                    sum_episode = 1 + int(playlist_count)
+                                except:
+                                    sum_episode = 1
+                            #print(int(crunchyroll.last_episode))
+                            #print(sum_episode)
+                            crunchyroll.set_last_episode(
+                                str(sum_episode)
+                            )
 
                 if not line: break
                 
