@@ -36,13 +36,14 @@ class Crunchyroll:
             '--no-warnings',
             '--match-filter', 'language={}'.format(audio_language),
             '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-            '{}'.format(self.channel_url)
+            '{}'.format(self.channel_url),
+            '--replace-in-metadata', '"season,episode"', '"[;/]"', '"-"'
         ]
         
         self.set_auth(command)
         self.set_proxy(command)
         self.set_start_episode(command)
-        #print(' '.join(command))
+        print(' '.join(command))
         return w.worker(command).pipe() 
 
     def get_start_episode(self):
