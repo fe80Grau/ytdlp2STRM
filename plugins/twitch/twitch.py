@@ -275,6 +275,21 @@ def to_strm(method):
         ## -- GET ON AIR STREAMING
         for line in twitch.direct:
             if line != "":
+                file_path = "{}/{}/{}/{}.{}".format(
+                    media_folder,  
+                    sanitize(
+                        "{}".format(
+                            twitch_channel)
+                        ), 
+                    'live',
+                    sanitize(
+                        "!000-live-{}".format(
+                            twitch_channel
+                        )
+                    ), 
+                    "strm"
+                )
+
                 if not 'ERROR' in line:
                     video_id = str(line).rstrip().split(';')[0]
                     video_name = str(line).rstrip().split(';')[1].split(" ")
@@ -299,21 +314,6 @@ def to_strm(method):
                             video_id
                             )
                         )
-                    
-                    file_path = "{}/{}/{}/{}.{}".format(
-                        media_folder,  
-                        sanitize(
-                            "{}".format(
-                                twitch_channel)
-                            ), 
-                        'live',
-                        sanitize(
-                            "!000-live-{}".format(
-                                twitch_channel
-                            )
-                        ), 
-                        "strm"
-                    )
 
                     data = {
                         "video_id" : video_id, 
@@ -327,23 +327,7 @@ def to_strm(method):
                         )
                 else:
                     try:
-                        os.remove(
-                                "{}/{}/{}.{}".format(
-                                media_folder,  
-                                sanitize(
-                                    "{}".format(
-                                        twitch_channel
-                                    )
-                                ),  
-                                sanitize(
-                                    "!000-live-{}".format(
-                                        twitch_channel
-                                    )
-                                ), 
-                                "strm"
-                            )
-                        )
-
+                        os.remove( file_path )
                     except:
                         pass
         ## -- END
