@@ -98,6 +98,10 @@ http://localhost:5005/
 * * Run container. To persist strm files, you must configure a volume, that is, a directory on the host that points to the /media directory in the container. Also, the default env value of DOCKER_PORT is 5005, make sure to put 5005 as host port or re-declare the env value of DOCKER_PORT like I do in the following screenshot.
 ![image](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/2dd73f50-8347-48a1-a6cd-3c2266475c4d)
 
+* Check the GUI in the browser
+```console
+http://localhost:5001/
+```
 
 # Additional info
 * After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch and /media/Crunchyroll as folders in Library and enjoy it!
