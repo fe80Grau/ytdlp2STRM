@@ -103,6 +103,42 @@ http://localhost:5005/
 http://localhost:5001/
 ```
 
+# Docker compose YAML template
+* Thank you INPoppoRTUNE
+```yaml
+---
+version: "2.1"
+services:
+ytdlp2strm:
+    image: fe80grau/ytdlp2strm
+    container_name: ytdlp2STRM
+    environment:
+      - AM_I_IN_A_DOCKER_CONTAINER=Yes
+      - DOCKER_PORT=5005
+    volumes:
+      - /local/path/to/media:/media
+      - /local/path/to/channel_list.json:/opt/ytdlp2STRM/plugins/youtube/channel_list.json
+      - /local/path/to/yt_config.json:/opt/ytdlp2STRM/plugins/youtube/config.json
+      - /local/path/to/config.json:/opt/ytdlp2STRM/config/config.json
+      - /local/path/to/crons.json:/opt/ytdlp2STRM/config/crons.json
+      - ytdlp2strm-data:/opt/ytdlp2STRM
+    ports:
+      - 5005:5000
+    restart: always
+volumes:
+  ytdlp2strm-data:
+```
+
+Where:
+- `/local/path/to/media` is the local folder where the `.strm` file will be created
+- `/local/path/to/config.json` is optional and will set your ytdlp2STRM general settings; formatted as [config.example.json](https://github.com/fe80Grau/ytdlp2STRM/blob/main/config/config.example.json)
+- `/local/path/to/crons.json` is optional and will set your ytdlp2STRM cronjob settings; formatted as [crons.example.json](https://github.com/fe80Grau/ytdlp2STRM/blob/main/config/crons.example.json)
+- `/local/path/to/channel_list.json` is optional and will set your Youtube channel list; formatted as [channel_list.example.json](https://github.com/fe80Grau/ytdlp2STRM/blob/main/plugins/youtube/channel_list.example.json)
+- `/local/path/to/yt_config.json` is optional and will set your Youtube plugin settings; formatted as [config.example.json](https://github.com/fe80Grau/ytdlp2STRM/blob/main/plugins/youtube/config.example.json)
+
+* The default env value of DOCKER_PORT is 5005, make sure to put 5005 as host port or re-declare the env value of DOCKER_PORT
+
+
 # Additional info
 * After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch and /media/Crunchyroll as folders in Library and enjoy it!
 
@@ -120,7 +156,7 @@ http://localhost:5001/
 * To avoid constant rewriting of the strm files, a file called last_episode.txt is generated in the series directory, it contains the playlist position of the last strm downloaded, this will only generate strm for new episodes.
 * Patch yt-dlp if Crunchyroll not works https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1637748442
 
-## Pokemon TV 
+## Pokemon TV _The Pokémon TV app and website are closing, and the service will end on March 28, 2024._
 * Thank you https://github.com/seiya-dev 
 * This doesn't need a channel_list.json file
 

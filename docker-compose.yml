@@ -1,0 +1,21 @@
+---
+version: "2.1"
+services:
+ytdlp2strm:
+    image: fe80grau/ytdlp2strm
+    container_name: ytdlp2STRM
+    environment:
+      - AM_I_IN_A_DOCKER_CONTAINER=Yes
+      - DOCKER_PORT=5005
+    volumes:
+      - /local/path/to/media:/media
+      - /local/path/to/channel_list.json:/opt/ytdlp2STRM/plugins/youtube/channel_list.json
+      - /local/path/to/yt_config.json:/opt/ytdlp2STRM/plugins/youtube/config.json
+      - /local/path/to/config.json:/opt/ytdlp2STRM/config/config.json
+      - /local/path/to/crons.json:/opt/ytdlp2STRM/config/crons.json
+      - ytdlp2strm-data:/opt/ytdlp2STRM
+    ports:
+      - 5005:5000
+    restart: always
+volumes:
+  ytdlp2strm-data:
