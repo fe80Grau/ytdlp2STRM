@@ -396,6 +396,11 @@ else:
 
 ## -- AUXILIARS STRM (CHANNEL AND SEARCH KEYWORD)
 def channel_strm(youtube_channel, youtube_channel_url, method):
+    extract_audio = False
+    if 'extractaudio-' in youtube_channel:
+        extract_audio = True
+        youtube_channel = youtube_channel.replace('extractaudio-','')
+
     yt = Youtube(
         youtube_channel,
         youtube_channel_url
@@ -454,6 +459,9 @@ def channel_strm(youtube_channel, youtube_channel_url, method):
                 video_id
             )
 
+            if extract_audio:
+                video_id += '-audio'
+
             file_content = "http://{}:{}/{}/{}/{}".format(
                 host, 
                 port, 
@@ -503,6 +511,11 @@ def channel_strm(youtube_channel, youtube_channel_url, method):
     ## -- END 
 
 def keyword_strm(keyword, method):
+    extract_audio = False
+    if 'extractaudio-' in keyword:
+        extract_audio = True
+        keyword = keyword.replace('extractaudio-','')
+
     yt = Youtube(
         keyword
     )
@@ -514,6 +527,10 @@ def keyword_strm(keyword, method):
             video_name = str(line).rstrip().split(';')[3]
             youtube_channel = str(line).rstrip().split(';')[2]
             youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
+
+            if extract_audio:
+                video_id += '-audio'
+
             file_content = "http://{}:{}/{}/{}/{}".format(
                 host, 
                 port, 
@@ -595,6 +612,8 @@ def to_strm(method):
         )
         print(youtube_channel)
         
+
+ 
         #formating youtube URL and init channel_id
         youtube_channel_url = "https://www.youtube.com/{}/videos".format(
             youtube_channel
@@ -612,6 +631,9 @@ def to_strm(method):
 
         if '/streams' in youtube_channel:
             method = 'direct'
+
+        if 'extractaudio-' in youtube_channel:
+            youtube_channel_url = youtube_channel_url.replace('extractaudio-','')
 
         if 'keyword-' in youtube_channel:
             keyword_strm(
@@ -632,14 +654,20 @@ def to_strm(method):
 
 ## -- EXTRACT / REDIRECT VIDEO DATA 
 def direct(youtube_id): #Sponsorblock doesn't work in this mode
+    s_youtube_id = youtube_id.split('-audio')[0]
+
     command = [
         'yt-dlp', 
         '-f', 'best',
         '--no-warnings',
         '--get-url', 
-        youtube_id
+        s_youtube_id
     ]
     Youtube().set_proxy(command)
+    if '-audio' in youtube_id:
+        command[2] = 'bestaudio'
+
+    print(' '.join(command))
     youtube_url = w.worker(command).output()
     return redirect(
         youtube_url, 
@@ -647,15 +675,19 @@ def direct(youtube_id): #Sponsorblock doesn't work in this mode
     )
 
 def bridge(youtube_id):
+    s_youtube_id = youtube_id.split('-audio')[0]
+
     def generate():
         startTime = time.time()
         buffer = []
         sentBurst = False
         if config["sponsorblock"]:
-            command = ['yt-dlp', '-o', '-', '-f', 'best', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', youtube_id]
+            command = ['yt-dlp', '-o', '-', '-f', 'best', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
         else:
-            command = ['yt-dlp', '-o', '-', '-f', 'best', '--restrict-filenames', youtube_id]
+            command = ['yt-dlp', '-o', '-', '-f', 'best', '--restrict-filenames', s_youtube_id]
         Youtube().set_proxy(command)
+        if '-audio' in youtube_id:
+            command[4] = 'bestaudio'
 
         process = w.worker(command).pipe()
         try:
@@ -691,11 +723,16 @@ def bridge(youtube_id):
     ) 
 
 def download(youtube_id):
+    s_youtube_id = youtube_id.split('-audio')[0]
+
     if config["sponsorblock"]:
-        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', youtube_id]
+        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
     else:
-        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--restrict-filenames', youtube_id]
+        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--restrict-filenames', s_youtube_id]
     Youtube().set_proxy(command)
+    if '-audio' in youtube_id:
+        command[2] = 'bestaudio'
+
     w.worker(command).call()
     filename = w.worker(
         ['yt-dlp', '--print', 'filename', '--restrict-filenames', "{}".format(youtube_id)]
