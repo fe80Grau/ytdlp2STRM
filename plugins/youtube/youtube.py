@@ -579,7 +579,7 @@ def keyword_strm(keyword, method):
                     media_folder, 
                     "{} [{}]".format(
                         channel.channel_name_folder,
-                        channel.channel_id
+                        channel_id
                     )
                 ),
                 {
