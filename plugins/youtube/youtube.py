@@ -42,17 +42,20 @@ class Youtube:
                     self.videos = self.get_videos()
 
     def get_id(self):
+        base_channel_url = self.channel_url
+        if 'streams' in base_channel_url:
+            base_channel_url = base_channel_url[:base_channel_url.index('streams')]
         command = [
-            'yt-dlp', 
+            'yt-dlp',
             '--compat-options', 'no-youtube-channel-redirect',
             '--compat-options', 'no-youtube-unavailable-videos',
             '--restrict-filenames',
             '--ignore-errors',
             '--no-warnings',
-            '--playlist-start', '1', 
-            '--playlist-end', '1', 
-            '--print', 'channel_url', 
-            self.channel_url
+            '--playlist-start', '1',
+            '--playlist-end', '1',
+            '--print', 'channel_url',
+            base_channel_url
         ]
 
         print(' '.join(command))
