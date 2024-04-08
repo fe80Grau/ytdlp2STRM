@@ -6,3 +6,5 @@ requests[socks]
 requests_html
 schedule
 Werkzeug==2.2.2
+pytz
+ffmpeg

@@ -1,4 +1,4 @@
-from __main__ import app
+from __main__ import app, request
 from plugins.crunchyroll.crunchyroll import direct
 
 ### CRUNCHY ZONE

@@ -1,5 +1,7 @@
+from __main__ import app
 import json
 from clases.config import config as c
+from clases.cron import cron as cron
 
 class Ui:
     def __init__(self):
@@ -96,3 +98,4 @@ class Ui:
     def crons(self, data):
         with open(self.crons_file, 'w', newline="") as file:
             file.write(data)
+

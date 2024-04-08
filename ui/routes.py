@@ -70,11 +70,12 @@ def crons_settings():
     result = False
     if request.method == 'POST':
         # Obtener el código de plugins desde el formulario
-        headers = ('every', 'qty', 'at', 'plugin', 'param')
+        headers = ('every', 'qty', 'at', 'timezone', 'plugin', 'param')
         values = (
             request.form.getlist('every[]'),
             request.form.getlist('qty[]'),
             request.form.getlist('at[]'),
+            request.form.getlist('timezone[]'),
             request.form.getlist('plugin[]'),
             request.form.getlist('param[]'),
         )

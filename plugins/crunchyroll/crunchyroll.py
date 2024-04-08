@@ -1,11 +1,15 @@
-from flask import redirect
+from flask import stream_with_context, Response
 from sanitize_filename import sanitize
 import os
+import glob
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
-import requests
+from datetime import datetime
+import time
+import subprocess
+import threading
 
 ## -- CRUNCHYROLL CLASS
 class Crunchyroll:
@@ -281,18 +285,103 @@ def to_strm(method):
 ## -- END
 
 ## -- EXTRACT / REDIRECT VIDEO DATA 
-def direct(crunchyroll_id): 
+
+def download_stream(crunchyroll_id, format_code, filename):
     command = [
         'yt-dlp', 
-        '-f', 'best',
         '--no-warnings',
+        '--format', '"{}"'.format(format_code), # Selecciona el mejor vídeo y el mejor audio
         '--match-filter', '"language={}"'.format(audio_language),
         '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(subtitle_language),
+        '-o', f'{filename}',  # Especifica el nombre de archivo aquí
         'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
-        '--get-url'
     ]
+
+    if format_code == '':
+        command.pop(2)
+        command.pop(2)
     Crunchyroll().set_auth(command,True)
     Crunchyroll().set_proxy(command)
-    crunchyroll_url = w.worker(command).output()
-    return redirect(crunchyroll_url, code=301)
+    #print(' '.join(command))
+    w.worker(command).output()
+
+def direct(crunchyroll_id): 
+    base_filename  = f"crunchyroll-{crunchyroll_id}"
+    filepath_video_pattern = f"{base_filename}*.mp4.part"
+    filepath_audio_pattern = f"{base_filename}*.m4a.part"
+
+    # Video
+    threading.Thread(target=download_stream, args=(crunchyroll_id, '', '{}{}'.format(base_filename, '.mp4'), )).start()
+
+    # Audio
+    threading.Thread(target=download_stream, args=(crunchyroll_id, 'ba*', '{}{}'.format(base_filename, '.m4a'), )).start()
+    
+    # La función generadora ahora lee el archivo de salida mientras se está descargando
+    def generate():
+        filepath_video = None
+        filepath_audio = None
+
+        # Espera hasta que el archivo aparezca
+        while filepath_video is None:
+            print(filepath_video_pattern)
+            matching_files = glob.glob(filepath_video_pattern)
+            if matching_files:
+                filepath_video = matching_files[0]  # Tomamos el primer archivo que coincida
+            else:
+                time.sleep(1)
+
+        while filepath_audio is None:
+            print(filepath_audio_pattern)
+            matching_files = glob.glob(filepath_audio_pattern)
+            if matching_files:
+                filepath_audio = matching_files[0]  # Tomamos el primer archivo que coincida
+            else:
+                time.sleep(1)
+
+        time.sleep(3)
+        def obtener_duracion(path_del_video):
+            """
+            Obtiene la duración de un video usando ffprobe.
+
+            :param path_del_video: La ruta al archivo de video del cual obtener la duración.
+            :return: duración del video en segundos.
+            """
+            comando = [
+                'ffprobe',
+                '-v', 'error',
+                '-show_entries', 'format=duration',
+                '-of', 'default=noprint_wrappers=1:nokey=1',
+                path_del_video
+            ]
+            resultado = subprocess.run(comando, stdout=subprocess.PIPE, text=True)
+            duracion = resultado.stdout.strip()
+            return duracion
+
+        def ffmpeg_stream():
+            ffmpeg_command = [
+                'ffmpeg',
+                '-i', filepath_video,
+                '-i', filepath_audio,
+                '-c:v', 'copy',  # Especifica codec H264 para video
+                '-c:a', 'copy',  # Copia el audio sin re-codificar
+                '-strict', 'experimental',  # Puede ser necesario para algunos formatos de audio en MP4
+                '-f', 'mp4',
+                '-movflags', 'frag_keyframe+empty_moov',  # Permite la creación de MP4 fragmentado para streaming
+                'pipe:1'
+            ]
+            process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, bufsize=10**8)
+
+            while True:
+                data = process.stdout.read(1024)
+                if not data:
+                    break
+                yield data
+
+        video_duration = obtener_duracion(filepath_video)
+        response = Response(stream_with_context(ffmpeg_stream()), content_type='video/mp4')
+        response.headers['X-Video-Duration'] = video_duration  # Se añade la duración en un header personalizado.
+        return response
+
+    return generate()
+    
 ## -- END

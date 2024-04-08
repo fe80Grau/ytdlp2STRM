@@ -33,6 +33,7 @@
                         <span style="flex: 1 1 auto; width: 1%;padding-left:12px;">Quantity (default 1)</span>
                         <span style="flex: 1 1 auto; width: 1%;padding-left:12px;">Every</span>
                         <span style="flex: 1 1 auto; width: 1%;padding-left:12px;">At</span>
+                        <span style="flex: 1 1 auto; width: 1%;padding-left:12px;">Timezone</span>
                         <span style="width: 41px;"></span>
 
                     </div>
@@ -43,6 +44,7 @@
                             <input class="form-control" type="text" name="qty[]" value="{{ field.qty }}">
                             <input class="form-control" type="text" name="every[]" value="{{ field.every }}">
                             <input class="form-control" type="text" name="at[]" value="{{ field.at }}">
+                            <input class="form-control" type="text" name="timezone[]" value="{{ field.timezone }}">
 
                             <button class="btn btn-danger" type="button" onclick="this.parentNode.parentNode.removeChild(this.parentNode);">
                                 <i class="bi bi-trash"></i>

@@ -37,7 +37,8 @@ def channels():
     databases_json_files = []
     for i in databases['payload']['tree']['items']:
         if ('series' in i['name']
-            or 'movies' in i['name']):
+            or 'movies' in i['name']
+            or 'original' in i['name']):
             databases_json_files.append(
                 "{}{}/{}".format(
                     github_raw_base_url, 
@@ -56,6 +57,8 @@ def to_strm(method):
         seasson_type = "serie/Pokemon"
         if 'movies' in channel:
             seasson_type = "movies"
+        if 'original' in channel:
+            seasson_type = "special"
 
         nfo_type = "episode" if seasson_type != "movies" else "movie"
 

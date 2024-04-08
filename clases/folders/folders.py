@@ -45,7 +45,8 @@ class folders:
                 now = time.time()
                 for f in os.listdir(path):
                     extension = f.split('.')[-1]
-                    if extension == "webm" and os.stat(f).st_ctime < now - self.keep_downloaded:
+                    if (extension == "webm" or extension == "mp4" or extension == "m4a" or extension == "part") \
+                    and os.stat(f).st_ctime < now - self.keep_downloaded:
                         if os.path.isfile(f):
                             os.remove(os.path.join(path, f))
             except:
