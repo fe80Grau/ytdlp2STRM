@@ -305,31 +305,18 @@ def download(crunchyroll_id):
     command = [
         'yt-dlp', 
         '--no-warnings',
-        '--match-filter', '"language={}"'.format(audio_language),
-        '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(subtitle_language),
+        '--match-filter', 'language={}'.format(audio_language),
+        '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
         'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
-        '--restrict-filenames', crunchyroll_id
+        '--output', '{}.mp4'.format(crunchyroll_id)
     ]
-    Crunchyroll().set_auth(command,True)
+    Crunchyroll().set_auth(command,False)
     Crunchyroll().set_proxy(command)
 
-    print(' '.join(command))
-    w.worker(command).run()
-
-
-    output_filename_command = ['yt-dlp', '--print', 'filename', '--restrict-filenames', 'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/'))]
-    Crunchyroll().set_auth(output_filename_command,True)
-    Crunchyroll().set_proxy(output_filename_command)
-
-    print(' '.join(output_filename_command))
-
-    filename = w.worker(
-        output_filename_command
-    ).output()
-
+    subprocess.run(command)
 
     return send_file(
-        filename
+        '{}.mp4'.format(crunchyroll_id)
     )
 
 ## -- END
