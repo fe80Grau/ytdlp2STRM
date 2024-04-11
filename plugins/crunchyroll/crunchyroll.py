@@ -290,6 +290,7 @@ def to_strm(method):
 ## -- EXTRACT / REDIRECT VIDEO DATA 
 
 def direct(crunchyroll_id): 
+    '''
     command = [
         'yt-dlp', 
         '-f', 'best',
@@ -303,51 +304,15 @@ def direct(crunchyroll_id):
     Crunchyroll().set_proxy(command)
     crunchyroll_url = w.worker(command).output()
     return redirect(crunchyroll_url, code=301)
+    '''
+
+    return download(crunchyroll_id)
 
 def download(crunchyroll_id):
     def extract_media(command):
         print(' '.join(command))
         subprocess.run(command)
 
-    def stream_video(video, audio):
-        # Define el comando ffmpeg aquí. Asegúrate de reemplazar 'archivo_video.mp4' y 'archivo_audio.m4a'
-        # con las rutas a tus archivos reales.
-        command = [
-            'ffmpeg',
-            '-i', f'{video}',  # El archivo de video
-            '-i', f'{audio}',  # El archivo de audio
-            '-c:v', 'copy',  # Copia el video tal como está
-            '-c:a', 'copy',  # Re-codifica el audio a AAC
-            '-strict', 'experimental',
-            '-f', 'mp4',  # Formato de salida
-            '-movflags', 'frag_keyframe+empty_moov',  # Permite que el archivo sea "streamable"
-            'pipe:1'  # Salida a stdout
-        ]
-
-        # Ejecuta ffmpeg y captura el stdout
-        proc = subprocess.Popen(command, stdout=subprocess.PIPE, bufsize=10**8)
-
-        # La función generadora que emitirá porciones del video
-        def generate_video():
-            while True:
-                chunk = proc.stdout.read(1024*1024)  # Lee 1MB de datos cada vez
-                if not chunk:  # Si el chunk está vacío, se terminó la transmisión
-                    break
-                yield chunk
-            proc.wait()  # Espera a que termine el proceso
-
-        # Retorna la respuesta con el contenido del stream
-        return Response(generate_video(), mimetype='video/mp4')
-
-    
-    def stream_preprocess_video(video_path):
-        file_size = os.path.getsize(video_path)
-        
-        def generate():
-            with open(video_path, 'rb') as fvideo:
-                yield from fvideo
-        
-        return Response(generate(), mimetype="video/mp4", headers={"Content-Length": str(file_size)})
 
     def preprocess_video(input_video, input_audio, output_file):
         """Pre-procesa el video y el audio para optimizarlo para streaming."""
@@ -363,64 +328,47 @@ def download(crunchyroll_id):
         ]
         subprocess.run(cmd, check=True)
     
-    def get_file_size(file_path):
-        """Obtiene el tamaño del archivo en bytes."""
-        return os.path.getsize(file_path)
-    
-    
-
-    def get_video_bitrate(video_path):
-        """Obtiene el bitrate del video en kbps."""
-        command = [
-            'ffprobe', 
-            '-v', 'error', 
-            '-select_streams', 'v:0',
-            '-show_entries', 'stream=bit_rate', 
-            '-of', 'json', 
-            video_path
+    if not os.path.isfile(f'full-{crunchyroll_id}.mp4'):
+        command_video = [
+            'yt-dlp', 
+            '-f', 'bestvideo',
+            '--no-warnings',
+            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
+            '--external-downloader', 'aria2c',
+            '--external-downloader-args', '-j 16 -x 16 -k 1M',
+            'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+            '--output', '{}.mp4'.format(crunchyroll_id)
         ]
- 
-
-    command_video = [
-        'yt-dlp', 
-        '-f', 'bestvideo',
-        '--no-warnings',
-        '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-        '--external-downloader', 'aria2c',
-        '--external-downloader-args', '-j 16 -x 16 -k 1M',
-        'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
-        '--output', '{}.mp4'.format(crunchyroll_id)
-    ]
-    Crunchyroll().set_auth(command_video,False)
-    Crunchyroll().set_proxy(command_video)
+        Crunchyroll().set_auth(command_video,False)
+        Crunchyroll().set_proxy(command_video)
 
 
-    command_audio = [
-        'yt-dlp', 
-        '-f', 'bestaudio',
-        '--no-warnings',
-        '--match-filter', 'language={}'.format(audio_language),
-        '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-        '--external-downloader', 'aria2c',
-        '--external-downloader-args', '-j 16 -x 16 -k 1M',
-        'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
-        '--output', '{}.m4a'.format(crunchyroll_id)
-    ]
-    Crunchyroll().set_auth(command_audio,False)
-    Crunchyroll().set_proxy(command_audio)
+        command_audio = [
+            'yt-dlp', 
+            '-f', 'bestaudio',
+            '--no-warnings',
+            '--match-filter', 'language={}'.format(audio_language),
+            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
+            '--external-downloader', 'aria2c',
+            '--external-downloader-args', '-j 16 -x 16 -k 1M',
+            'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+            '--output', '{}.m4a'.format(crunchyroll_id)
+        ]
+        Crunchyroll().set_auth(command_audio,False)
+        Crunchyroll().set_proxy(command_audio)
 
-    video = Thread(target=extract_media, args=(command_video,))
-    audio = Thread(target=extract_media, args=(command_audio,))
+        video = Thread(target=extract_media, args=(command_video,))
+        audio = Thread(target=extract_media, args=(command_audio,))
 
-    video.start()
-    audio.start()
+        video.start()
+        audio.start()
 
-    video.join()
-    audio.join()
+        video.join()
+        audio.join()
 
-    preprocess_video(f'{crunchyroll_id}.mp4', f'{crunchyroll_id}.m4a', f'full-{crunchyroll_id}.mp4')
+        preprocess_video(f'{crunchyroll_id}.mp4', f'{crunchyroll_id}.m4a', f'full-{crunchyroll_id}.mp4')
 
-    return stream_preprocess_video(
+    return send_file(
         f'full-{crunchyroll_id}.mp4'
     )
     #return stream_video(f'{crunchyroll_id}.mp4', f'{crunchyroll_id}.m4a')
