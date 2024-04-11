@@ -1,9 +1,0 @@
-{
-    "strm_output_folder" : "/media/SX3",
-    "channels_list_file" : "./plugins/sx3/channel_list.json",
-    "ytdlp2strm_keep_old_strm": true,
-    "proxy" : false,
-    "proxy_url" : "",
-    "http_get_proxy" : false,
-    "http_get_proxy_url" : ""
-}

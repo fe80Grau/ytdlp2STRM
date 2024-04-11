@@ -1,4 +1,4 @@
-from flask import send_file, redirect
+from flask import send_file, redirect, stream_with_context, Response
 from sanitize_filename import sanitize
 import os
 import glob
@@ -9,7 +9,10 @@ from clases.nfo import nfo as n
 from datetime import datetime
 import time
 import subprocess
-import threading
+from subprocess import Popen, PIPE, check_output
+import ffmpeg
+import queue
+from threading import Thread
 
 ## -- CRUNCHYROLL CLASS
 class Crunchyroll:
@@ -307,16 +310,85 @@ def download(crunchyroll_id):
         '--no-warnings',
         '--match-filter', 'language={}'.format(audio_language),
         '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
+        '--external-downloader', 'aria2c',
+        '--external-downloader-args', '-j 16 -x 16 -k 1M',
         'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
         '--output', '{}.mp4'.format(crunchyroll_id)
     ]
     Crunchyroll().set_auth(command,False)
     Crunchyroll().set_proxy(command)
 
-    subprocess.run(command)
+    try:
+        subprocess.run(command)
+    except:
+        pass
 
     return send_file(
         '{}.mp4'.format(crunchyroll_id)
     )
+
+def remux(crunchyroll_id):
+
+    def remux_stream_to_hls():
+        hls_output = '-'  # Ejemplo de ruta de salida, asumiendo una carpeta 'static' en tu aplicación Flask.
+        command_ffmpeg = [
+            'ffmpeg',
+            '-i', 'pipe:0',  # Entrada de video (ej. 'pipe:0')
+            '-i', 'pipe:1',  # Entrada de audio (ej. 'pipe:1')
+            '-c:v', 'copy',  # Copiar el stream de vídeo sin recodificar
+            '-c:a', 'aac',  # Codificar el stream de audio a AAC
+            '-f', 'hls',  # Formato de salida HLS
+            '-hls_time', '2',  # Duración de cada segmento de HLS en segundos
+            '-hls_playlist_type', 'event',  # O 'live' para streaming en vivo
+            '-hls_segment_filename', 'static/live%03d.ts',  # Patrón de nombre de archivo de segmento
+            hls_output  # Archivo de manifiesto HLS
+        ]
+        process_ffmpeg = subprocess.Popen(command_ffmpeg, stdout=subprocess.PIPE, bufsize=10**8)
+
+        def read_stream(process):
+            # Leemos el stdout del proceso de ffmpeg en bucles de 4096 bytes
+            while True:
+                chunk = process.stdout.read(4096)
+                if not chunk:
+                    process.terminate()  # Asegúrate de terminar el proceso si ya no hay datos
+                    break
+                yield chunk
+
+        return read_stream(process_ffmpeg)
+    
+    def generate_video_stream():
+        # Configura los comandos de yt-dlp para video y audio
+        command_video = [
+            'yt-dlp',
+            '--no-warnings',
+            '--external-downloader', 'aria2c',
+            '--match-filter', 'language={}'.format(audio_language),
+            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
+            '--output', '-',  # Salida al stdout
+            f'https://www.crunchyroll.com/{crunchyroll_id.replace("_", "/")}',
+        ]
+        Crunchyroll().set_auth(command_video,False)
+        Crunchyroll().set_proxy(command_video)
+
+        command_audio = [
+            'yt-dlp',
+            '--no-warnings',
+            '--format', 'ba',  # Selecciona el mejor vídeo combinado con el mejor audio
+            '--external-downloader', 'aria2c',
+            '--match-filter', 'language={}'.format(audio_language),
+            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
+            '--output', '-',  # Salida al stdout
+            f'https://www.crunchyroll.com/{crunchyroll_id.replace("_", "/")}',
+        ]
+        Crunchyroll().set_auth(command_audio,False)
+        Crunchyroll().set_proxy(command_audio)
+        # Ejecuta yt-dlp para obtener los flujos combinados de video y audio
+        process_video = subprocess.Popen(command_video, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process_audio = subprocess.Popen(command_audio, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+        return Response(stream_with_context(remux_stream_to_hls()), mimetype='video/x-matroska')
+
+    return generate_video_stream()
 
 ## -- END

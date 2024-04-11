@@ -4,7 +4,7 @@ import shutil
 import time
 
 class folders:
-    keep_downloaded = 1800
+    keep_downloaded = 86400
 
     def make_clean_folder(self, folder_path, forceclean, config):
         # Verificar si el directorio existe

@@ -162,8 +162,6 @@ Where:
 * Thank you https://github.com/seiya-dev 
 * This doesn't need a channel_list.json file
 
-## SX3 - Anime en Català (Catalan Anime)
-* Last mp4 url only works if it's requested from Spain IP. This plugin have http_get_proxy and http_get_proxy_url to set an http get proxy , for example http://proxy/?address=
 
 ## main.py 
 A little script to serve yt-dlp video/audio as HTTP data throught Flask and dynamic URLs. We can use this dynamic URLs with youtube id video in url like http://127.0.0.1:5000/youtube/direct/FxCqhXVc9iY and open it with VLC or save it in .strm file (works in Jellyfin)
@@ -206,8 +204,7 @@ You can change --media value for another plugin
 * [CRUNCHYROLL] crunchyroll_cookies_file (set if your choice in curnchyroll_auth is cookies)
 * [CRUNCHYROLL] crunchyroll_audio_language
 * [CRUNCHYROLL] crunchyroll_subtitle_language <- embedded in video
-* [SX3] http_get_proxy
-* [SX3] http_get_proxy_url
+
 
 ## plugins/*media*/channel_list.json
 * [YOUTUBE] With "keyword-" prefix you can search for a keyword and this script will create the folders of channels founds dinamically and put inside them the strm files for each video. See an exaple in channel_list.example.json
