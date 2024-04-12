@@ -10,6 +10,9 @@
     "crunchyroll_browser" : "",
     "crunchyroll_useragent" : "",
     "crunchyroll_username" : "",
-    "crunchyroll_password" : ""
-
+    "crunchyroll_password" : "",
+    "jellyfin_preload" : "False", 
+    "jellyfin_base_url" : "", 
+    "jellyfin_user_id" : "", 
+    "jellyfin_api_key" : ""
 }

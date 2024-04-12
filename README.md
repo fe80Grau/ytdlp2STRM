@@ -147,6 +147,7 @@ Where:
 ## Youtube
 * SponsorBlock doesn't work in redirect mode.
 * Local NFO for each video
+* audio- prefix
 
 ## Twitch
 * If a live video is on air the !000-live-channel.strm will be created. The script will download the strm for each video in the /videos channel tab in any manner. Take a look at the limits and daterange values for videos in ./plugins/twitch/config.json.
@@ -182,10 +183,12 @@ You can change --media value for another plugin
 ## config/crons.json
 * Working with Schedule library (https://schedule.readthedocs.io/en/stable/examples.html)
 * Do attribute needs a list with commands ["--media", "youtube", "--params", "direct"], replace youtube with your plugin name and direct with your prefered mode.
+* Custom timezone for each cron
 
 * direct : A simple redirect to final stream URL. (faster, no disk usage, sponsorblock not works)
 * bridge : Remuxing on fly. (fast, no disk usage)
 * download : First download full video then it's served. (slow, temp disk usage)
+* With download mode, the files in the temp folder older than 24h will be deleted.
 
 ## plugins/*media*/config.json
 * strm_output_folder
@@ -204,7 +207,10 @@ You can change --media value for another plugin
 * [CRUNCHYROLL] crunchyroll_cookies_file (set if your choice in curnchyroll_auth is cookies)
 * [CRUNCHYROLL] crunchyroll_audio_language
 * [CRUNCHYROLL] crunchyroll_subtitle_language <- embedded in video
-
+* [CRUNCHYROLL] jellyfin_preload (False by default, set True to preload the next episode while the current is playing in Jellyfin)
+* [CRUNCHYROLL] jellyfin_base_url (Your Jellyfin URL, without final slash)
+* [CRUNCHYROLL] jellyfin_user_id (Your Jellyfin user_id)
+* [CRUNCHYROLL] jellyfin_api_key (Your Jellyfin api_key)
 
 ## plugins/*media*/channel_list.json
 * [YOUTUBE] With "keyword-" prefix you can search for a keyword and this script will create the folders of channels founds dinamically and put inside them the strm files for each video. See an exaple in channel_list.example.json

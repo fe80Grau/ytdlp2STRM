@@ -6,12 +6,10 @@ from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
+from plugins.crunchyroll.jellyfin import daemon
 from datetime import datetime
-import time
 import subprocess
 from subprocess import Popen, PIPE, check_output
-import ffmpeg
-import queue
 from threading import Thread
 
 ## -- CRUNCHYROLL CLASS
@@ -154,12 +152,22 @@ channels_list = config["channels_list_file"]
 cookies_file = config["crunchyroll_cookies_file"]
 subtitle_language = config["crunchyroll_subtitle_language"]
 audio_language = config['crunchyroll_audio_language']
+jellyfin_preload = False
+
+if 'jellyfin_preload' in config:
+    jellyfin_preload = bool(config['jellyfin_preload'])
+
 if 'proxy' in config:
     proxy = config['proxy']
     proxy_url = config['proxy_url']
 else:
     proxy = False
     proxy_url = ""
+## -- END
+
+## -- JELLYFIN DAEMON
+if jellyfin_preload:
+    Thread(target=daemon, daemon=True).start()
 ## -- END
 
 ## -- MANDATORY TO_STRM FUNCTION 
@@ -309,10 +317,14 @@ def direct(crunchyroll_id):
     return download(crunchyroll_id)
 
 def download(crunchyroll_id):
+
+    current_dir = os.getcwd()
+
+    # Construyes la ruta hacia la carpeta 'temp' dentro del directorio actual
+    temp_dir = os.path.join(current_dir, 'temp')
     def extract_media(command):
         print(' '.join(command))
         subprocess.run(command)
-
 
     def preprocess_video(input_video, input_audio, output_file):
         """Pre-procesa el video y el audio para optimizarlo para streaming."""
@@ -328,7 +340,7 @@ def download(crunchyroll_id):
         ]
         subprocess.run(cmd, check=True)
     
-    if not os.path.isfile(f'full-{crunchyroll_id}.mp4'):
+    if not os.path.isfile(os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')):
         command_video = [
             'yt-dlp', 
             '-f', 'bestvideo',
@@ -337,7 +349,7 @@ def download(crunchyroll_id):
             '--external-downloader', 'aria2c',
             '--external-downloader-args', '-j 16 -x 16 -k 1M',
             'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
-            '--output', '{}.mp4'.format(crunchyroll_id)
+            '--output', os.path.join(temp_dir, f'{crunchyroll_id}.mp4')
         ]
         Crunchyroll().set_auth(command_video,False)
         Crunchyroll().set_proxy(command_video)
@@ -352,7 +364,7 @@ def download(crunchyroll_id):
             '--external-downloader', 'aria2c',
             '--external-downloader-args', '-j 16 -x 16 -k 1M',
             'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
-            '--output', '{}.m4a'.format(crunchyroll_id)
+            '--output', os.path.join(temp_dir, f'{crunchyroll_id}.m4a')
         ]
         Crunchyroll().set_auth(command_audio,False)
         Crunchyroll().set_proxy(command_audio)
@@ -366,13 +378,19 @@ def download(crunchyroll_id):
         video.join()
         audio.join()
 
-        preprocess_video(f'{crunchyroll_id}.mp4', f'{crunchyroll_id}.m4a', f'full-{crunchyroll_id}.mp4')
+        preprocess_video(
+            os.path.join(temp_dir, f'{crunchyroll_id}.mp4'), 
+            os.path.join(temp_dir, f'{crunchyroll_id}.m4a'), 
+            os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')
+        )
 
     return send_file(
-        f'full-{crunchyroll_id}.mp4'
+        os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')
     )
     #return stream_video(f'{crunchyroll_id}.mp4', f'{crunchyroll_id}.m4a')
 
+
+#experimental not works.
 def remux(crunchyroll_id):
 
     def remux_stream_to_hls():

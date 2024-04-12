@@ -1,4 +1,4 @@
-from __main__ import app, request
+from __main__ import app
 from plugins.crunchyroll.crunchyroll import direct, download, remux
 
 ### CRUNCHY ZONE
@@ -9,7 +9,7 @@ def crunchyroll_direct(crunchyroll_id):
 @app.route("/crunchyroll/download/<crunchyroll_id>")
 def crunchyroll_download(crunchyroll_id):
     return download(crunchyroll_id)
-
+#experimental not works
 @app.route("/crunchyroll/remux/<crunchyroll_id>")
 def crunchyroll_remux(crunchyroll_id):
     return remux(crunchyroll_id)

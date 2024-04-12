@@ -727,11 +727,14 @@ def bridge(youtube_id):
 
 def download(youtube_id):
     s_youtube_id = youtube_id.split('-audio')[0]
+    current_dir = os.getcwd()
 
+    # Construyes la ruta hacia la carpeta 'temp' dentro del directorio actual
+    temp_dir = os.path.join(current_dir, 'temp')
     if config["sponsorblock"]:
-        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
+        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '-o',  os.path.join(temp_dir, '%(title)s.%(ext)s'), '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
     else:
-        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '--restrict-filenames', s_youtube_id]
+        command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '-o',  os.path.join(temp_dir, '%(title)s.%(ext)s'), '--restrict-filenames', s_youtube_id]
     Youtube().set_proxy(command)
     if '-audio' in youtube_id:
         command[2] = 'bestaudio'

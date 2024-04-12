@@ -10,4 +10,5 @@ log.txt
 channel_list.json
 config.json
 crons.json
-downloaded_files/
+downloaded_files/*
+temp/*
