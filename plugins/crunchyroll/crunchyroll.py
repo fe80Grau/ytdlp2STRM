@@ -1,16 +1,12 @@
 from flask import send_file, redirect, stream_with_context, Response
 from sanitize_filename import sanitize
 import os
-import asyncio
-import requests
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
 from plugins.crunchyroll.jellyfin import daemon
-from datetime import datetime
 import subprocess
-from subprocess import Popen, PIPE, check_output
 from threading import Thread
 
 ## -- CRUNCHYROLL CLASS
