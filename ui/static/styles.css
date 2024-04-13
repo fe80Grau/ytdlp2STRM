@@ -3,6 +3,9 @@
         color: var(--bs-secondary-bg-subtle);
         background-color: var(--bs-dark);
     }
+    a{
+        color: white !important;
+    }
     h1 {
         color: var(--bs-secondary-bg-subtle);
     }
