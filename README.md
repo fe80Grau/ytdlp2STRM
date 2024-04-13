@@ -208,6 +208,7 @@ You can change --media value for another plugin
 * [CRUNCHYROLL] crunchyroll_audio_language
 * [CRUNCHYROLL] crunchyroll_subtitle_language <- embedded in video
 * [CRUNCHYROLL] jellyfin_preload (False by default, set True to preload the next episode while the current is playing in Jellyfin)
+* [CRUNCHYROLL] jellyfin_preload_last_episode (An @Floflo10 idea. False by default, set True to preloads the last episode at the time its strm is generated. Remember in 24h will be deleted from temp folder)
 * [CRUNCHYROLL] jellyfin_base_url (Your Jellyfin URL, without final slash)
 * [CRUNCHYROLL] jellyfin_user_id (Your Jellyfin user_id)
 * [CRUNCHYROLL] jellyfin_api_key (Your Jellyfin api_key)

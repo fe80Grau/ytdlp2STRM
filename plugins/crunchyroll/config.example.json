@@ -12,6 +12,7 @@
     "crunchyroll_username" : "",
     "crunchyroll_password" : "",
     "jellyfin_preload" : "False", 
+    "jellyfin_preload_last_episode" : "False",
     "jellyfin_base_url" : "", 
     "jellyfin_user_id" : "", 
     "jellyfin_api_key" : ""

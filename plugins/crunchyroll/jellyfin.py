@@ -25,7 +25,6 @@ def get_next_episode(serie_id, temporada_id, episodio_id):
     """Obtiene el ID del siguiente episodio basado en la ID actual del episodio."""
     url = f"{base_url}/Shows/{serie_id}/Episodes?seasonId={temporada_id}&userId={user_id}"
     headers = {'X-Emby-Token': api_key}
-    
     response = requests.get(url, headers=headers)
     episodios = response.json().get('Items', [])
     
@@ -128,13 +127,14 @@ def preload_next_episode():
                         preload_video(siguiente_episodio_id, user_id, api_key)
                         # Aquí puedes agregar la lógica para "precargar" el siguiente episodio
                     else:
-                        print("No se encontró el siguiente episodio o ya estás en el último episodio.")
+                        pass
+                        #print("No se encontró el siguiente episodio o ya estás en el último episodio.")
         else:
             print(f"Error: El servidor devolvió un estado HTTP {response.status_code}")
     except requests.exceptions.RequestException as e:
-        print(f"Error de solicitud HTTP: {e}")
+        print(f"Error HTTP: {e}")
     except ValueError as e:
-        print(f"Error decodificando JSON: {e}")
+        print(f"Error JSON: {e}")
 
 def daemon():
     print(' * Running Crunchyroll Jellyfin daemon')

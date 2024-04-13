@@ -1,7 +1,8 @@
 from flask import send_file, redirect, stream_with_context, Response
 from sanitize_filename import sanitize
 import os
-import glob
+import asyncio
+import requests
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
@@ -48,7 +49,7 @@ class Crunchyroll:
         self.set_auth(command)
         self.set_proxy(command)
         self.set_start_episode(command)
-        print(' '.join(command))
+        #print(' '.join(command))
         return w.worker(command).pipe() 
 
     def get_start_episode(self):
@@ -153,10 +154,12 @@ cookies_file = config["crunchyroll_cookies_file"]
 subtitle_language = config["crunchyroll_subtitle_language"]
 audio_language = config['crunchyroll_audio_language']
 jellyfin_preload = False
+jellyfin_preload_last_episode = False
 
 if 'jellyfin_preload' in config:
     jellyfin_preload = bool(config['jellyfin_preload'])
-
+if 'jellyfin_preload_last_episode' in config:
+    jellyfin_preload_last_episode = bool(config['jellyfin_preload_last_episode'])
 if 'proxy' in config:
     proxy = config['proxy']
     proxy_url = config['proxy_url']
@@ -195,7 +198,7 @@ def to_strm(method):
 
         # -- BUILD STRM
         process = crunchyroll.videos
-
+        file_content = ""
         try:
             for line in iter(process.stdout.readline, b''):
                 if line != "" and not 'ERROR' in line and not 'WARNING' in line:
@@ -287,7 +290,11 @@ def to_strm(method):
                                 str(sum_episode)
                             )
 
-                if not line: break
+                if not line:
+                    if jellyfin_preload_last_episode:
+                        if 'http' in file_content:
+                            w.worker(file_content).preload()
+                    break
                 
         finally:
             process.kill()
@@ -323,7 +330,7 @@ def download(crunchyroll_id):
     # Construyes la ruta hacia la carpeta 'temp' dentro del directorio actual
     temp_dir = os.path.join(current_dir, 'temp')
     def extract_media(command):
-        print(' '.join(command))
+        #print(' '.join(command))
         subprocess.run(command)
 
     def preprocess_video(input_video, input_audio, output_file):
