@@ -1,10 +1,17 @@
 import os
 import glob
-import shutil
 import time
+from clases.config import config as c
 
 class folders:
+    ytdlp2strm_config = c.config(
+        './config/config.json'
+    ).get_config()
+
     keep_downloaded = 86400
+    if 'ytdlp2strm_temp_file_duration' in ytdlp2strm_config:
+        keep_downloaded = int(ytdlp2strm_config['ytdlp2strm_config'])
+    
 
     def make_clean_folder(self, folder_path, forceclean, config):
         # Verificar si el directorio existe
