@@ -10,7 +10,7 @@ class folders:
 
     keep_downloaded = 86400
     if 'ytdlp2strm_temp_file_duration' in ytdlp2strm_config:
-        keep_downloaded = int(ytdlp2strm_config['ytdlp2strm_config'])
+        keep_downloaded = int(ytdlp2strm_config['ytdlp2strm_temp_file_duration'])
     
 
     def make_clean_folder(self, folder_path, forceclean, config):

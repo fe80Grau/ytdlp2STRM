@@ -24,7 +24,7 @@ channels_list = config["channels_list_file"]
 
 def channels():
     
-    github_base_url = "https://github.com/seiya-dev/pokemon-tv/tree/master/database/"
+    github_base_url = "https://api.github.com/repos/seiya-dev/pokemon-tv/contents/database/"
     github_raw_base_url = "https://raw.githubusercontent.com/seiya-dev/pokemon-tv/master/database/"
     # URL on the Github where the csv files are stored
     github_url = "{}{}".format(
@@ -35,7 +35,7 @@ def channels():
     result = requests.get(github_url)
     databases = json.loads(result.text)
     databases_json_files = []
-    for i in databases['payload']['tree']['items']:
+    for i in databases:
         if ('series' in i['name']
             or 'movies' in i['name']
             or 'original' in i['name']):
