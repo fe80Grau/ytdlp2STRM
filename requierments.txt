@@ -8,6 +8,5 @@ tzlocal
 schedule
 Werkzeug==2.2.2
 pytz
-ffmpeg
 ffmpeg-python
 flask_socketio
