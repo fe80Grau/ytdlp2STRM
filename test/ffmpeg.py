@@ -10,7 +10,7 @@ def test_ffmpeg_python_installation():
         print("FFmpeg está correctamente instalado y es accesible a través de ffmpeg-python.")
         return True
         
-    except ffmpeg.Error as e:
+    except:
         # Si ffmpeg.Error es lanzado, algo falló con el acceso a FFmpeg, posiblemente no está instalado
         print("FFmpeg no está instalado o no es accesible a través de ffmpeg-python. Asegúrate de que FFmpeg esté en el PATH.")
         return False
