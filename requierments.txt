@@ -4,6 +4,7 @@ sanitize_filename
 beautifulsoup4
 requests[socks]
 requests_html
+tzlocal
 schedule
 Werkzeug==2.2.2
 pytz
