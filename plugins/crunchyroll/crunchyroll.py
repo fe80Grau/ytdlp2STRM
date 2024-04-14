@@ -1,6 +1,7 @@
 from flask import send_file, redirect, stream_with_context, Response
 from sanitize_filename import sanitize
 import os
+import ffmpeg
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
@@ -330,18 +331,22 @@ def download(crunchyroll_id):
         subprocess.run(command)
 
     def preprocess_video(input_video, input_audio, output_file):
-        """Pre-procesa el video y el audio para optimizarlo para streaming."""
-        cmd = [
-            'ffmpeg',
-            '-y',
-            '-i', input_video,
-            '-i', input_audio,
-            '-c:v', 'copy',
-            '-c:a', 'copy',
-            '-movflags', '+faststart',
-            output_file
-        ]
-        subprocess.run(cmd, check=True)
+        """Pre-procesa el video y el audio para optimizarlo para streaming usando ffmpeg-python."""
+        # Construir el gráfico de procesamiento de flujo para la entrada de video
+        video_stream = ffmpeg.input(input_video)
+        # Construir el gráfico de procesamiento de flujo para la entrada de audio
+        audio_stream = ffmpeg.input(input_audio)
+        
+        # Combinar los flujos de video y audio, copiarlos sin recodificación y optimizarlos para el inicio rápido
+        ffmpeg.output(
+            video_stream, 
+            audio_stream, 
+            output_file, 
+            c='copy', 
+            movflags='faststart'
+        ).run(overwrite_output=True)
+
+
     
     if not os.path.isfile(os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')):
         command_video = [
