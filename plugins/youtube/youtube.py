@@ -58,7 +58,7 @@ class Youtube:
             base_channel_url
         ]
 
-        print(' '.join(command))
+        #print(' '.join(command))
 
         self.set_proxy(command)
 
@@ -111,7 +111,7 @@ class Youtube:
                         '--compat-options', 'no-youtube-channel-redirect']
         self.set_proxy(command)
 
-        print("Command {}".format(' '.join(command)))
+        #print("Command {}".format(' '.join(command)))
         #self.channel_name = subprocess.getoutput(' '.join(command))
         self.channel_name = w.worker(command).output()
         return sanitize(
@@ -670,7 +670,7 @@ def direct(youtube_id): #Sponsorblock doesn't work in this mode
     if '-audio' in youtube_id:
         command[2] = 'bestaudio'
 
-    print(' '.join(command))
+    #print(' '.join(command))
     youtube_url = w.worker(command).output()
     return redirect(
         youtube_url, 
@@ -744,7 +744,7 @@ def download(youtube_id):
         ['yt-dlp', '--print', 'filename', '--restrict-filenames', "{}".format(youtube_id)]
     ).output()
     return send_file(
-        filename
+        os.path.join(temp_dir, filename)
     )
 
 ## -- END

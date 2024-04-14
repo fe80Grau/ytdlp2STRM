@@ -1,11 +1,13 @@
 from __main__ import app
+from flask_socketio import SocketIO, emit
 from flask import request, render_template
-from subprocess import Popen, PIPE, STDOUT
-#from flask_socketio import emit
+from subprocess import Popen, PIPE
+import shlex
 import json
 from clases.worker import worker as w
 from ui.ui import Ui
 _ui = Ui()
+socketio = SocketIO(app)
 
 # Ruta principal
 @app.route('/')
@@ -183,3 +185,42 @@ def execute(command):
         print('except')
         pass     
 """
+
+@socketio.on('execute_command')
+def handle_command(command):
+    # Asegurarse de que el comando se ejecuta sin buffering
+    if not '-u' in command:
+        if 'python3' in command:
+            command = command.replace('python3', 'python3 -u')
+        else:
+            command = command.replace('python', 'python -u')
+    
+    secure_command = command.split(' ')
+    try :
+        if secure_command[2] == 'cli.py':
+            
+            # Iniciar el proceso
+            process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE, text=True)
+
+            # Leer y emitir la salida en tiempo real
+            while True:
+                output = process.stdout.readline()
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    #print(output.strip())  # Debugging: Imprimir en el servidor
+                    emit('command_output', output.strip())  # Enviar a cliente
+
+            # Manejar salida de error si existe
+            _, stderr = process.communicate()
+            if stderr:
+                emit('command_error', stderr.strip())
+
+            # Importante: Emitir 'command_completed' al finalizar el comando
+            emit('command_completed', {'data': 'Comando completado'})
+        else:
+            emit('command_output', 'only python cli.py command can be executed from here.')
+            emit('command_completed', {'data': 'Comando completado'})
+    except:
+        emit('command_output', 'only python cli.py command can be executed from here.')
+        emit('command_completed', {'data': 'Comando completado'})

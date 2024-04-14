@@ -1,14 +1,45 @@
+#terminal {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.input-line {
+    display: flex;
+}
+
+.input-line span {
+    white-space: pre;
+}
+
+.input-line input {
+    flex: 1;
+    background-color: black;
+    color: white;
+    border: none;
+    outline: none;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+}
+#terminal div input{
+    background: none;
+    color: white;
+    border: 0;
+}
 @media (prefers-color-scheme: dark) {
     body {
         color: var(--bs-secondary-bg-subtle);
         background-color: var(--bs-dark);
     }
-    a{
+
+    a {
         color: white !important;
     }
+
     h1 {
         color: var(--bs-secondary-bg-subtle);
     }
+
     .text-muted {
         color: var(--bs-secondary-bg-subtle) !important;
     }

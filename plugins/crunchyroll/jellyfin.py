@@ -137,7 +137,7 @@ def preload_next_episode():
         print(f"Error JSON: {e}")
 
 def daemon():
-    print(' * Running Crunchyroll Jellyfin daemon')
+    #print(' * Running Crunchyroll Jellyfin daemon')
     """Inicia el daemon que verificará el estado de reproducción cada minuto."""
     schedule.every(1).minutes.do(preload_next_episode)
 

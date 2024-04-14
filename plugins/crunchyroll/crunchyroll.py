@@ -392,7 +392,6 @@ def download(crunchyroll_id):
     )
     #return stream_video(f'{crunchyroll_id}.mp4', f'{crunchyroll_id}.m4a')
 
-
 #experimental not works.
 def remux(crunchyroll_id):
 
