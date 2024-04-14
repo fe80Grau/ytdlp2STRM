@@ -4,7 +4,7 @@
 * Watch Twitch through Jellyfin or Emby 
 * Watch Crunchyroll through Jellyfin or Emby 
 ![ytdlp2STRM](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/cc31ee7c-5e4b-450b-9a3b-526f191d18d8)
-![Captura de pantalla 2023-09-06 170858](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/d3fa6b5a-ca75-4dc3-b9e6-354ddf9b1fdf)
+![image](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/7bee7f75-2f8d-483d-ac7d-2e0250d96d32)
 
 <a href="https://www.buymeacoffee.com/fe80grau" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="width: 120px !important;" ></a>
 
