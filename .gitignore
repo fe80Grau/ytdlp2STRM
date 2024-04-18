@@ -6,6 +6,7 @@ __pycache__/
 *.csv
 *.mp4
 *.m4a
+*.session
 log.txt
 channel_list.json
 config.json

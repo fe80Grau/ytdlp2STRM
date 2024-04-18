@@ -50,10 +50,12 @@ class folders:
                 time.sleep(60)
                 path = os.getcwd()
                 temp_path = os.path.join(path, 'temp')
+                print(temp_path)
                 now = time.time()
                 for f in os.listdir(temp_path):
+                    print(f)
                     if os.stat(f).st_ctime < now - self.keep_downloaded:
                         if os.path.isfile(f):
-                            os.remove(os.path.join(path, f))
+                            os.remove(os.path.join(temp_path, f))
             except:
                 continue
