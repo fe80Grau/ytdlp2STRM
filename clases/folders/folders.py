@@ -47,15 +47,15 @@ class folders:
     def clean_old_videos(self):
         while True:
             try:
-                time.sleep(60)
+                time.sleep(5)
                 path = os.getcwd()
                 temp_path = os.path.join(path, 'temp')
-                print(temp_path)
                 now = time.time()
                 for f in os.listdir(temp_path):
-                    print(f)
-                    if os.stat(f).st_ctime < now - self.keep_downloaded:
-                        if os.path.isfile(f):
-                            os.remove(os.path.join(temp_path, f))
-            except:
+                    if not f == "__init__.py":
+                        if os.stat(os.path.join(temp_path, f)).st_ctime < now - self.keep_downloaded:
+                            if os.path.isfile(os.path.join(temp_path, f)):
+                                os.remove(os.path.join(temp_path, f))
+            except Exception as e:
+                print(e)
                 continue
