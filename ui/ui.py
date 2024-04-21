@@ -41,31 +41,32 @@ class Ui:
         
         for plugin in self.plugins_py.split('\n'):
             if 'plugins.' in plugin:
-                name = plugin.split('plugins.')[1].split(' ')[0]
-                path = '{}/{}'.format(
-                    './plugins',
-                    name
-                )
-                config = c.config(
-                    '{}/{}'.format(
-                        path,
-                        'config.json'
+                if not '#' in plugin:
+                    name = plugin.split('plugins.')[1].split(' ')[0]
+                    path = '{}/{}'.format(
+                        './plugins',
+                        name
                     )
-                ).get_config()
+                    config = c.config(
+                        '{}/{}'.format(
+                            path,
+                            'config.json'
+                        )
+                    ).get_config()
 
-                channels = c.config(
-                    config['channels_list_file']
-                ).get_channels()
+                    channels = c.config(
+                        config['channels_list_file']
+                    ).get_channels()
 
-                plugins.append(
-                    {
-                        'name' : name,
-                        'path' : path,
-                        'enabled' : True if not '#' in plugin else False,
-                        'config' :  config,
-                        'channels' : channels
-                    }
-                )
+                    plugins.append(
+                        {
+                            'name' : name,
+                            'path' : path,
+                            'enabled' : True if not '#' in plugin else False,
+                            'config' :  config,
+                            'channels' : channels
+                        }
+                    )
 
         return plugins
     

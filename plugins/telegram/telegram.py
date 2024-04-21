@@ -39,7 +39,6 @@ class Telegram:
         if ',' in self.current_series_title:
             self.current_series_title = message.text.split("\n")[0]
 
-
     def extract_seasson(self, message_text):
         # Buscar patrones para las temporadas en el texto del mensaje
         patterns = [
@@ -271,3 +270,6 @@ def to_strm(method):
     )
 
 ## -- END
+
+def direct(telegram_id):
+    pass

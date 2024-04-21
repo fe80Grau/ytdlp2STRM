@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Stream</title>
+</head>
+<body>
+<video id="videoPlayer" controls preload="none" style="width:100%; max-width:640px;">
+ <source src="http://127.0.0.1:5151/telegram/direct/pokemontvcastellano-2016" type="video/mp4">
+ Your browser does not support the video tag.
+</video>
+<script>
+ const videoPlayer = document.getElementById('videoPlayer');
+ videoPlayer.load();
+</script>
+</body>
+</html>

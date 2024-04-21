@@ -1,5 +1,5 @@
 flask==2.2.3
-yt-dlp>=2023.3.4
+yt-dlp>=2023.04.20.dev0
 sanitize_filename
 beautifulsoup4
 requests[socks]

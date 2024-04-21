@@ -362,7 +362,7 @@ def download(crunchyroll_id):
         Crunchyroll().set_auth(command_video,False)
         Crunchyroll().set_proxy(command_video)
 
-
+        print(' '.join(command_video))
         command_audio = [
             'yt-dlp', 
             '-f', 'bestaudio',
@@ -392,6 +392,12 @@ def download(crunchyroll_id):
             os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')
         )
 
+        f.folders().clean_waste(
+            [
+                os.path.join(temp_dir, f'{crunchyroll_id}.mp4'), 
+                os.path.join(temp_dir, f'{crunchyroll_id}.m4a')
+            ]
+        )
     return send_file(
         os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')
     )
