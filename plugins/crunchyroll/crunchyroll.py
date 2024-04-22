@@ -2,6 +2,7 @@ from flask import send_file, redirect, stream_with_context, Response
 from sanitize_filename import sanitize
 import os
 import ffmpeg
+import time
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
@@ -326,6 +327,7 @@ def download(crunchyroll_id):
 
     # Construyes la ruta hacia la carpeta 'temp' dentro del directorio actual
     temp_dir = os.path.join(current_dir, 'temp')
+
     def extract_media(command):
         #print(' '.join(command))
         subprocess.run(command)
@@ -354,23 +356,19 @@ def download(crunchyroll_id):
             '-f', 'bestvideo',
             '--no-warnings',
             '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-            '--external-downloader', 'aria2c',
-            '--external-downloader-args', '-j 16 -x 16 -k 1M',
             'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
             '--output', os.path.join(temp_dir, f'{crunchyroll_id}.mp4')
         ]
         Crunchyroll().set_auth(command_video,False)
         Crunchyroll().set_proxy(command_video)
 
-        print(' '.join(command_video))
+        #print(' '.join(command_video))
         command_audio = [
             'yt-dlp', 
             '-f', 'bestaudio',
             '--no-warnings',
             '--match-filter', 'language={}'.format(audio_language),
             '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-            '--external-downloader', 'aria2c',
-            '--external-downloader-args', '-j 16 -x 16 -k 1M',
             'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
             '--output', os.path.join(temp_dir, f'{crunchyroll_id}.m4a')
         ]
@@ -392,6 +390,7 @@ def download(crunchyroll_id):
             os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')
         )
 
+        
         f.folders().clean_waste(
             [
                 os.path.join(temp_dir, f'{crunchyroll_id}.mp4'), 

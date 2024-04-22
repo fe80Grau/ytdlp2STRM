@@ -1,6 +1,7 @@
 import os
 import glob
 import time
+import platform
 from clases.config import config as c
 
 class folders:
@@ -62,23 +63,40 @@ class folders:
                 pass
 
     def clean_old_videos(self):
+        def creation_date(path_to_file):
+            """
+            Try to get the date that a file was created, falling back to when it was
+            last modified if that isn't possible.
+            See http://stackoverflow.com/a/39501288/1709587 for explanation.
+            """
+            if platform.system() == 'Windows':
+                return os.path.getctime(path_to_file)
+            else:
+                stat = os.stat(path_to_file)
+                try:
+                    return stat.st_birthtime
+                except AttributeError:
+                    # We're probably on Linux. No easy way to get creation dates here,
+                    # so we'll settle for when its content was last modified.
+                    return stat.st_mtime
+                
         while True:
             try:
-                time.sleep(5)
+                time.sleep(5)  # Espera entre iteraciones para no sobrecargar el sistema
                 path = os.getcwd()
                 temp_path = os.path.join(path, 'temp')
                 now = time.time()
-                aria2_ffmpeg_files = ['.part', 'aria2', 'urls', '.temp', 'm4a']
+                aria2_ffmpeg_files = ['.part', 'aria2', 'urls', '.temp', 'm4a', '.ytdl']
 
                 for f in os.listdir(temp_path):
                     temp_file = os.path.join(temp_path, f)
-                    if not f == "__init__.py":
+                    if not f == "__init__.py":  # Ignora el archivo __init__.py
                         if any(keyword in f for keyword in aria2_ffmpeg_files):
-                            if os.stat(temp_file).st_ctime < now - self.temp_aria2_ffmpeg_files:
-                                if os.path.isfile(temp_file):
-                                    os.remove(temp_file)
-                        elif os.stat(temp_file).st_ctime < now - self.keep_downloaded:
-                            if os.path.isfile(temp_file):
+                            if os.path.isfile(temp_file) and creation_date(temp_file) < now - self.temp_aria2_ffmpeg_files:
+                                os.remove(temp_file)
+                        else:
+                            if os.path.isfile(temp_file) and creation_date(temp_file) < now - self.keep_downloaded:
+                                print("Entra")
                                 os.remove(temp_file)
             except Exception as e:
                 print(e)
