@@ -96,7 +96,6 @@ class folders:
                                 os.remove(temp_file)
                         else:
                             if os.path.isfile(temp_file) and creation_date(temp_file) < now - self.keep_downloaded:
-                                print("Entra")
                                 os.remove(temp_file)
             except Exception as e:
                 print(e)
