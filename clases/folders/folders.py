@@ -79,7 +79,13 @@ class folders:
                     # We're probably on Linux. No easy way to get creation dates here,
                     # so we'll settle for when its content was last modified.
                     return stat.st_mtime
-                
+        def modified_date(path_to_file):
+            """
+            Returns the time of last modification of a file.
+            """
+            stat = os.stat(path_to_file)
+            return stat.st_mtime
+        
         while True:
             try:
                 time.sleep(5)  # Espera entre iteraciones para no sobrecargar el sistema
@@ -92,12 +98,12 @@ class folders:
                     temp_file = os.path.join(temp_path, f)
                     if not f == "__init__.py":  # Ignora el archivo __init__.py
                         if any(keyword in f for keyword in aria2_ffmpeg_files):
-                            if os.path.isfile(temp_file) and creation_date(temp_file) < now - self.temp_aria2_ffmpeg_files:
-                                print("Enter keyword: \n files: {} \n creation_date : {} \n delete_time: {} ".format(temp_file, creation_date(temp_file), now - self.temp_aria2_ffmpeg_files))
+                            if os.path.isfile(temp_file) and modified_date(temp_file) < now - self.temp_aria2_ffmpeg_files:
+                                print("Enter keyword: \n files: {} \n creation_date : {} \n delete_time: {} ".format(temp_file, modified_date(temp_file), now - self.temp_aria2_ffmpeg_files))
                                 os.remove(temp_file)
                         else:
-                            if os.path.isfile(temp_file) and creation_date(temp_file) < now - self.keep_downloaded:
-                                print("Enter older: \n files: {} \n creation_date : {} \n delete_time: {} ".format(temp_file, creation_date(temp_file), now - self.temp_aria2_ffmpeg_files))
+                            if os.path.isfile(temp_file) and modified_date(temp_file) < now - self.keep_downloaded:
+                                print("Enter older: \n files: {} \n creation_date : {} \n delete_time: {} ".format(temp_file, modified_date(temp_file), now - self.temp_aria2_ffmpeg_files))
                                 os.remove(temp_file)
             except Exception as e:
                 print(e)
