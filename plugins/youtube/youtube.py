@@ -3,6 +3,7 @@ from sanitize_filename import sanitize
 import os
 import time
 import platform
+import subprocess
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
@@ -692,12 +693,12 @@ def bridge(youtube_id):
         if '-audio' in youtube_id:
             command[4] = 'bestaudio'
 
-        process = w.worker(command).pipe()
+        print(command)
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         try:
             while True:
                 # Get some data from ffmpeg
                 line = process.stdout.read(1024)
-
                 # We buffer everything before outputting it
                 buffer.append(line)
 
