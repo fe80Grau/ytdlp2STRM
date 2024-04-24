@@ -99,11 +99,11 @@ class folders:
                     if not f == "__init__.py":  # Ignora el archivo __init__.py
                         if any(keyword in f for keyword in aria2_ffmpeg_files):
                             if os.path.isfile(temp_file) and modified_date(temp_file) < now - self.temp_aria2_ffmpeg_files:
-                                print("Enter keyword: \n files: {} \n creation_date : {} \n delete_time: {} ".format(temp_file, modified_date(temp_file), now - self.temp_aria2_ffmpeg_files))
+                                print("\n Enter keyword: \n files: {} \n creation_date : {} \n delete_time: {} ".format(temp_file, modified_date(temp_file), now - self.temp_aria2_ffmpeg_files))
                                 os.remove(temp_file)
                         else:
                             if os.path.isfile(temp_file) and modified_date(temp_file) < now - self.keep_downloaded:
-                                print("Enter older: \n files: {} \n creation_date : {} \n delete_time: {} ".format(temp_file, modified_date(temp_file), now - self.temp_aria2_ffmpeg_files))
+                                print("\n Enter older: \n files: {} \n creation_date : {} \n delete_time: {} ".format(temp_file, modified_date(temp_file), now - self.temp_aria2_ffmpeg_files))
                                 os.remove(temp_file)
             except Exception as e:
                 print(e)

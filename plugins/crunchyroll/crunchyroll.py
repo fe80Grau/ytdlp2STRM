@@ -355,6 +355,7 @@ def download(crunchyroll_id):
             'yt-dlp', 
             '-f', 'bestvideo',
             '--no-warnings',
+            '--no-mtime',
             '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
             'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
             '--output', os.path.join(temp_dir, f'{crunchyroll_id}.mp4')
@@ -367,6 +368,7 @@ def download(crunchyroll_id):
             'yt-dlp', 
             '-f', 'bestaudio',
             '--no-warnings',
+            '--no-mtime',
             '--match-filter', 'language={}'.format(audio_language),
             '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
             'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
