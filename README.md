@@ -10,6 +10,7 @@
 
 ## Prerequisite
 * Python 3 https://www.python.org/downloads/
+* FFmpeg https://ffmpeg.org/
 
 ## Installation and usage
 * To allocate ytdlp2STRM, I suggest using /opt/ in Linux or C:\ProgramData in Windows.
