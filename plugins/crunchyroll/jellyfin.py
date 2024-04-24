@@ -139,8 +139,10 @@ def preload_next_episode():
 def daemon():
     #print(' * Running Crunchyroll Jellyfin daemon')
     """Inicia el daemon que verificará el estado de reproducción cada minuto."""
-    schedule.every(1).minutes.do(preload_next_episode)
+    if not base_url == "" \
+    and not api_key == "" :
+        schedule.every(1).minutes.do(preload_next_episode)
 
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+        while True:
+            schedule.run_pending()
+            time.sleep(1)

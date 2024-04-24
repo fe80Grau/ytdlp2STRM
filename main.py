@@ -8,13 +8,13 @@ from clases.config import config as c
 from clases.folders import folders as f
 from clases.cron import cron as cron
 from clases.worker import worker as w
-
 import config.routes
+
+
 
 ytdlp2strm_config = c.config(
     './config/config.json'
 ).get_config()
-
 
 def run_flask_app():
     app.run(host='0.0.0.0',port=ytdlp2strm_config['ytdlp2strm_port'],debug=False)
@@ -30,7 +30,4 @@ if __name__ == "__main__":
     thread.daemon = True
     thread.start()
     
-    #Run Flask server
-    #socketio.run(app,host='0.0.0.0',port=ytdlp2strm_config['ytdlp2strm_port'],debug=True)
-    # Inicia Flask en un proceso
     run_flask_app()
