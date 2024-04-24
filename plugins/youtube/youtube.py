@@ -1,6 +1,7 @@
 from flask import stream_with_context, Response, send_file, redirect
 from sanitize_filename import sanitize
 import os
+import sys
 import time
 import platform
 import subprocess
@@ -686,19 +687,25 @@ def bridge(youtube_id):
         buffer = []
         sentBurst = False
         if config["sponsorblock"]:
-            command = ['yt-dlp', '-o', '-', '-f', 'best', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
+            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'best', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
         else:
-            command = ['yt-dlp', '-o', '-', '-f', 'best', '--restrict-filenames', s_youtube_id]
+            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'best', '--restrict-filenames', s_youtube_id]
         Youtube().set_proxy(command)
         if '-audio' in youtube_id:
             command[4] = 'bestaudio'
 
-        print(command)
+        #process = w.worker(command).pipe()
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        time.sleep(3)
         try:
+
             while True:
                 # Get some data from ffmpeg
+                #time.sleep(0.1)  # Espera brevemente por más datos
                 line = process.stdout.read(1024)
+                
+                if not line:
+                    break
                 # We buffer everything before outputting it
                 buffer.append(line)
 
@@ -707,17 +714,13 @@ def bridge(youtube_id):
                     sentBurst = True
 
                     for i in range(0, len(buffer) - 2):
-                        print("Send initial burst #", i)
+                        #print("Send initial burst #", i)
                         yield buffer.pop(0)
 
                 elif time.time() > startTime + 3 and len(buffer) > 0:
                     yield buffer.pop(0)
 
                 process.poll()
-                if isinstance(process.returncode, int):
-                    if process.returncode > 0:
-                        print('yt-dlp Error', process.returncode)
-                    break
         finally:
             process.kill()
 

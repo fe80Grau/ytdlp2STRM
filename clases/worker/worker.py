@@ -28,6 +28,7 @@ class worker:
         return subprocess.Popen(
             self.command, 
             stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
             universal_newlines=True,
             #encoding='latin-1',
             cwd=self.wd
