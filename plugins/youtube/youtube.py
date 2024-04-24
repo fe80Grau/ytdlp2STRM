@@ -694,7 +694,7 @@ def bridge(youtube_id):
             command[4] = 'bestaudio'
 
         print(command)
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         try:
             while True:
                 # Get some data from ffmpeg
