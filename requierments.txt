@@ -10,4 +10,3 @@ Werkzeug==2.2.2
 pytz
 ffmpeg-python
 flask_socketio
-telegram-video-downloader
