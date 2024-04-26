@@ -155,7 +155,8 @@ Where:
 * SponsorBlock doesn't work in redirect mode, Twitch only works in direct mode at the moment.
 
 ## Crunchyroll
-* Requieres a cookie file from Premium user login (you can extract the cookie file from Crunchyroll with browser extension like https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) or load a fresh cookie from browser (check discusion in https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1685036245).
+* ~~Requieres a cookie file from Premium user login (you can extract the cookie file from Crunchyroll with browser extension like https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) or load a fresh cookie from browser (check discusion in https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1685036245).~~
+* Only works with login auth.
 * I'm using a filter language *your crunchyroll_audio_language config value* and extractor crunchyrollbeta:hardsub=*your crunchyroll_subtitle_language config value* to get a version with one language and subs embedded
 * To avoid constant rewriting of the strm files, a file called last_episode.txt is generated in the series directory, it contains the playlist position of the last strm downloaded, this will only generate strm for new episodes.
 * Patch yt-dlp if Crunchyroll not works https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1637748442
@@ -200,7 +201,7 @@ You can change --media value for another plugin
 * [YOUTUBE] sponsorblock_cats
 * [YOUTUBE] [CRUNCHYROLL] proxy
 * [YOUTUBE] [CRUNCHYROLL] proxy_url
-* [CRUNCHYROLL] crunchyroll_auth (browser, cookies or login), browser option in addition with background task opening firefox is the best way to keep unatended workflow.
+* [CRUNCHYROLL] crunchyroll_auth (~~browser, cookies or~~ login), browser option in addition with background task opening firefox is the best way to keep unatended workflow.
 * [CRUNCHYROLL] crunchyroll_browser (set if your choice in curnchyroll_auth is browser) You can read more about this searching --cookies-from-browser in https://github.com/yt-dlp/yt-dlp
 * [CRUNCHYROLL] crunchyroll_useragent (set if your choice in curnchyroll_auth is browser) Needs the same user agent that your browser. If you search current user-agent in Google you can see your user-agent, copy it.
 * [CRUNCHYROLL] crunchyroll_username (set if your choice in curnchyroll_auth is login)
