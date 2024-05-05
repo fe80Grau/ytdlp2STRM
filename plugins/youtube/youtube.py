@@ -671,6 +671,7 @@ def direct(youtube_id): #Sponsorblock doesn't work in this mode
     Youtube().set_proxy(command)
     if '-audio' in youtube_id:
         command[2] = 'bestaudio'
+    print(' '.join(command))
 
     #print(' '.join(command))
     youtube_url = w.worker(command).output()
@@ -692,7 +693,9 @@ def bridge(youtube_id):
             command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'best', '--restrict-filenames', s_youtube_id]
         Youtube().set_proxy(command)
         if '-audio' in youtube_id:
-            command[4] = 'bestaudio'
+            command[5] = 'bestaudio'
+        
+        print(' '.join(command))
 
         #process = w.worker(command).pipe()
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -743,6 +746,8 @@ def download(youtube_id):
     if '-audio' in youtube_id:
         command[2] = 'bestaudio'
 
+
+    print(' '.join(command))
     w.worker(command).call()
     filename = w.worker(
         ['yt-dlp', '--print', 'filename', '--restrict-filenames', "{}".format(youtube_id)]
