@@ -2,10 +2,12 @@ from __main__ import app
 from flask_socketio import SocketIO
 from flask import request, render_template, session
 import json
+import logging
 from clases.worker import worker as w
 from ui.ui import Ui
 _ui = Ui()
 socketio = SocketIO(app)
+logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
 # Ruta principal
 @app.route('/')
