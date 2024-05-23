@@ -353,7 +353,7 @@ def direct(crunchyroll_id):
     return redirect(crunchyroll_url, code=301)
     '''
 
-    return remux_streams(crunchyroll_id)
+    return download(crunchyroll_id)
 
 def download(crunchyroll_id):
 
