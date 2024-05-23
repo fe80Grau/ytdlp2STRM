@@ -154,12 +154,20 @@ Where:
 * If a live video is on air the !000-live-channel.strm will be created. The script will download the strm for each video in the /videos channel tab in any manner. Take a look at the limits and daterange values for videos in ./plugins/twitch/config.json.
 * SponsorBlock doesn't work in redirect mode, Twitch only works in direct mode at the moment.
 
+## TV3
+* Plugin for 3cat, content in Catalan.
+
 ## Crunchyroll
 * ~~Requieres a cookie file from Premium user login (you can extract the cookie file from Crunchyroll with browser extension like https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) or load a fresh cookie from browser (check discusion in https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1685036245).~~
+* Requires yt-dlp nightly build to work. `yt-dlp >=2024.05.22.232749.dev0`
 * Only works with login auth.
 * I'm using a filter language *your crunchyroll_audio_language config value* and extractor crunchyrollbeta:hardsub=*your crunchyroll_subtitle_language config value* to get a version with one language and subs embedded
 * To avoid constant rewriting of the strm files, a file called last_episode.txt is generated in the series directory, it contains the playlist position of the last strm downloaded, this will only generate strm for new episodes.
 * Patch yt-dlp if Crunchyroll not works https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1637748442
+* `mutate_values.json` A particular file for this plugin. Overwrites the value of a specified field. For example, in cases where the season given by yt-dlp - season_number does not correspond to the actual season of the series. The available fields are as follows: season_number, season, episode_number, and episode.
+* direct mode. On Crunchyroll, the direct mode inherits the functionality of the bridge mode. Given the latest updates, it is necessary to obtain the audio and video streams separately, redirect their output, and remux both tracks to finally serve them over HTTP. Experimental, sometimes it may fail to start playback and you need to try playing it again. There is no timestamp and it is not possible to navigate through the video's timeline.
+* With download mode, the audio and video streams will be downloaded separately, and after downloading, they will be remuxed to finally serve a final video/mp4 file. The files will be downloaded to `./temp/` and their lifespan will be 24 hours. This is configurable in `config.json` -> `ytdlp2strm_temp_file_duration`. The Crunchyroll plugin in download mode will automatically download the latest discovered episode of each series declared in `channel_list.json`.
+* In the `config.json` file, and specifically for the Crunchyroll plugin, there are 4 parameters: `jellyfin_preload_last_episode`, `jellyfin_base_url`, `jellyfin_user_id`, and `jellyfin_api_key`. When configured with their correct values, they allow detecting if an episode is being played and pre-downloading the next one to achieve a seamless playback flow without interruptions.
 
 ## Pokemon TV _The Pokémon TV app and website are closing, and the service will end on March 28, 2024._
 * Thank you https://github.com/seiya-dev 
@@ -181,6 +189,7 @@ You can change --media value for another plugin
 * ytdlp2strm_host 
 * ytdlp2strm_port
 * ytdlp2strm_keep_old_strm
+* ytdlp2strm_temp_file_duration
 
 ## config/crons.json
 * Working with Schedule library (https://schedule.readthedocs.io/en/stable/examples.html)
@@ -225,12 +234,6 @@ You can change --media value for another plugin
 ## Service
 * LINUX: ytdlp2strm.service example service to run main.py with systemctl. 
 * WINDOWS: MS-TASK-ytdlp2STRM.xml example scheduled task with schtasks.
-
-## Pendings
-* Include subtitles
-* Video quality. Config options: Forced (worst, balanced, best) or Dynamic (depends connection speed)
-* Get Youtube account subscrition channel list
-* Do this as a Jellyfin plugin with GUI (settings and search for channels to add in list)
 
 ## Credits
 [![GitHub - ShieldsIO](https://img.shields.io/badge/GitHub-ShieldsIO-42b983?logo=GitHub)](https://github.com/badges/shields)

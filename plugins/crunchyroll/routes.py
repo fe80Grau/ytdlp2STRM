@@ -1,5 +1,5 @@
 from __main__ import app
-from plugins.crunchyroll.crunchyroll import direct, download, remux
+from plugins.crunchyroll.crunchyroll import direct, download, streams, remux_streams, cleanup_frag_files
 
 ### CRUNCHY ZONE
 @app.route("/crunchyroll/direct/<crunchyroll_id>")
@@ -9,7 +9,14 @@ def crunchyroll_direct(crunchyroll_id):
 @app.route("/crunchyroll/download/<crunchyroll_id>")
 def crunchyroll_download(crunchyroll_id):
     return download(crunchyroll_id)
-#experimental not works
-@app.route("/crunchyroll/remux/<crunchyroll_id>")
-def crunchyroll_remux(crunchyroll_id):
-    return remux(crunchyroll_id)
+@app.route("/crunchyroll/stream/<media>/<crunchyroll_id>")
+def crunchyroll_remux(media, crunchyroll_id):
+    return streams(media, crunchyroll_id)
+
+@app.route('/crunchyroll/bridge/<crunchyroll_id>')
+def remux(crunchyroll_id):
+    try:
+        return remux_streams(crunchyroll_id)
+    except:
+        cleanup_frag_files()
+        return 'Failed to remux streams.', 500

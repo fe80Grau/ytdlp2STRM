@@ -1,0 +1,8 @@
+{
+    "https://www.crunchyroll.com/es/series/GY5P48XEY/demon-slayer-kimetsu-no-yaiba" : [
+        { "field" : "season_number", "value" : "55", "replace" : "02" },
+        { "field" : "season_number", "value" : "56", "replace" : "03" },
+        { "field" : "season_number", "value" : "57", "replace" : "04" },
+        { "field" : "season_number", "value" : "58", "replace" : "05" }
+    ]
+}

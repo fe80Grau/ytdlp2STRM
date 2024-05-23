@@ -1,4 +1,4 @@
-from flask import send_file, redirect, stream_with_context, Response
+from flask import send_file, redirect, stream_with_context, Response, abort
 from sanitize_filename import sanitize
 import os
 import ffmpeg
@@ -9,7 +9,7 @@ from clases.folders import folders as f
 from clases.nfo import nfo as n
 from plugins.crunchyroll.jellyfin import daemon
 import subprocess
-from threading import Thread
+import threading
 
 ## -- CRUNCHYROLL CLASS
 class Crunchyroll:
@@ -145,6 +145,10 @@ channels = c.config(
     config["channels_list_file"]
 ).get_channels()
 
+mutate_values = c.config(
+    config["mutate_values"]
+).get_channels()
+
 source_platform = "crunchyroll"
 media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
@@ -153,6 +157,12 @@ subtitle_language = config["crunchyroll_subtitle_language"]
 audio_language = config['crunchyroll_audio_language']
 jellyfin_preload = False
 jellyfin_preload_last_episode = False
+port = ytdlp2strm_config['ytdlp2strm_port']
+SECRET_KEY = os.environ.get('AM_I_IN_A_DOCKER_CONTAINER', False)
+DOCKER_PORT = os.environ.get('DOCKER_PORT', False)
+if SECRET_KEY:
+    port = DOCKER_PORT
+
 
 if 'jellyfin_preload' in config:
     jellyfin_preload = bool(config['jellyfin_preload'])
@@ -168,7 +178,7 @@ else:
 
 ## -- JELLYFIN DAEMON
 if jellyfin_preload:
-    Thread(target=daemon, daemon=True).start()
+    threading.Thread(target=daemon, daemon=True).start()
 ## -- END
 
 ## -- MANDATORY TO_STRM FUNCTION 
@@ -200,17 +210,41 @@ def to_strm(method):
         try:
             for line in iter(process.stdout.readline, b''):
                 if line != "" and not 'ERROR' in line and not 'WARNING' in line:
-                    #print(line)
-                    season_number = str(line).rstrip().split(';')[0].zfill(2)
-                    season = str(line).rstrip().split(';')[1]
-                    episode_number = (line).rstrip().split(';')[2].zfill(4)
-                    episode = (line).rstrip().split(';')[3]
-                    url = (line).rstrip().split(';')[4].replace(
-                        'https://www.crunchyroll.com/',
-                        ''
-                    ).replace('/','_')
-                    playlist_count = (line).rstrip().split(';')[5]
-               
+                    # Extrae los valores dividiendo la línea una sola vez y procesa según sea necesario.
+                    split_line = str(line).rstrip().split(';')
+                    season_number = split_line[0].zfill(2)
+                    season = split_line[1]
+                    episode_number = split_line[2].zfill(4)
+                    episode = split_line[3]
+                    url = split_line[4].replace('https://www.crunchyroll.com/', '').replace('/', '_')
+                    playlist_count = split_line[5]
+
+                    # Diccionario para almacenar los valores extraídos para comparación y posible reemplazo.
+                    data = {
+                        'season_number': season_number,
+                        'season': season,
+                        'episode_number': episode_number,
+                        'episode': episode,
+                        'url': url,
+                        'playlist_count': playlist_count,
+                    }
+
+                    # Verifica si hay mutaciones especificadas para este canal.
+                    if crunchyroll_channel in mutate_values:
+                        for values in mutate_values[crunchyroll_channel]:
+                            # Obtén el campo y el valor objetivo a mutar del diccionario 'values'.
+                            field = values['field']
+                            value = values['value']
+
+                            # Si el valor actual en el campo corresponde al valor objetivo, reemplázalo.
+                            if field in data and data[field] == value:
+                                data[field] = values['replace']
+
+                    # Actualiza las variables con los valores posiblemente mutados.
+                    season_number, season, episode_number, episode, url, playlist_count = (
+                        data['season_number'], data['season'], data['episode_number'], data['episode'], data['url'], data['playlist_count']
+                    )
+                                                        
                     if not episode_number == '0' and not episode_number  == 0:
 
                         video_name = "{} - {}".format(
@@ -289,7 +323,7 @@ def to_strm(method):
                             )
 
                 if not line:
-                    if jellyfin_preload_last_episode:
+                    if jellyfin_preload_last_episode and method == 'download':
                         if 'http' in file_content:
                             w.worker(file_content).preload()
                     break
@@ -319,7 +353,7 @@ def direct(crunchyroll_id):
     return redirect(crunchyroll_url, code=301)
     '''
 
-    return download(crunchyroll_id)
+    return remux_streams(crunchyroll_id)
 
 def download(crunchyroll_id):
 
@@ -377,8 +411,8 @@ def download(crunchyroll_id):
         Crunchyroll().set_auth(command_audio,False)
         Crunchyroll().set_proxy(command_audio)
 
-        video = Thread(target=extract_media, args=(command_video,))
-        audio = Thread(target=extract_media, args=(command_audio,))
+        video = threading.Thread(target=extract_media, args=(command_video,))
+        audio = threading.Thread(target=extract_media, args=(command_audio,))
 
         video.start()
         audio.start()
@@ -405,68 +439,128 @@ def download(crunchyroll_id):
     #return stream_video(f'{crunchyroll_id}.mp4', f'{crunchyroll_id}.m4a')
 
 #experimental not works.
-def remux(crunchyroll_id):
-
-    def remux_stream_to_hls():
-        hls_output = '-'  # Ejemplo de ruta de salida, asumiendo una carpeta 'static' en tu aplicación Flask.
-        command_ffmpeg = [
-            'ffmpeg',
-            '-i', 'pipe:0',  # Entrada de video (ej. 'pipe:0')
-            '-i', 'pipe:1',  # Entrada de audio (ej. 'pipe:1')
-            '-c:v', 'copy',  # Copiar el stream de vídeo sin recodificar
-            '-c:a', 'aac',  # Codificar el stream de audio a AAC
-            '-f', 'hls',  # Formato de salida HLS
-            '-hls_time', '2',  # Duración de cada segmento de HLS en segundos
-            '-hls_playlist_type', 'event',  # O 'live' para streaming en vivo
-            '-hls_segment_filename', 'static/live%03d.ts',  # Patrón de nombre de archivo de segmento
-            hls_output  # Archivo de manifiesto HLS
+def streams(media, crunchyroll_id):
+    print(f'Remuxing {media} - {crunchyroll_id}')
+    command = None
+    mimetype = None
+    if media == 'audio':
+        mimetype = 'audio/mp4'
+        command = [
+            'yt-dlp', 
+            '-f', 'bestaudio[ext=m4a]/bestaudio',
+            '--no-warnings',
+            '--no-mtime',
+            '--match-filter', 'language={}'.format(audio_language),
+            'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+            '-o-'
         ]
-        process_ffmpeg = subprocess.Popen(command_ffmpeg, stdout=subprocess.PIPE, bufsize=10**8)
 
-        def read_stream(process):
-            # Leemos el stdout del proceso de ffmpeg en bucles de 4096 bytes
+    if media == 'video':
+        mimetype = 'video/mp4'
+        command = [
+            'yt-dlp', 
+            '-f', 'bestvideo',
+            '--no-warnings',
+            '--no-mtime',
+            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
+            'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+            '-o-'
+        ]
+
+    if command and mimetype:
+        # Ejecutar el comando y obtener el output en modo binario
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        def generate():
+            # Leer la salida en modo binario en pequeños bloques
             while True:
-                chunk = process.stdout.read(4096)
-                if not chunk:
-                    process.terminate()  # Asegúrate de terminar el proceso si ya no hay datos
+                output = process.stdout.read(1024)
+                if output:
+                    yield output
+                else:
                     break
-                yield chunk
 
-        return read_stream(process_ffmpeg)
-    
-    def generate_video_stream():
-        # Configura los comandos de yt-dlp para video y audio
-        command_video = [
-            'yt-dlp',
-            '--no-warnings',
-            '--external-downloader', 'aria2c',
-            '--match-filter', 'language={}'.format(audio_language),
-            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-            '--output', '-',  # Salida al stdout
-            f'https://www.crunchyroll.com/{crunchyroll_id.replace("_", "/")}',
-        ]
-        Crunchyroll().set_auth(command_video,False)
-        Crunchyroll().set_proxy(command_video)
+        def log_stderr():
+            for line in iter(process.stderr.readline, b''):
+                print(line.decode('utf-8', errors='ignore'), end='')  # Imprimir la salida de error por consola
 
-        command_audio = [
-            'yt-dlp',
-            '--no-warnings',
-            '--format', 'ba',  # Selecciona el mejor vídeo combinado con el mejor audio
-            '--external-downloader', 'aria2c',
-            '--match-filter', 'language={}'.format(audio_language),
-            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-            '--output', '-',  # Salida al stdout
-            f'https://www.crunchyroll.com/{crunchyroll_id.replace("_", "/")}',
-        ]
-        Crunchyroll().set_auth(command_audio,False)
-        Crunchyroll().set_proxy(command_audio)
-        # Ejecuta yt-dlp para obtener los flujos combinados de video y audio
-        process_video = subprocess.Popen(command_video, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process_audio = subprocess.Popen(command_audio, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Lanzar la función log_stderr en un hilo separado para capturar stderr mientras se transmite stdout
+        threading.Thread(target=log_stderr).start()
 
+        return Response(generate(), mimetype=mimetype)
 
-        return Response(stream_with_context(remux_stream_to_hls()), mimetype='video/x-matroska')
+    else:
+        print('Please use a correct media type audio or video')
+        abort(500)
 
-    return generate_video_stream()
+def remux_streams(crunchyroll_id):
+    cleanup_frag_files()
+    audio_url = f'http://localhost:{port}/crunchyroll/stream/audio/{crunchyroll_id}'
+    video_url = f'http://localhost:{port}/crunchyroll/stream/video/{crunchyroll_id}'
+
+    ffmpeg_command = [
+        'ffmpeg',
+        '-re',  # Read input at native frame rate
+        '-protocol_whitelist', 'file,http,https,tcp,tls',
+        '-i', video_url,  # Video input from URL
+        '-re',  # Read input at native frame rate
+        '-i', audio_url,  # Audio input from URL
+        '-c', 'copy',  # Copy both audio and video without re-encoding
+        '-f', 'matroska',  # Output format suitable for streaming
+        'pipe:1'  # Output to stdout
+    ]
+    # Include robust FFmpeg input handling options
+    ffmpeg_options = '-reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 2'.split()
+
+    ffmpeg_command = ffmpeg_command[:1] + ffmpeg_options + ffmpeg_command[1:]
+    ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+
+    # Event to signal that ffmpeg_process has finished
+    ffmpeg_done_event = threading.Event()
+
+    # Function to log stderr output
+    def log_stderr():
+        try:
+            for line in iter(ffmpeg_process.stderr.readline, b''):
+                print(line.decode('utf-8', errors='ignore'), end='')  # Log FFmpeg stderr output
+        except ValueError:
+            pass  # Handle closed file stream silently
+        finally:
+            ffmpeg_done_event.set()  # Signal that stderr logging is done
+
+    # Start the log_stderr function in a separate thread
+    threading.Thread(target=log_stderr).start()
+
+    def generate_ffmpeg_output():
+        try:
+            while True:
+                output = ffmpeg_process.stdout.read(1024)
+                if output:
+                    yield output
+                else:
+                    break
+        finally:
+            # Ensure FFmpeg process is terminated
+            print("Cleaning up FFmpeg process")
+            ffmpeg_process.terminate()
+            ffmpeg_process.stdout.close()
+            ffmpeg_process.stderr.close()
+            # Wait for logging thread to finish
+            ffmpeg_done_event.wait()
+            # Clean up the --FragXX files
+            cleanup_frag_files()
+
+    return Response(stream_with_context(generate_ffmpeg_output()), mimetype='video/x-matroska')
+
+def cleanup_frag_files():
+    current_directory = os.getcwd()
+    for file_name in os.listdir(current_directory):
+        if file_name.startswith('--Frag'):
+            file_path = os.path.join(current_directory, file_name)
+            try:
+                os.remove(file_path)
+                print(f'Removed fragment file: {file_path}')
+            except Exception as e:
+                print(f'Unable to remove fragment file: {file_path}. Error: {e}')
 
 ## -- END
