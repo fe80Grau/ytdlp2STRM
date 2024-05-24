@@ -323,7 +323,7 @@ def to_strm(method):
                             )
 
                 if not line:
-                    if jellyfin_preload_last_episode and method == 'download':
+                    if jellyfin_preload_last_episode and (method == 'download' or method =='direct'):
                         if 'http' in file_content:
                             w.worker(file_content).preload()
                     break
