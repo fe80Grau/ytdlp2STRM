@@ -1,6 +1,7 @@
 {
     "strm_output_folder" : "/media/Crunchyroll",
     "channels_list_file" : "./plugins/crunchyroll/channel_list.json",
+    "mutate_values" : "./plugins/crunchyroll/mutate_values.json",
     "crunchyroll_cookies_file" : "/etc/www.crunchyroll.com_cookies.txt",
     "crunchyroll_subtitle_language" : "es-ES",
     "crunchyroll_audio_language" : "ja-JP",
