@@ -449,6 +449,7 @@ def streams(media, crunchyroll_id):
             'yt-dlp', 
             '-f', 'bestaudio[ext=m4a]/bestaudio',
             '--no-warnings',
+            '--no-part',
             '--no-mtime',
             '--match-filter', 'language={}'.format(audio_language),
             'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
@@ -461,6 +462,7 @@ def streams(media, crunchyroll_id):
             'yt-dlp', 
             '-f', 'bestvideo',
             '--no-warnings',
+            '--no-part',
             '--no-mtime',
             '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
             'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
@@ -549,8 +551,13 @@ def remux_streams(crunchyroll_id):
             ffmpeg_done_event.wait()
             # Clean up the --FragXX files
             cleanup_frag_files()
-
-    return Response(stream_with_context(generate_ffmpeg_output()), mimetype='video/x-matroska')
+            
+    headers = {
+        'Content-Type': 'video/x-matroska',
+        'Cache-Control': 'no-cache',
+        'Content-Disposition': 'inline; filename="stream.mkv"'
+    }
+    return Response(stream_with_context(generate_ffmpeg_output()), mimetype='video/x-matroska', headers=headers)
 
 def cleanup_frag_files():
     current_directory = os.getcwd()
