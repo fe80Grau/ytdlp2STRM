@@ -122,8 +122,8 @@ def preload_next_episode():
                     siguiente_episodio_id = get_next_episode(serie_id, temporada_id, episodio_id)
                     
                     if siguiente_episodio_id:
-                        #print(f"El siguiente episodio ID es {siguiente_episodio_id}")
-                        #print("precargando...")
+                        print(f"El siguiente episodio ID es {siguiente_episodio_id}")
+                        print("precargando...")
                         preload_video(siguiente_episodio_id, user_id, api_key)
                         # Aquí puedes agregar la lógica para "precargar" el siguiente episodio
                     else:
@@ -141,8 +141,6 @@ def daemon():
     """Inicia el daemon que verificará el estado de reproducción cada minuto."""
     if not base_url == "" \
     and not api_key == "" :
-        schedule.every(1).minutes.do(preload_next_episode)
-
         while True:
-            schedule.run_pending()
-            time.sleep(1)
+            preload_next_episode()
+            time.sleep(60)
