@@ -4,6 +4,7 @@ import schedule
 import time
 import threading
 from clases.config import config as c
+from clases.worker import worker as w
 
 config = c.config(
     './plugins/crunchyroll/config.json'
@@ -46,63 +47,16 @@ def fetch_item_details(item_id, user_id, api_key):
         return None
 
 def preload_video(item_id, user_id, api_key):
-    global is_preloading
-    
-    # Intenta adquirir el Lock
-    if not preload_lock.acquire(blocking=False):
-        # Si no se puede adquirir el Lock, significa que otra instancia ya está ejecutando preload_video
-        #print("Ya se está precargando un video.")
-        return
-    
-    # Verifica si ya se está ejecutando la función
-    if is_preloading:
-        #print("Ya se está precargando otro video. Saliendo...")
-        preload_lock.release()  # No olvides liberar el Lock si decides no proceder
-        return
-    
-    is_preloading = True  # Marca el inicio de la ejecución
-
-    current_dir = os.getcwd()
-
-    # Construyes la ruta hacia la carpeta 'temp' dentro del directorio actual
-    temp_dir = os.path.join(current_dir, 'temp')
-
     item_details = fetch_item_details(item_id, user_id, api_key)
     if item_details is None:
         return
+    #print(item_details)
+    file_content = item_details['MediaSources'][0].get("Path", "")
+    #print(file_content)
+    if 'crunchyroll' in file_content:
+        #print("precargando...")
+        w.worker(file_content).preload()
 
-    path = item_details['MediaSources'][0].get("Path", "")
-    
-    if ("download" in path or "direct" in path) \
-        and "crunchyroll" in path:
-
-
-        # Usamos un thread para cancelar la solicitud después de 5 segundos
-        def download_and_cancel():
-            with requests.get(path, stream=True) as r:
-                time.sleep(5)  # Esperamos 5 segundos y luego cancelamos la solicitud
-                #print("Preloading cancelled after 5 seconds")
-
-        crunchyroll_id = path.split('_')[-1]
-
-        isin = False
-        # Iterar sobre todos los archivos en la carpeta 'temp'
-        for filename in os.listdir(temp_dir):
-            # Comprobar si el crunchroll_id está en el nombre del archivo
-            if crunchyroll_id in filename:
-                isin = True
-                # Si necesitas hacer algo más que imprimir, este es el lugar.
-                # Por ejemplo, podrías romper el bucle con 'break' si solo te interesa saber si al menos uno existe
-
-        if not isin:
-            preload_thread = threading.Thread(target=download_and_cancel)
-            preload_thread.start()
-            #print("Preloading started...")
-    else:
-        #print("The path does not contain the word 'download'.")
-        pass 
-    is_preloading = False  # Restablece el estado
-    preload_lock.release()  # Libera el Lock
 
 def preload_next_episode():
     url = f"{base_url}/Sessions?api_key={api_key}"
@@ -122,8 +76,7 @@ def preload_next_episode():
                     siguiente_episodio_id = get_next_episode(serie_id, temporada_id, episodio_id)
                     
                     if siguiente_episodio_id:
-                        print(f"El siguiente episodio ID es {siguiente_episodio_id}")
-                        print("precargando...")
+                        #print(f"El siguiente episodio ID es {siguiente_episodio_id}")
                         preload_video(siguiente_episodio_id, user_id, api_key)
                         # Aquí puedes agregar la lógica para "precargar" el siguiente episodio
                     else:

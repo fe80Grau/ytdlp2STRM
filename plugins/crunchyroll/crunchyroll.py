@@ -381,10 +381,13 @@ def download(crunchyroll_id):
             c='copy', 
             movflags='faststart'
         ).run(overwrite_output=True)
-
-
+    isin = False
     
-    if not os.path.isfile(os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')):
+    for filename in os.listdir(temp_dir):
+        if crunchyroll_id in filename:
+            isin = True
+
+    if not isin:        
         command_video = [
             'yt-dlp', 
             '-f', 'bestvideo',
@@ -419,7 +422,7 @@ def download(crunchyroll_id):
 
         video.join()
         audio.join()
-
+        
         preprocess_video(
             os.path.join(temp_dir, f'{crunchyroll_id}.mp4'), 
             os.path.join(temp_dir, f'{crunchyroll_id}.m4a'), 
@@ -433,6 +436,13 @@ def download(crunchyroll_id):
                 os.path.join(temp_dir, f'{crunchyroll_id}.m4a')
             ]
         )
+
+
+    if isin and not os.path.isfile(os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')):
+        while not os.path.isfile(os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')):
+            time.sleep(5)
+        isin = False
+        
     return send_file(
         os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')
     )

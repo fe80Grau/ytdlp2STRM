@@ -98,13 +98,13 @@ class worker:
             except:
                 print("error on preloading {}".format(self.command))
 
-        crunchyroll_id = self.command.split('_')[-1]
+        video_id = self.command.split('_')[-1]
 
         isin = False
         # Iterar sobre todos los archivos en la carpeta 'temp'
         for filename in os.listdir(temp_dir):
             # Comprobar si el crunchroll_id está en el nombre del archivo
-            if crunchyroll_id in filename:
+            if video_id in filename:
                 isin = True
                 # Si necesitas hacer algo más que imprimir, este es el lugar.
                 # Por ejemplo, podrías romper el bucle con 'break' si solo te interesa saber si al menos uno existe
