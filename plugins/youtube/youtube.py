@@ -22,26 +22,29 @@ class Youtube:
                 print("Searching {}...".format(channel))
                 self.videos = self.get_search()
             else:
-                print("Working channel URL: {}".format(channel_url))
-                print('Getting channel ID...')
-                self.channel_id = self.get_id()
-                print('Generating name folder...')
-                self.channel_name_folder = self.get_name_folder()
-                print('Getting name...')
-                self.channel_name = self.get_name()
-                print('Getting description...')
-                self.channel_description = self.get_description()
-                print('Getting thumbnails...')
-                self.thumbs = self.get_thumbs()
-                self.channel_poster = self.thumbs['poster']
-                self.channel_landscape = self.thumbs['landscape']
+                try:
+                    print("Working channel URL: {}".format(channel_url))
+                    print('Getting channel ID...')
+                    self.channel_id = self.get_id()
+                    print('Generating name folder...')
+                    self.channel_name_folder = self.get_name_folder()
+                    print('Getting name...')
+                    self.channel_name = self.get_name()
+                    print('Getting description...')
+                    self.channel_description = self.get_description()
+                    print('Getting thumbnails...')
+                    self.thumbs = self.get_thumbs()
+                    self.channel_poster = self.thumbs['poster']
+                    self.channel_landscape = self.thumbs['landscape']
 
-                if 'novideo' in channel_url:
-                    print('novideo flag, only channel info...')
-                    self.videos = []
-                else:
-                    print('Getting videos...')
-                    self.videos = self.get_videos()
+                    if 'novideo' in channel_url:
+                        print('novideo flag, only channel info...')
+                        self.videos = []
+                    else:
+                        print('Getting videos...')
+                        self.videos = self.get_videos()
+                except:
+                    print('Error processing channel...')
 
     def get_id(self):
         base_channel_url = self.channel_url
@@ -124,6 +127,7 @@ class Youtube:
         self.channel_name_folder = (
             self.channel
             .replace('/user/','@')
+            .replace('/c/', '@')
             .replace('/streams','')
         )
 
@@ -612,7 +616,7 @@ def to_strm(method):
         print("Preparing channel {}".format(youtube_channel))
 
         youtube_channel = (
-            youtube_channel.replace('https://www.youtube.com/', '') if not '/user/' in youtube_channel 
+            youtube_channel.replace('https://www.youtube.com/', '') if not '/user/' and not '/c/' in youtube_channel 
             else youtube_channel.replace('https://www.youtube.com', '')
         )
         print(youtube_channel)
