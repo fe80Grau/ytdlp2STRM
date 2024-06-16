@@ -47,11 +47,11 @@ class Cron(threading.Thread):
                 call_constructor
             )
 
-        while True:
+        while 1==1:
             try:
                 schedule.run_pending()
 
                 time.sleep(60)
             except Exception as e:
                 print(e)
-                continue
+                pass
