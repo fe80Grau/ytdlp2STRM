@@ -1,7 +1,8 @@
-from flask import stream_with_context, Response, send_file, redirect
+from flask import stream_with_context, Response, send_file, redirect, abort, request
 from sanitize_filename import sanitize
 import os
 import sys
+import json
 import time
 import platform
 import subprocess
@@ -9,7 +10,8 @@ from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
-
+import subprocess
+import threading
 ## -- YOUTUBE CLASS
 class Youtube:
     def __init__(self, channel=False, channel_url=False):
@@ -759,5 +761,162 @@ def download(youtube_id):
     return send_file(
         os.path.join(temp_dir, filename)
     )
+
+def streams(media, youtube_id):
+    s_youtube_id = youtube_id.split('-audio')[0]
+
+    print(f'Remuxing {media} - {s_youtube_id}')
+    command = None
+    mimetype = None
+    if media == 'audio':
+        mimetype = 'audio/mp4'
+        command = [
+            'yt-dlp', 
+            '-f', 'bestaudio[ext=m4a]/bestaudio',
+            '--no-warnings',
+            '--no-part',
+            '--no-mtime',
+            s_youtube_id,
+            '-o-'
+        ]
+
+    if media == 'video':
+        mimetype = 'video/mp4'
+        command = [
+            'yt-dlp', 
+            '-f', 'bestvideo',
+            '--no-warnings',
+            '--no-part',
+            '--no-mtime',
+            s_youtube_id,
+            '-o-'
+        ]
+
+    if command and mimetype:
+        # Ejecutar el comando y obtener el output en modo binario
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        def generate():
+            # Leer la salida en modo binario en pequeños bloques
+            while True:
+                output = process.stdout.read(1024)
+                if output:
+                    yield output
+                else:
+                    break
+
+        def log_stderr():
+            for line in iter(process.stderr.readline, b''):
+                print(line.decode('utf-8', errors='ignore'), end='')  # Imprimir la salida de error por consola
+
+        # Lanzar la función log_stderr en un hilo separado para capturar stderr mientras se transmite stdout
+        threading.Thread(target=log_stderr).start()
+
+        return Response(generate(), mimetype=mimetype)
+
+    else:
+        print('Please use a correct media type audio or video')
+        abort(500)
+
+
+def get_duration(youtube_id):
+    command = [
+        'yt-dlp',
+        '-j',  # Output in JSON
+        '--no-warnings',
+        '--no-part',
+        '--no-mtime',
+        youtube_id
+    ]
+    result = subprocess.run(command, capture_output=True, text=True, check=True)
+    video_info = json.loads(result.stdout)
+    return float(video_info.get('duration', 0))  # Return duration in seconds
+
+def remux_streams(youtube_id, start_time='0', end_time=None):
+    cleanup_frag_files()
+    
+    s_youtube_id = youtube_id.split('-audio')[0]
+
+    duration = get_duration(s_youtube_id)  # Obtain duration
+    if end_time:
+        end_time = float(end_time)
+    else:
+        end_time = duration
+
+    audio_url = f'http://localhost:{port}/youtube/stream/audio/{youtube_id}'
+    video_url = f'http://localhost:{port}/youtube/stream/video/{youtube_id}'
+
+    # Use the obtained duration to improve FFmpeg's output
+    ffmpeg_command = [
+        'ffmpeg',
+        '-re',  # Read input at native frame rate
+        '-protocol_whitelist', 'file,http,https,tcp,tls',
+        '-i', video_url,  # Video input from URL
+        '-i', audio_url,  # Audio input from URL
+        '-c:v', 'copy',  # Copy video without re-encoding
+        '-c:a', 'aac',  # Re-encode audio to AAC to ensure compatibility
+        '-t', str(end_time - float(start_time)),  # Set the duration
+        '-f', 'matroska',  # Output format suitable for streaming
+        '-movflags', 'faststart',  # Place the moov atom at the beginning of the file for seeking
+        '-movflags', 'frag_keyframe+empty_moov',  # Allow for navigation and set the moov atom at the beginning
+        '-fflags', '+genpts',  # Generate missing PTS
+        'pipe:1'  # Output to stdout
+    ]
+
+    ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+    ffmpeg_done_event = threading.Event()
+
+    def log_stderr():
+        try:
+            for line in iter(ffmpeg_process.stderr.readline, b''):
+                print(line.decode('utf-8', errors='ignore'), end='')  # Log FFmpeg stderr output
+        except ValueError:
+            pass  # Handle closed file stream silently
+        finally:
+            ffmpeg_done_event.set()  # Signal that stderr logging is done
+
+    threading.Thread(target=log_stderr).start()
+
+    def generate_ffmpeg_output():
+        try:
+            start_time = time.time()
+            buffer = []
+            while True:
+                output = ffmpeg_process.stdout.read(1024)
+                if output:
+                    buffer.append(output)
+                    if time.time() - start_time > 2:  # Adjust the initial buffer duration as needed
+                        for chunk in buffer:
+                            yield chunk
+                        buffer = []
+                else:
+                    break
+        finally:
+            print("Cleaning up FFmpeg process")
+            ffmpeg_process.terminate()
+            ffmpeg_process.stdout.close()
+            ffmpeg_process.stderr.close()
+            ffmpeg_done_event.wait()
+            cleanup_frag_files()
+
+    headers = {
+        'Content-Type': 'video/x-matroska',
+        'Cache-Control': 'no-cache',
+        'Content-Disposition': 'inline; filename="stream.mkv"',
+        'Accept-Ranges': 'bytes'  # This header might help with seeking
+    }
+
+    return Response(stream_with_context(generate_ffmpeg_output()), mimetype='video/x-matroska', headers=headers)
+
+def cleanup_frag_files():
+    current_directory = os.getcwd()
+    for file_name in os.listdir(current_directory):
+        if file_name.startswith('--Frag'):
+            file_path = os.path.join(current_directory, file_name)
+            try:
+                os.remove(file_path)
+                print(f'Removed fragment file: {file_path}')
+            except Exception as e:
+                print(f'Unable to remove fragment file: {file_path}. Error: {e}')
 
 ## -- END

@@ -6,19 +6,13 @@ import threading
 import re 
 from tzlocal import get_localzone # $ pip install tzlocal
 
-## -- LOAD CONFIG AND CHANNELS FILES
-crons = c.config(
-    './config/crons.json'
-).get_config()
-
-
-
+# -- LOAD CONFIG AND CHANNELS FILES
+crons = c.config('./config/crons.json').get_config()
 
 class Cron(threading.Thread):
-    def __init__(self):
-        super().__init__(
-            daemon=True
-        )
+    def __init__(self, stop_event):
+        super().__init__(daemon=True)
+        self.stop_event = stop_event
 
     def run(self):
         local_tz = get_localzone() 
@@ -43,15 +37,13 @@ class Cron(threading.Thread):
             call_constructor = re.sub(r'\.at\(\'\'\,.*?\)', '', call_constructor)
             call_constructor = re.sub(r"\.at\(''\,.*?\)", '', call_constructor)
 
-            r = eval(
-                call_constructor
-            )
+            r = eval(call_constructor)
 
-        while 1==1:
+        while not self.stop_event.is_set():
             try:
                 schedule.run_pending()
-
-                time.sleep(60)
+                # Usa una espera con timeout para poder verificar la señal de parada
+                self.stop_event.wait(60)
             except Exception as e:
                 print(e)
                 pass
