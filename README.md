@@ -1,8 +1,8 @@
 # ytdlp2STRM
-* Youtube / Twitch / Crunchyroll etc. to STRM files
+* Youtube / Twitch / ~~Crunchyroll~~ etc. to STRM files
 * Watch Youtube through Jellyfin or Emby 
 * Watch Twitch through Jellyfin or Emby 
-* Watch Crunchyroll through Jellyfin or Emby 
+* ~~Watch Crunchyroll through Jellyfin or Emby~~
 ![ytdlp2STRM](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/cc31ee7c-5e4b-450b-9a3b-526f191d18d8)
 ![image](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/7bee7f75-2f8d-483d-ac7d-2e0250d96d32)
 
@@ -143,7 +143,7 @@ Where:
 
 
 # Additional info
-* After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch and /media/Crunchyroll as folders in Library and enjoy it!
+* After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch ~~and /media/Crunchyroll~~ as folders in Library and enjoy it!
 
 ## Youtube
 * SponsorBlock doesn't work in redirect mode.
@@ -157,18 +157,18 @@ Where:
 ## TV3
 * Plugin for 3cat, content in Catalan.
 
-## Crunchyroll
+## ~~Crunchyroll~~
 * ~~Requieres a cookie file from Premium user login (you can extract the cookie file from Crunchyroll with browser extension like https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) or load a fresh cookie from browser (check discusion in https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1685036245).~~
-* Requires yt-dlp nightly build to work. `yt-dlp >=2024.05.22.232749.dev0`
-* Only works with login auth.
-* I'm using a filter language *your crunchyroll_audio_language config value* and extractor crunchyrollbeta:hardsub=*your crunchyroll_subtitle_language config value* to get a version with one language and subs embedded
-* To avoid constant rewriting of the strm files, a file called last_episode.txt is generated in the series directory, it contains the playlist position of the last strm downloaded, this will only generate strm for new episodes.
-* Patch yt-dlp if Crunchyroll not works https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1637748442
-* `mutate_values.json` A particular file for this plugin. Overwrites the value of a specified field. For example, in cases where the season given by yt-dlp - season_number does not correspond to the actual season of the series. The available fields are as follows: season_number, season, episode_number, and episode.
-* direct mode. On Crunchyroll, the direct mode inherits the functionality of the download mode. 
-* bridge mode. Given the latest updates, it is necessary to obtain the audio and video streams separately, redirect their output, and remux both tracks to finally serve them over HTTP. Experimental, sometimes it may fail to start playback and you need to try playing it again. There is no timestamp and it is not possible to navigate through the video's timeline.
-* With download mode, the audio and video streams will be downloaded separately, and after downloading, they will be remuxed to finally serve a final video/mp4 file. The files will be downloaded to `./temp/` and their lifespan will be 24 hours. This is configurable in `config.json` -> `ytdlp2strm_temp_file_duration`. The Crunchyroll plugin in download mode will automatically download the latest discovered episode of each series declared in `channel_list.json`.
-* In the `config.json` file, and specifically for the Crunchyroll plugin, there are 4 parameters: `jellyfin_preload_last_episode`, `jellyfin_base_url`, `jellyfin_user_id`, and `jellyfin_api_key`. When configured with their correct values, they allow detecting if an episode is being played and pre-downloading the next one to achieve a seamless playback flow without interruptions.
+* ~~Requires yt-dlp nightly build to work. `yt-dlp >=2024.05.22.232749.dev0`~~
+* ~~Only works with login auth.~~
+* ~~I'm using a filter language *your crunchyroll_audio_language config value* and extractor crunchyrollbeta:hardsub=*your crunchyroll_subtitle_language config value* to get a version with one language and subs embedded~~
+* ~~To avoid constant rewriting of the strm files, a file called last_episode.txt is generated in the series directory, it contains the playlist position of the last strm downloaded, this will only generate strm for new episodes.~~
+* ~~Patch yt-dlp if Crunchyroll not works https://github.com/yt-dlp/yt-dlp/issues/7442#issuecomment-1637748442~~
+* ~~`mutate_values.json` A particular file for this plugin. Overwrites the value of a specified field. For example, in cases where the season given by yt-dlp - season_number does not correspond to the actual season of the series. The available fields are as follows: season_number, season, episode_number, and episode.~~
+* ~~direct mode. On Crunchyroll, the direct mode inherits the functionality of the download mode. ~~
+* ~~bridge mode. Given the latest updates, it is necessary to obtain the audio and video streams separately, redirect their output, and remux both tracks to finally serve them over HTTP. Experimental, sometimes it may fail to start playback and you need to try playing it again. There is no timestamp and it is not possible to navigate through the video's timeline.~~
+* ~~With download mode, the audio and video streams will be downloaded separately, and after downloading, they will be remuxed to finally serve a final video/mp4 file. The files will be downloaded to `./temp/` and their lifespan will be 24 hours. This is configurable in `config.json` -> `ytdlp2strm_temp_file_duration`. The Crunchyroll plugin in download mode will automatically download the latest discovered episode of each series declared in `channel_list.json`.~~
+* ~~In the `config.json` file, and specifically for the Crunchyroll plugin, there are 4 parameters: `jellyfin_preload_last_episode`, `jellyfin_base_url`, `jellyfin_user_id`, and `jellyfin_api_key`. When configured with their correct values, they allow detecting if an episode is being played and pre-downloading the next one to achieve a seamless playback flow without interruptions.~~
 
 ## Pokemon TV _The Pokémon TV app and website are closing, and the service will end on March 28, 2024._
 * Thank you https://github.com/seiya-dev 
@@ -209,28 +209,28 @@ You can change --media value for another plugin
 * videos_limit
 * [YOUTUBE] sponsorblock
 * [YOUTUBE] sponsorblock_cats
-* [YOUTUBE] [CRUNCHYROLL] proxy
-* [YOUTUBE] [CRUNCHYROLL] proxy_url
-* [CRUNCHYROLL] crunchyroll_auth (~~browser, cookies or~~ login), browser option in addition with background task opening firefox is the best way to keep unatended workflow.
-* [CRUNCHYROLL] crunchyroll_browser (set if your choice in curnchyroll_auth is browser) You can read more about this searching --cookies-from-browser in https://github.com/yt-dlp/yt-dlp
-* [CRUNCHYROLL] crunchyroll_useragent (set if your choice in curnchyroll_auth is browser) Needs the same user agent that your browser. If you search current user-agent in Google you can see your user-agent, copy it.
-* [CRUNCHYROLL] crunchyroll_username (set if your choice in curnchyroll_auth is login)
-* [CRUNCHYROLL] crunchyroll_password (set if your choice in curnchyroll_auth is login)
-* [CRUNCHYROLL] crunchyroll_cookies_file (set if your choice in curnchyroll_auth is cookies)
-* [CRUNCHYROLL] crunchyroll_audio_language
-* [CRUNCHYROLL] crunchyroll_subtitle_language <- embedded in video
-* [CRUNCHYROLL] jellyfin_preload (False by default, set True to preload the next episode while the current is playing in Jellyfin)
-* [CRUNCHYROLL] jellyfin_preload_last_episode (An @Floflo10 idea. False by default, set True to preloads the last episode at the time its strm is generated. Remember in 24h will be deleted from temp folder)
-* [CRUNCHYROLL] jellyfin_base_url (Your Jellyfin URL, without final slash)
-* [CRUNCHYROLL] jellyfin_user_id (Your Jellyfin user_id)
-* [CRUNCHYROLL] jellyfin_api_key (Your Jellyfin api_key)
+* [YOUTUBE]  ~~[CRUNCHYROLL]~~ proxy
+* [YOUTUBE]  ~~[CRUNCHYROLL]~~ proxy_url
+* ~~[CRUNCHYROLL] crunchyroll_auth (~~browser, cookies or~~ login), browser option in addition with background task opening firefox is the best way to keep unatended workflow.~~
+* ~~[CRUNCHYROLL] crunchyroll_browser (set if your choice in curnchyroll_auth is browser) You can read more about this searching --cookies-from-browser in https://github.com/yt-dlp/yt-dlp~~
+* ~~[CRUNCHYROLL] crunchyroll_useragent (set if your choice in curnchyroll_auth is browser) Needs the same user agent that your browser. If you search current user-agent in Google you can see your user-agent, copy it.~~
+* ~~[CRUNCHYROLL] crunchyroll_username (set if your choice in curnchyroll_auth is login)~~
+* ~~[CRUNCHYROLL] crunchyroll_password (set if your choice in curnchyroll_auth is login)~~
+* ~~[CRUNCHYROLL] crunchyroll_cookies_file (set if your choice in curnchyroll_auth is cookies)~~
+* ~~[CRUNCHYROLL] crunchyroll_audio_language~~
+* ~~[CRUNCHYROLL] crunchyroll_subtitle_language <- embedded in video~~
+* ~~[CRUNCHYROLL] jellyfin_preload (False by default, set True to preload the next episode while the current is playing in Jellyfin)~~
+* ~~[CRUNCHYROLL] jellyfin_preload_last_episode (An @Floflo10 idea. False by default, set True to preloads the last episode at the time its strm is generated. Remember in 24h will be deleted from temp folder)~~
+* ~~[CRUNCHYROLL] jellyfin_base_url (Your Jellyfin URL, without final slash)~~
+* ~~[CRUNCHYROLL] jellyfin_user_id (Your Jellyfin user_id)~~
+* ~~[CRUNCHYROLL] jellyfin_api_key (Your Jellyfin api_key)~~
 
 ## plugins/*media*/channel_list.json
 * [YOUTUBE] With "keyword-" prefix you can search for a keyword and this script will create the folders of channels founds dinamically and put inside them the strm files for each video. See an exaple in channel_list.example.json
 * [YOUTUBE] Playlist needs "list-" prefix before playlist id, you can see an exaple in channel_list.example.json
 * [YOUTUBE] If you want to get livestream from /streams youtube channel tab you need to add a new channel in channel_list with /streams (Check an example in ./plugins/youtube/channel_list.example.json)
 * [TWITCH] This script makes a NFO file (tvshow.nfo) for each youtube or twitch channel (to get name, description and images). *Description only works in Linux systems at the moment
-* [CRUNCHYROLL] Only support URL series (not episodes), the script will create a folder for each serie, and subfolders for each season, inside season folder the strm episodes files  will be created 
+* ~~[CRUNCHYROLL] Only support URL series (not episodes), the script will create a folder for each serie, and subfolders for each season, inside season folder the strm episodes files  will be created~~
 
 ## Service
 * LINUX: ytdlp2strm.service example service to run main.py with systemctl. 
