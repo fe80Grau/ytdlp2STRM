@@ -1,4 +1,4 @@
 [
-    {"every" : "day", "qty" : "", "at" : "00:58", "timezone": "", "do" : ["--media", "crunchyroll", "--params", "download"]},
+    {"every" : "day", "qty" : "", "at" : "00:58", "timezone": "", "do" : ["--media", "twitch", "--params", "direct"]},
     {"every" : "hours", "qty" : "4", "at" : ":15", "timezone": "", "do" : ["--media", "youtube", "--params", "direct"]}
 ]
