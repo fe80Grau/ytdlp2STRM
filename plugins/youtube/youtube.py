@@ -12,8 +12,6 @@ from clases.folders import folders as f
 from clases.nfo import nfo as n
 import subprocess
 import threading
-import re
-import urllib.request
 ## -- YOUTUBE CLASS
 class Youtube:
     def __init__(self, channel=False, channel_url=False):
