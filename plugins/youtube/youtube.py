@@ -666,23 +666,21 @@ def to_strm(method):
 ## -- EXTRACT / REDIRECT VIDEO DATA 
 def direct(youtube_id): #Sponsorblock doesn't work in this mode
     s_youtube_id = youtube_id.split('-audio')[0]
-
     command = [
-        'yt-dlp', 
-        '-f', 'best',
-        '--no-warnings',
-        '--get-url', 
+        'yt-dlp', '-j',
         s_youtube_id
     ]
     Youtube().set_proxy(command)
-    if '-audio' in youtube_id:
-        command[2] = 'bestaudio'
-    print(' '.join(command))
-
-    #print(' '.join(command))
-    youtube_url = w.worker(command).output()
+    full_info_json_str = w.worker(command).output()
+    full_info_json = json.loads(full_info_json_str)
+    m3u8_url = ''
+    for fmt in full_info_json["formats"]:
+        if "manifest_url" in fmt.keys():
+            if not fmt["manifest_url"] == None:
+                m3u8_url=fmt["manifest_url"]
+                break
     return redirect(
-        youtube_url, 
+        m3u8_url, 
         code=301
     )
 
