@@ -667,7 +667,9 @@ def to_strm(method):
 def direct(youtube_id): #Sponsorblock doesn't work in this mode
     s_youtube_id = youtube_id.split('-audio')[0]
     command = [
-        'yt-dlp', '-j',
+        'yt-dlp', 
+        '-j',
+        '--no-warnings',
         s_youtube_id
     ]
     Youtube().set_proxy(command)

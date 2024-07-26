@@ -177,8 +177,8 @@ else:
 ## -- END
 
 ## -- JELLYFIN DAEMON
-if jellyfin_preload:
-    threading.Thread(target=daemon, daemon=True).start()
+#if jellyfin_preload:
+#    threading.Thread(target=daemon, daemon=False).start()
 ## -- END
 
 ## -- MANDATORY TO_STRM FUNCTION 
