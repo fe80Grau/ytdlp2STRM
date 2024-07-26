@@ -12,6 +12,7 @@ from clases.folders import folders as f
 from clases.nfo import nfo as n
 import subprocess
 import threading
+import requests
 ## -- YOUTUBE CLASS
 class Youtube:
     def __init__(self, channel=False, channel_url=False):
@@ -663,8 +664,51 @@ def to_strm(method):
 
 ## -- END
 
+def filter_and_modify_bandwidth(m3u8_content):
+    lines = m3u8_content.splitlines()
+    
+    highest_bandwidth = 0
+    best_video_info = None
+    best_video_url = None
+    media_lines = []
+    
+    high_audio = False
+    sd_audio = ""
+    for i in range(len(lines)):
+        line = lines[i]
+        if line.startswith("#EXT-X-STREAM-INF:"):
+            info = line
+            url = lines[i + 1]
+            bandwidth = int(info.split("BANDWIDTH=")[1].split(",")[0])
+
+            if bandwidth > highest_bandwidth:
+                highest_bandwidth = bandwidth
+                best_video_info = info.replace(f"BANDWIDTH={bandwidth}", "BANDWIDTH=279001")
+                best_video_url = url
+        
+        if line.startswith("#EXT-X-MEDIA:URI"):
+            if '234' in line:
+                high_audio = True
+                media_lines.append(line)
+            else:
+                sd_audio = line
+
+    if not high_audio:
+        media_lines.append(sd_audio)
+
+    # Create the final M3U8 content
+    final_m3u8 = "#EXTM3U\n#EXT-X-INDEPENDENT-SEGMENTS\n"
+    
+    # Add all EXT-X-MEDIA lines
+    for media_line in media_lines:
+        final_m3u8 += f"{media_line}\n"
+
+    if best_video_info:
+        final_m3u8 += f"{best_video_info}\n{best_video_url}\n"
+
+    return final_m3u8
 ## -- EXTRACT / REDIRECT VIDEO DATA 
-def direct(youtube_id): #Sponsorblock doesn't work in this mode
+def direct(youtube_id): # Sponsorblock doesn't work in this mode
     s_youtube_id = youtube_id.split('-audio')[0]
     command = [
         'yt-dlp', 
@@ -675,16 +719,29 @@ def direct(youtube_id): #Sponsorblock doesn't work in this mode
     Youtube().set_proxy(command)
     full_info_json_str = w.worker(command).output()
     full_info_json = json.loads(full_info_json_str)
+
     m3u8_url = ''
     for fmt in full_info_json["formats"]:
         if "manifest_url" in fmt.keys():
-            if not fmt["manifest_url"] == None:
-                m3u8_url=fmt["manifest_url"]
-                break
-    return redirect(
-        m3u8_url, 
-        code=301
-    )
+            m3u8_url = fmt["manifest_url"]
+            break
+
+    if m3u8_url:
+        response = requests.get(m3u8_url)
+        if response.status_code == 200:
+            m3u8_content = response.text
+            filtered_content = filter_and_modify_bandwidth(m3u8_content)
+            #print(filtered_content)
+            headers = {
+                'Content-Type': 'application/vnd.apple.mpegurl',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
+            
+            return Response(filtered_content, mimetype='application/vnd.apple.mpegurl', headers=headers)
+        
+    return "Manifest URL not found or failed to download.", 404
 
 def bridge(youtube_id):
     s_youtube_id = youtube_id.split('-audio')[0]
