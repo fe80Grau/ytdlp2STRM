@@ -12,6 +12,8 @@ from clases.folders import folders as f
 from clases.nfo import nfo as n
 import subprocess
 import threading
+import re
+import urllib.request
 ## -- YOUTUBE CLASS
 class Youtube:
     def __init__(self, channel=False, channel_url=False):
@@ -667,7 +669,7 @@ def to_strm(method):
 def direct(youtube_id): #Sponsorblock doesn't work in this mode
     s_youtube_id = youtube_id.split('-audio')[0]
     command = [
-        'yt-dlp', 
+        'yt-dlp',
         '-j',
         '--no-warnings',
         s_youtube_id
@@ -681,10 +683,55 @@ def direct(youtube_id): #Sponsorblock doesn't work in this mode
             if not fmt["manifest_url"] == None:
                 m3u8_url=fmt["manifest_url"]
                 break
-    return redirect(
-        m3u8_url, 
-        code=301
-    )
+    m3u8_fp = urllib.request.urlopen(m3u8_url)
+    m3u8_lines = m3u8_fp.readlines()
+    m3u8_fp.close()
+
+    best_height = 0
+    best_width = 0
+    audio_id = 0
+    re_resolution_matcher = re.compile(r'RESOLUTION=([0-9]*)x([0-9]*).*AUDIO="([0-9]*)')
+    for m3u8_line in m3u8_lines:
+        m3u8_line = m3u8_line.decode("utf-8")
+        resolution = re_resolution_matcher.findall(m3u8_line)
+        if resolution and int(resolution[0][0]) > best_height:
+            best_height = int(resolution[0][0])
+            best_width = int(resolution[0][1])
+            audio_id = resolution[0][2]
+
+    re_audio_matcher = re.compile(r'^#EXT-X-MEDIA:.*TYPE=AUDIO.*GROUP-ID="{}'.format(audio_id))
+    #The codecs are set to vp09 to have the best form of compatibility
+    codecs="vp09"
+    re_streaminf_matcher = re.compile(r'^#EXT-X-STREAM-INF:.*CODECS="{}.*RESOLUTION={}x{}.*AUDIO="{}'.format(codecs, best_height, best_width,audio_id))
+
+    audio_inf_list = []
+    stream_inf = ""
+    next_line_is_stream_url = False
+    stream_url = ""
+    for m3u8_line in m3u8_lines:
+        m3u8_line = m3u8_line.decode("utf-8")
+        if re_streaminf_matcher.match(m3u8_line):
+            stream_inf = m3u8_line
+            next_line_is_stream_url = True
+        elif re_audio_matcher.match(m3u8_line):
+            audio_inf_list.append(m3u8_line)
+        elif next_line_is_stream_url:
+            stream_url = m3u8_line
+            next_line_is_stream_url = False
+
+    current_dir = os.getcwd()
+    temp_dir = os.path.join(current_dir, 'temp')
+    served_m3u8_filename = "{}.m3u8".format(s_youtube_id)
+    served_m3u8_filepath = os.path.join(temp_dir, served_m3u8_filename)
+    served_m3u8_fp = open(served_m3u8_filepath, 'w')
+    served_m3u8_fp.write('#EXTM3U\n')
+    served_m3u8_fp.write('#EXT-X-INDEPENDENT-SEGMENTS\n')
+    for audio_inf in audio_inf_list:
+        served_m3u8_fp.write(audio_inf)
+    served_m3u8_fp.write(stream_inf)
+    served_m3u8_fp.write(stream_url)
+    served_m3u8_fp.close()
+    return send_file(served_m3u8_filepath)
 
 def bridge(youtube_id):
     s_youtube_id = youtube_id.split('-audio')[0]
