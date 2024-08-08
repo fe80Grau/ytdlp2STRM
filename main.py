@@ -7,10 +7,7 @@ app = Flask(__name__, template_folder='ui/html', static_folder='ui/static', stat
 from clases.config import config as c
 from clases.folders import folders as f
 from clases.cron import cron as cron
-from clases.worker import worker as w
 import config.routes
-
-# Configuración global
 
 def run_flask_app(stop_event, port):
     @app.before_request
@@ -40,7 +37,7 @@ def signal_handler(sig, frame):
         print("Clean old videos thread terminated.")
     
     print('Threads and process terminated.')
-    exit(0)
+    exit(0)  # Using exit to ensure immediate termination
 
 if __name__ == "__main__":
     ytdlp2strm_config = c.config('./config/config.json').get_config()
@@ -57,13 +54,16 @@ if __name__ == "__main__":
     # Crear una instancia de Folders y un hilo para clean_old_videos
     folders_instance = f.folders()
     thread_clean_old_videos = Thread(target=folders_instance.clean_old_videos, args=(stop_event,))
-    thread_clean_old_videos.daemon = True
+    thread_clean_old_videos.daemon = True  # Set the thread as daemon
     thread_clean_old_videos.start()
     print(" * Clean old videos thread started")
 
     # Crear un proceso para la aplicación Flask
     port = ytdlp2strm_config['ytdlp2strm_port']
-    run_flask_app(stop_event, port)
+    flask_thread = Thread(target=run_flask_app, args=(stop_event, port))
+    flask_thread.daemon = True  # Set the thread as daemon
+    flask_thread.start()
+    print(" * Flask thread started")
 
     try:
         # Mantener el hilo principal activo hasta que se establezca el evento de parada
