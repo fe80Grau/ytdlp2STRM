@@ -53,6 +53,7 @@ class Youtube:
         base_channel_url = self.channel_url
         if 'streams' in base_channel_url:
             base_channel_url = base_channel_url[:base_channel_url.index('streams')]
+
         command = [
             'yt-dlp',
             '--compat-options', 'no-youtube-channel-redirect',
@@ -329,6 +330,7 @@ class Youtube:
             command.pop(7)
             command.pop(7)
 
+        print(' '.join(command))
         self.videos = (
             w.worker(
                 command
@@ -621,7 +623,7 @@ def to_strm(method):
         youtube_channel = (
             youtube_channel.replace('https://www.youtube.com/', '') if not '/user/' and not '/c/' in youtube_channel 
             else youtube_channel.replace('https://www.youtube.com', '')
-        )
+        ).replace('//','/')
         print(youtube_channel)
         
 
