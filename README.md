@@ -110,9 +110,8 @@ http://localhost:5001/
 
 ```yaml
 ---
-version: "2.1"
 services:
-ytdlp2strm:
+ ytdlp2strm:
     image: fe80grau/ytdlp2strm
     container_name: ytdlp2STRM
     environment:
