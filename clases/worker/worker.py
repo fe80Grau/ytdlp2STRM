@@ -4,6 +4,7 @@ import shlex
 import requests
 import time
 import threading
+from clases.log import log as l
 
 # Inicializa un objeto Lock para el control de concurrencia
 preload_lock = threading.Lock()
@@ -18,12 +19,15 @@ class worker:
         self.wd =  os.path.abspath('.')
 
     def output(self):
-        return subprocess.getoutput(
-            ' '.join(
-                self.command
-            ),
-            encoding='utf-8'
+        process = subprocess.run(
+            ' '.join(self.command),  # Unimos el comando en una cadena de texto
+            shell=True,
+            capture_output=True  # Capturamos stdout y stderr
         )
+        try:
+            return process.stdout.decode('utf-8')  # Intentamos decodificar como UTF-8
+        except UnicodeDecodeError:
+            return process.stdout.decode('latin1')  # Intentamos decodificar con latin1
 
     def pipe(self):
         return subprocess.Popen(
@@ -65,7 +69,8 @@ class worker:
             if output == '' and process.poll() is not None:
                 break
             if output:
-                print(output.strip())
+                log_text = (output.strip())
+                l.log("worker", log_text)
         rc = process.poll()
         return rc
 
@@ -80,12 +85,10 @@ class worker:
         # Intenta adquirir el Lock
         if not preload_lock.acquire(blocking=False):
             # Si no se puede adquirir el Lock, significa que otra instancia ya está ejecutando preload_video
-            #print("Ya se está precargando un video.")
             return
         
         # Verifica si ya se está ejecutando la función
         if is_preloading:
-            #print("Ya se está precargando otro video. Saliendo...")
             preload_lock.release()  # No olvides liberar el Lock si decides no proceder
             return
         
@@ -95,9 +98,9 @@ class worker:
             try:
                 with requests.get(self.command, stream=True) as r:
                     time.sleep(5)  # Esperamos 5 segundos y luego cancelamos la solicitud
-                    #print("Preloading cancelled after 5 seconds")
             except:
-                print("error on preloading {}".format(self.command))
+                log_text = ("error on preloading {}".format(self.command))
+                l.log("worker", log_text)
 
         video_id = self.command.split('_')[-1]
 
@@ -113,7 +116,6 @@ class worker:
         if not isin:
             preload_thread = threading.Thread(target=download_and_cancel)
             preload_thread.start()
-            #print("Preloading started...")
 
         is_preloading = False  # Restablece el estado
         preload_lock.release()  # Libera el Lock

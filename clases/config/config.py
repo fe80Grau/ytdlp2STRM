@@ -2,6 +2,8 @@ import json
 import os
 import shutil
 
+from clases.log import log as l
+
 class config:
     def __init__(self, config_file):
         self.config_file = config_file
@@ -18,7 +20,9 @@ class config:
 
             # Comprobar si existe el archivo de ejemplo
             if os.path.exists(example_config_file):
-                print(f"No {self.config_file} detected, Building a copy from {example_config_file}. Please check this in config folder")
+                log_text = (f"No {self.config_file} detected, Building a copy from {example_config_file}. Please check this in config folder")
+                l.log("config", log_text)
+
                 shutil.copyfile(
                     example_config_file, 
                     self.config_file
@@ -28,7 +32,6 @@ class config:
                 with open(self.config_file, "r") as file:
                     config_data = json.load(file)
             else:
-                #print(f"No config.json or config.example.json detected in config folder: {self.config_file}")
                 return None
 
         return config_data
@@ -45,7 +48,9 @@ class config:
 
             # Comprobar si existe el archivo de ejemplo
             if os.path.exists(example_config_file):
-                print(f"No {self.config_file} detected, Building a copy from {example_config_file}. Please check this in config folder")
+                log_text = (f"No {self.config_file} detected, Building a copy from {example_config_file}. Please check this in config folder")
+                l.log("config", log_text)
+
                 shutil.copyfile(
                     example_config_file, 
                     self.config_file
@@ -55,7 +60,6 @@ class config:
                 with open(self.config_file, "r") as file:
                     config_data = json.load(file)
             else:
-                #print(f"No channles.json or channel_list.example.json detected in config folder: {self.config_file}")
                 return None
 
         return config_data

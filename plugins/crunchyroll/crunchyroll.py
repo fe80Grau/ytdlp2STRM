@@ -7,6 +7,7 @@ from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
+from clases.log import log as l
 from plugins.crunchyroll.jellyfin import daemon
 import subprocess
 import threading
@@ -47,7 +48,6 @@ class Crunchyroll:
         self.set_auth(command)
         self.set_proxy(command)
         self.set_start_episode(command)
-        #print(' '.join(command))
         return w.worker(command).pipe() 
 
     def get_start_episode(self):
@@ -184,7 +184,8 @@ else:
 ## -- MANDATORY TO_STRM FUNCTION 
 def to_strm(method):
     for crunchyroll_channel in channels:
-        print("Preparing channel {}".format(crunchyroll_channel))
+        log_text = ("Preparing channel {}".format(crunchyroll_channel))
+        l.log("crunchyroll", log_text)
 
         crunchyroll = Crunchyroll(crunchyroll_channel)
         #crunchyroll.get_cookie_from_firefox()
@@ -308,7 +309,6 @@ def to_strm(method):
                         if crunchyroll.new_content:
                             crunchyroll.set_last_episode(playlist_count)
                         else:
-                            #print(int(playlist_count))
                             try:
                                 sum_episode = int(crunchyroll.last_episode) + int(playlist_count)
                             except:
@@ -316,8 +316,7 @@ def to_strm(method):
                                     sum_episode = 1 + int(playlist_count)
                                 except:
                                     sum_episode = 1
-                            #print(int(crunchyroll.last_episode))
-                            #print(sum_episode)
+
                             crunchyroll.set_last_episode(
                                 str(sum_episode)
                             )
@@ -363,7 +362,6 @@ def download(crunchyroll_id):
     temp_dir = os.path.join(current_dir, 'temp')
 
     def extract_media(command):
-        #print(' '.join(command))
         subprocess.run(command)
 
     def preprocess_video(input_video, input_audio, output_file):
@@ -400,7 +398,6 @@ def download(crunchyroll_id):
         Crunchyroll().set_auth(command_video,False)
         Crunchyroll().set_proxy(command_video)
 
-        #print(' '.join(command_video))
         command_audio = [
             'yt-dlp', 
             '-f', 'bestaudio',
@@ -450,7 +447,8 @@ def download(crunchyroll_id):
 
 #experimental not works.
 def streams(media, crunchyroll_id):
-    print(f'Remuxing {media} - {crunchyroll_id}')
+    log_text = (f'Remuxing {media} - {crunchyroll_id}')
+    l.log("crunchyroll", log_text)
     command = None
     mimetype = None
     if media == 'audio':
@@ -494,7 +492,8 @@ def streams(media, crunchyroll_id):
 
         def log_stderr():
             for line in iter(process.stderr.readline, b''):
-                print(line.decode('utf-8', errors='ignore'), end='')  # Imprimir la salida de error por consola
+                log_text (line.decode('utf-8', errors='ignore'))  # Imprimir la salida de error por consola
+                l.log("crunchyroll", log_text)
 
         # Lanzar la función log_stderr en un hilo separado para capturar stderr mientras se transmite stdout
         threading.Thread(target=log_stderr).start()
@@ -502,7 +501,8 @@ def streams(media, crunchyroll_id):
         return Response(generate(), mimetype=mimetype)
 
     else:
-        print('Please use a correct media type audio or video')
+        log_text = ('Please use a correct media type audio or video')
+        l.log("crunchyroll", log_text)
         abort(500)
 
 def remux_streams(crunchyroll_id):
@@ -534,7 +534,9 @@ def remux_streams(crunchyroll_id):
     def log_stderr():
         try:
             for line in iter(ffmpeg_process.stderr.readline, b''):
-                print(line.decode('utf-8', errors='ignore'), end='')  # Log FFmpeg stderr output
+                log_text = (line.decode('utf-8', errors='ignore'))  # Log FFmpeg stderr output
+                l.log("crunchyroll", log_text)
+
         except ValueError:
             pass  # Handle closed file stream silently
         finally:
@@ -553,7 +555,8 @@ def remux_streams(crunchyroll_id):
                     break
         finally:
             # Ensure FFmpeg process is terminated
-            print("Cleaning up FFmpeg process")
+            log_text = ("Cleaning up FFmpeg process")
+            l.log("crunchyroll", log_text)
             ffmpeg_process.terminate()
             ffmpeg_process.stdout.close()
             ffmpeg_process.stderr.close()
@@ -576,8 +579,10 @@ def cleanup_frag_files():
             file_path = os.path.join(current_directory, file_name)
             try:
                 os.remove(file_path)
-                print(f'Removed fragment file: {file_path}')
+                log_text = (f'Removed fragment file: {file_path}')
+                l.log("crunchyroll", log_text)
             except Exception as e:
-                print(f'Unable to remove fragment file: {file_path}. Error: {e}')
+                log_text = (f'Unable to remove fragment file: {file_path}. Error: {e}')
+                l.log("crunchyroll", log_text)
 
 ## -- END

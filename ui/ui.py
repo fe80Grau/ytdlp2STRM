@@ -2,6 +2,7 @@ import json
 import shlex
 from clases.config import config as c
 from clases.cron import cron as cron
+from clases.log import log as l
 from flask_socketio import emit
 from subprocess import Popen, PIPE
 
@@ -127,15 +128,19 @@ class Ui:
                         break
                     if output:
                         #print(output.strip())  # Debugging: Imprimir en el servidor
-                        self.handle_output(output)
+                        #self.handle_output(output)
+                        l.log('ui', output)
+                
+                
+                emit('command_completed', {'data': 'Comando completado'})
 
                 # Manejar salida de error si existe
                 _, stderr = process.communicate()
-                if stderr:
-                    emit('command_error', stderr.strip())
+                #if stderr:
+                #    emit('command_error', stderr.strip())
 
                 # Importante: Emitir 'command_completed' al finalizar el comando
-                emit('command_completed', {'data': 'Comando completado'})
+                #emit('command_completed', {'data': 'Comando completado'})
             else:
                 emit('command_output', 'only python cli.py command can be executed from here.')
                 emit('command_completed', {'data': 'Comando completado'})

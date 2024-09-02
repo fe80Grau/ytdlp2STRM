@@ -9,6 +9,7 @@ from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
+from clases.log import log as l
 
 from sanitize_filename import sanitize
 from flask import stream_with_context, Response, send_file, redirect, abort, request
@@ -583,22 +584,31 @@ def filter_and_modify_bandwidth(m3u8_content):
 def to_strm(method):
     for youtube_channel in channels:
         yt = Youtube(youtube_channel)
-        print(" --------------- ")
-        print(f'Working {youtube_channel}...')
+        log_text = (" --------------- ")
+        l.log("youtube", log_text)
+        log_text = (f'Working {youtube_channel}...')
+        l.log("youtube", log_text)
         videos = yt.get_results()
         channel_name = yt.channel_name
         channel_url = yt.channel_url
         channel_description = yt.channel_description
 
-        print(f'Channel URL: {channel_url}')
-        print(f'Channel Name: {channel_name}')
-        print(f'Channel Poster: {yt.channel_poster}')
-        print(f'Channel Landscape: {yt.channel_landscape}')
-        print('Channel Description: ')
-        print(channel_description)
+        log_text = (f'Channel URL: {channel_url}')
+        l.log("youtube", log_text)
+        log_text = (f'Channel Name: {channel_name}')
+        l.log("youtube", log_text)
+        log_text = (f'Channel Poster: {yt.channel_poster}')
+        l.log("youtube", log_text)
+        log_text = (f'Channel Landscape: {yt.channel_landscape}')
+        l.log("youtube", log_text)
+        log_text = ('Channel Description: ')
+        l.log("youtube", log_text)
+        log_text = (channel_description)
+        l.log("youtube", log_text)
         
         if videos:
-            print(f'Videos detected: {len(videos)}')
+            log_text = (f'Videos detected: {len(videos)}')
+            l.log("youtube", log_text)
             for video in videos:
                 video_id = video['id']
                 channel_id = video['channel_id']
@@ -673,7 +683,8 @@ def to_strm(method):
                         file_content
                     )
         else:
-            print(" no videos detected...") 
+            log_text = (" no videos detected...") 
+            l.log("youtube", log_text)
 
 def direct(youtube_id):
     if not '-audio' in youtube_id:
@@ -698,8 +709,8 @@ def direct(youtube_id):
             pass 
 
         if not m3u8_url:
-            print('No manifest detected. Check your cookies config. \n* This video is age-restricted; some formats may be missing without authentication. Use --cookies-from-browser or --cookies for the authentication')
-
+            log_text = ('No manifest detected. Check your cookies config. \n* This video is age-restricted; some formats may be missing without authentication. Use --cookies-from-browser or --cookies for the authentication')
+            l.log("youtube", log_text)
         if m3u8_url:
             response = requests.get(m3u8_url)
             if response.status_code == 200:
@@ -744,7 +755,6 @@ def bridge(youtube_id):
         if '-audio' in youtube_id:
             command[5] = 'bestaudio'
         
-        print(' '.join(command))
 
         #process = w.worker(command).pipe()
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -766,7 +776,6 @@ def bridge(youtube_id):
                     sentBurst = True
 
                     for i in range(0, len(buffer) - 2):
-                        #print("Send initial burst #", i)
                         yield buffer.pop(0)
 
                 elif time.time() > startTime + 3 and len(buffer) > 0:

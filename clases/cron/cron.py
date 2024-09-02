@@ -2,6 +2,7 @@ import schedule
 import time
 from cli import main as main_cli
 from clases.config import config as c
+from clases.log import log as l
 import threading
 import re 
 from tzlocal import get_localzone # $ pip install tzlocal
@@ -45,5 +46,7 @@ class Cron(threading.Thread):
                 # Usa una espera con timeout para poder verificar la señal de parada
                 self.stop_event.wait(60)
             except Exception as e:
-                print(e)
+                log_text = (e)
+                l.log("cron", log_text)
+
                 pass

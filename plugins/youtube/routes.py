@@ -10,7 +10,7 @@ def youtube_direct(youtube_id):
 
 #Redirect to best pre-merget format youtube url
 @app.route("/youtube/bridge/<youtube_id>")
-def youtube_direct(youtube_id):
+def youtube_bridge(youtube_id):
     return direct(youtube_id)
 
 #Keep URL from v0 version

@@ -1,6 +1,7 @@
 from datetime import datetime
 import argparse
-import config.plugins as  plugins
+import config.plugins as plugins
+from clases.log import log as l
 from sanitize_filename import sanitize
 
 def main(raw_args=None):
@@ -46,15 +47,17 @@ def main(raw_args=None):
 
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-    print(dt_string)
-    print("Running {} with {} params".format(method, params))
+    
+    log_text = "Running {} with {} params".format(method, params)
+    l.log("CLI", log_text)
 
     if args.version:
-        print(
+        log_text = (
             'ytdlp2STRM version: {}'.format(
                 '1.0.1'
             )
         )
+        l.log("CLI", log_text)
 
     r = False
     if params != None:

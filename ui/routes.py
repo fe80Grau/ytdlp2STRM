@@ -1,6 +1,6 @@
 from __main__ import app
-from flask_socketio import SocketIO
 from flask import request, render_template, session
+from flask_socketio import SocketIO
 import json
 import logging
 from clases.worker import worker as w

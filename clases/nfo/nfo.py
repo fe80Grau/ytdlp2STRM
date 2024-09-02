@@ -1,3 +1,5 @@
+from clases.log import log as l
+
 class nfo:
     def __init__(self, nfo_type, nfo_path, nfo_data):
         self.nfo_type = nfo_type
@@ -16,7 +18,8 @@ class nfo:
             template = self.episode_template
             nfo_filename = f"{self.nfo_data['item_name']}.nfo"
         else:
-            print("Invalid NFO type.")
+            log_text = ("Invalid NFO type.")
+            l.log("folder", log_text)
             return
 
         # Rellenar la plantilla con los datos proporcionados

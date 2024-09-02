@@ -8,7 +8,7 @@ from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
-
+from clases.log import log as l
 
 ## -- TWITCH CLASS
 class Twitch:
@@ -46,8 +46,8 @@ class Twitch:
 
     def get_direct(self):
         #Get current livestream
-        print("Processing live video in channel")
-
+        log_text = ("Processing live video in channel")
+        l.log("twitch", log_text)
         command = [
             'yt-dlp', 
             '--print', '"%(id)s;%(title)s"', 
@@ -147,8 +147,8 @@ class Twitch:
                 '1920x1080'
             )
         except:
-            print("No poster detected")
-
+            log_text = ("No poster detected")
+            l.log("twitch", log_text)
         pictures = self.get_pictures()
         poster = ""
         landscape = ""
@@ -216,7 +216,8 @@ else:
 ## -- MANDATORY TO_STRM FUNCTION 
 def to_strm(method):
     for twitch_channel in channels:
-        print("Preparing channel {}".format(twitch_channel))
+        log_text = ("Preparing channel {}".format(twitch_channel))
+        l.log("twitch", log_text)
         twitch_channel = twitch_channel.replace('https://www.twitch.tv/', '')
         twitch = Twitch(twitch_channel)
 
@@ -396,7 +397,8 @@ def to_strm(method):
 
 ## --  REDIRECT VIDEO DATA 
 def direct(twitch_id): 
-    print(twitch_id)
+    log_text = (twitch_id)
+    l.log("twitch", log_text)
     channel = twitch_id.split("@")[0]
     video_id = twitch_id.split("@")[1]
     command = [
@@ -527,7 +529,6 @@ def bridge(twitch_id):
             turl
         ]
 
-        print(' '.join(command))
         process = w.worker(command).pipe()
         try:
             while True:
@@ -542,7 +543,8 @@ def bridge(twitch_id):
                     sentBurst = True
 
                     for i in range(0, len(buffer) - 2):
-                        print("Send initial burst #", i)
+                        log_text = ("Send initial burst #", i)
+                        l.log("twitch", log_text)
                         yield buffer.pop(0)
 
                 elif time.time() > startTime + 3 and len(buffer) > 0:
@@ -551,7 +553,8 @@ def bridge(twitch_id):
                 process.poll()
                 if isinstance(process.returncode, int):
                     if process.returncode > 0:
-                        print('yt-dlp Error', process.returncode)
+                        log_text = ('yt-dlp Error', process.returncode)
+                        l.log("twitch", log_text)
                     break
         finally:
             process.kill()

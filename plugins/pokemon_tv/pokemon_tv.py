@@ -5,7 +5,7 @@ import requests
 from clases.config import config as c
 from clases.folders import folders as f
 from clases.nfo import nfo as n
-
+from clases.log import log as l
 
 ## -- LOAD CONFIG AND CHANNELS FILES
 ytdlp2strm_config = c.config(
@@ -52,8 +52,8 @@ def channels():
 
 def to_strm(method):
     for channel in channels():
-        print(channel)
-
+        log_text = (channel)
+        l.log("pokemon_tv", log_text)
         seasson_type = "serie/Pokemon"
         if 'movies' in channel:
             seasson_type = "movies"

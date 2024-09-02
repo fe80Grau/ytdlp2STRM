@@ -5,6 +5,7 @@ import time
 import threading
 from clases.config import config as c
 from clases.worker import worker as w
+from clases.log import log as l
 
 config = c.config(
     './plugins/crunchyroll/config.json'
@@ -43,18 +44,16 @@ def fetch_item_details(item_id, user_id, api_key):
     if response.status_code == 200:
         return response.json()
     else:
-        print(f"Error fetching item details: {response.status_code}")
+        log_text = (f"Error fetching item details: {response.status_code}")
+        l.log("jellyfin", log_text)
         return None
 
 def preload_video(item_id, user_id, api_key):
     item_details = fetch_item_details(item_id, user_id, api_key)
     if item_details is None:
         return
-    #print(item_details)
     file_content = item_details['MediaSources'][0].get("Path", "")
-    #print(file_content)
     if 'crunchyroll' in file_content:
-        #print("precargando...")
         w.worker(file_content).preload()
 
 
@@ -76,21 +75,21 @@ def preload_next_episode():
                     siguiente_episodio_id = get_next_episode(serie_id, temporada_id, episodio_id)
                     
                     if siguiente_episodio_id:
-                        #print(f"El siguiente episodio ID es {siguiente_episodio_id}")
                         preload_video(siguiente_episodio_id, user_id, api_key)
                         # Aquí puedes agregar la lógica para "precargar" el siguiente episodio
                     else:
                         pass
-                        #print("No se encontró el siguiente episodio o ya estás en el último episodio.")
         else:
-            print(f"Error: El servidor devolvió un estado HTTP {response.status_code}")
+            log_text = (f"Error: El servidor devolvió un estado HTTP {response.status_code}")
+            l.log("jellyfin", log_text)
     except requests.exceptions.RequestException as e:
-        print(f"Error HTTP: {e}")
+        log_text = (f"Error HTTP: {e}")
+        l.log("jellyfin", log_text)
     except ValueError as e:
-        print(f"Error JSON: {e}")
+        log_text = (f"Error JSON: {e}")
+        l.log("jellyfin", log_text)
 
 def daemon():
-    #print(' * Running Crunchyroll Jellyfin daemon')
     """Inicia el daemon que verificará el estado de reproducción cada minuto."""
     if not base_url == "" \
     and not api_key == "" :

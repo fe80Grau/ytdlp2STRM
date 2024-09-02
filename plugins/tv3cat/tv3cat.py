@@ -5,6 +5,7 @@ from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
+from clases.log import log as l
 from sanitize_filename import sanitize
 
 class tv3cat:
@@ -16,8 +17,8 @@ class tv3cat:
             self.episodes = self.fetch_json_data(program_id, seasons)
             self.channel_name = self.episodes[0]['programa']
         else:
-            print("No se pudo extraer el programId o las temporadas.")
-        
+            log_text = ("No se pudo extraer el programId o las temporadas.")
+            l.log("tv3cat", log_text)
         return None
 
     def recursively_find_key_value(self, obj, key, value):
@@ -113,7 +114,8 @@ media_folder = config["strm_output_folder"]
 
 def to_strm(method):
     for tv3cat_channel in channels:
-        print(f'Working {tv3cat_channel}...')
+        log_text = (f'Working {tv3cat_channel}...')
+        l.log("tv3cat", log_text)
         tv3 = tv3cat(tv3cat_channel)
         if tv3.episodes:
             # -- MAKES CHANNEL DIR (AND SUBDIRS) IF NOT EXIST, REMOVE ALL STRM IF KEEP_OLDER_STRM IS SETTED TO FALSE IN GENERAL CONFIG

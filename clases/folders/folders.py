@@ -3,6 +3,7 @@ import glob
 import time
 import platform
 from clases.config import config as c
+from clases.log import log as l
 import threading
 
 class folders:
@@ -20,21 +21,26 @@ class folders:
                 for file_path in file_list:
                     if os.path.isfile(file_path):
                         os.remove(file_path)
-                        print(f"Deleted file: {file_path}")
-                print(f"Cleaned directory: {folder_path}")
+                        log_text = (f"Deleted file: {file_path}")
+                        l.log("folder", log_text)
+                log_text = (f"Cleaned directory: {folder_path}")
+                l.log("folder", log_text)
         else:
             os.makedirs(folder_path, exist_ok=True)
-            print(f"Created directory: {folder_path}")
+            log_text = (f"Created directory: {folder_path}")
+            l.log("folder", log_text)
 
     def write_file(self, file_path, content):
         try:
-            with open(file_path, "w") as file:
+            with open(file_path, "w", encoding="utf-8") as file:
                 file.write(content.replace('\n',''))
-            print(f"File created: {file_path}")
+            log_text = (f"File created: {file_path}")
+            l.log("folder", log_text)
         except Exception as e:
-            print(f"Error writing file: {e}")
+            log_text = (f"Error writing file: {e}")
+            l.log("folder", log_text)
             pass
-        
+            
     def clean_waste(self, files_to_delete):
         for file_path in files_to_delete:
             try:
@@ -43,7 +49,8 @@ class folders:
                 else:
                     continue
             except Exception as e:
-                print(f"Error deleting file {file_path}: {e}")
+                log_text = (f"Error deleting file {file_path}: {e}")
+                l.log("folder", log_text)
                 pass
 
     def clean_old_videos(self, stop_event):
@@ -74,13 +81,17 @@ class folders:
                     if not f == "__init__.py":
                         if any(keyword in f for keyword in aria2_ffmpeg_files):
                             if os.path.isfile(temp_file) and modified_date(temp_file) < now - self.temp_aria2_ffmpeg_files:
-                                print(f"Removing old temporary file: {temp_file}")
+                                log_text = (f"Removing old temporary file: {temp_file}")
+                                l.log("folder", log_text)
                                 os.remove(temp_file)
                         else:
                             if os.path.isfile(temp_file) and modified_date(temp_file) < now - self.keep_downloaded:
-                                print(f"Removing old video file: {temp_file}")
+                                log_text = (f"Removing old video file: {temp_file}")
+                                l.log("folder", log_text)
                                 os.remove(temp_file)
             except Exception as e:
-                print(f"Error in clean_old_videos: {e}")
+                log_text = (f"Error in clean_old_videos: {e}")
+                l.log("folder", log_text)
                 continue
-        print("Exiting clean_old_videos thread.")
+        log_text = ("Exiting clean_old_videos thread.")
+        l.log("folder", log_text)
