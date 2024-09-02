@@ -211,6 +211,8 @@ You can change --media value for another plugin
 * [YOUTUBE] sponsorblock_cats
 * [YOUTUBE]  ~~[CRUNCHYROLL]~~ proxy
 * [YOUTUBE]  ~~[CRUNCHYROLL]~~ proxy_url
+* [YOUTUBE] cookies *Required to obtain the manifest for age-protected videos. It can be (cookies-from-browser or cookies)
+* [YOUTUBE] cookie_value *If you set cookies as browser cookies you must indicate the browser (chrome, firefox, edge etc.). In the case of cookies, you must indicate the cookie file path stored in text format
 * ~~[CRUNCHYROLL] crunchyroll_auth (~~browser, cookies or~~ login), browser option in addition with background task opening firefox is the best way to keep unatended workflow.~~
 * ~~[CRUNCHYROLL] crunchyroll_browser (set if your choice in curnchyroll_auth is browser) You can read more about this searching --cookies-from-browser in https://github.com/yt-dlp/yt-dlp~~
 * ~~[CRUNCHYROLL] crunchyroll_useragent (set if your choice in curnchyroll_auth is browser) Needs the same user agent that your browser. If you search current user-agent in Google you can see your user-agent, copy it.~~

@@ -4,5 +4,7 @@
     "days_dateafter" : "10", 
     "videos_limit" : "10",
     "sponsorblock" : false,
-    "sponsorblock_cats" : "sponsor"
+    "sponsorblock_cats" : "sponsor",
+    "cookies" : "cookies-from-browser",
+    "cookie_value" : "chrome"
 }

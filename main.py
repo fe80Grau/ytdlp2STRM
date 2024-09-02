@@ -27,14 +27,6 @@ def run_flask_app(stop_event, port):
 def signal_handler(sig, frame):
     print('Signal received, terminating threads...')
     stop_event.set()
-
-    if 'crons' in globals():
-        crons.join()
-        print("Cron thread terminated.")
-
-    if 'thread_clean_old_videos' in globals():
-        thread_clean_old_videos.join()
-        print("Clean old videos thread terminated.")
     
     print('Threads and process terminated.')
     exit(0)  # Using exit to ensure immediate termination
@@ -69,13 +61,6 @@ if __name__ == "__main__":
         # Mantener el hilo principal activo hasta que se establezca el evento de parada
         while not stop_event.is_set():
             time.sleep(1)
-        
-        # Esperar que todos los hilos y procesos terminen
-        crons.join()
-        print("Cron thread terminated.")
-
-        thread_clean_old_videos.join()
-        print("Clean old videos thread terminated.")
 
         print('Threads and process terminated.')
     
