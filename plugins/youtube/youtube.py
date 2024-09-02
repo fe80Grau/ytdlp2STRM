@@ -61,20 +61,31 @@ class Youtube:
     
     def get_results(self):
         if 'extractaudio-' in self.channel:
+            islist = False
             self.channel_url = self.channel.replace(
                 'extractaudio-',
                 ''
             )
-            if not 'www.youtube' in self.channel_url:
-                self.channel_url = f'https://www.youtube.com/{self.channel_url}'
+            if 'list-' in self.channel:
+                islist = True
+                self.channel_url = self.channel.replace(
+                    'list-',
+                    ''
+                )
+                if not 'www.youtube' in self.channel_url:
+                    self.channel_url = f'https://www.youtube.com/playlist?list={self.channel_url}'
+            else:
+                if not 'www.youtube' in self.channel_url:
+                    self.channel_url = f'https://www.youtube.com/{self.channel_url}'
+
 
             self.channel_name = self.get_channel_name()
-            self.channel_description = self.get_channel_description()
+            self.channel_description = self.get_channel_description() if not islist else  f'Playlist {self.channel_name}'
             thumbs = self.get_channel_images()
             self.channel_poster = thumbs['poster']
             self.channel_landscape = thumbs['landscape']
 
-            return self.get_channel_audios()
+            return self.get_channel_audios() if not islist else  self.get_list_audios()
         
         elif 'keyword' in self.channel:
             return self.get_keyword_videos()
@@ -105,7 +116,7 @@ class Youtube:
             self.channel_poster = thumbs['poster']
             self.channel_landscape = thumbs['landscape']
             return self.get_channel_videos()
-
+    
     def get_list_videos(self):
         command = [
             'yt-dlp', 
@@ -174,11 +185,48 @@ class Youtube:
         
         return videos
     
+    def get_keyword_audios(self):
+        keyword = self.channel.split('-')[1]
+        command = [
+            'yt-dlp', 
+            '-f', 'best', 'ytsearch10:["{}"]'.format(keyword),
+            '--compat-options', 'no-youtube-channel-redirect',
+            '--compat-options', 'no-youtube-unavailable-videos',
+            '--playlist-start', '1', 
+            '--playlist-end', videos_limit, 
+            '--no-warning',
+            '--dump-json'
+        ]
+
+        if config['days_dateafter'] == "0":
+            command.pop(8)
+            command.pop(8)
+
+        result = w.worker(command).output()
+        result = subprocess.run(command, capture_output=True, text=True)
+        videos = []
+        for line in result.stdout.split('\n'):
+            if line.strip():
+                data = json.loads(line)
+                
+                video = {
+                    'id': f'{data.get('id')}-audio',
+                    'title': data.get('title'),
+                    'upload_date': data.get('upload_date'),
+                    'thumbnail': data.get('thumbnail'),
+                    'description': data.get('description'),
+                    'channel_id': data.get('channel_id'),
+                    'uploader_id': data.get('uploader_id')
+                }
+                videos.append(video)
+        
+        return videos
+    
     def get_channel_audios(self):
         cu = self.channel
 
         if not '/streams' in self.channel:
-            cu = f'{self.channel}/videos'
+            cu = f'{self.channel_url}/videos'
 
         command = [
             'yt-dlp', 
@@ -208,6 +256,37 @@ class Youtube:
                     'description': data.get('description'),
                     'channel_id': data.get('channel_id'),
                     'uploader_id': data.get('uploader_id')
+                }
+                videos.append(video)
+        
+        return videos
+    
+    def get_list_audios(self):
+        command = [
+            'yt-dlp', 
+            '--compat-options', 'no-youtube-channel-redirect',
+            '--compat-options', 'no-youtube-unavailable-videos',
+            '--playlist-start', '1', 
+            '--playlist-end', str(videos_limit), 
+            '--no-warning',
+            '--dump-json',
+            self.channel_url
+        ]
+        result = w.worker(command).output()
+        result = subprocess.run(command, capture_output=True, text=True)
+        videos = []
+        for line in result.stdout.split('\n'):
+            if line.strip():
+                data = json.loads(line)
+                
+                video = {
+                    'id': f'{data.get('id')}-audio',
+                    'title': data.get('title'),
+                    'upload_date': data.get('upload_date'),
+                    'thumbnail': data.get('thumbnail'),
+                    'description': data.get('description'),
+                    'channel_id': self.channel_url.split('list=')[1],
+                    'uploader_id': sanitize(self.channel_name)
                 }
                 videos.append(video)
         
@@ -314,10 +393,8 @@ class Youtube:
                 ]
             )
             
-            #print("Command \n {}".format(' '.join(command)))
-            #self.channel_description = subprocess.getoutput(' '.join(command))
+
             self.channel_description = w.worker(command).output()
-            #print("Output \n {}".format(description))
             try:
                 os.remove("{}/{}.description".format(media_folder,sanitize(self.channel_name)))
             except:
@@ -387,7 +464,6 @@ class Youtube:
     def get_channel_images(self):
         c = 0
         command = ['yt-dlp', 
-
                     '--list-thumbnails',
                     '--restrict-filenames',
                     '--ignore-errors',
@@ -455,6 +531,7 @@ class Youtube:
             if proxy_url != "":
                 command.append('--proxy')
                 command.append(proxy_url)
+    
     def set_cookies(self, command):
         command.append(f'--{cookies}')
         command.append(cookie_value)

@@ -21,7 +21,8 @@ class worker:
         return subprocess.getoutput(
             ' '.join(
                 self.command
-            )
+            ),
+            encoding='utf-8'
         )
 
     def pipe(self):

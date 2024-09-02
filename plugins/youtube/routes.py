@@ -8,6 +8,11 @@ from flask import request  # Importa request desde Flask
 def youtube_direct(youtube_id):
     return direct(youtube_id)
 
+#Redirect to best pre-merget format youtube url
+@app.route("/youtube/bridge/<youtube_id>")
+def youtube_direct(youtube_id):
+    return direct(youtube_id)
+
 #Keep URL from v0 version
 @app.route("/youtube/redirect/<youtube_id>")
 def youtube_redirect(youtube_id):
