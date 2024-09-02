@@ -692,7 +692,7 @@ def direct(youtube_id):
             'yt-dlp', 
             '-j',
             '--no-warnings',
-            s_youtube_id
+            youtube_id
         ]
         Youtube().set_cookies(command)
         Youtube().set_proxy(command)
