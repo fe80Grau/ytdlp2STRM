@@ -36,25 +36,20 @@ class folders:
                 for file_name in file_list:
                     file_path = os.path.join(folder_path, file_name)
                     if os.path.isfile(file_path):
-                        file_age = now - self.modified_date(file_path)
-
-                        if forceclean or file_age > self.keep_downloaded:
-                            try:
-                                os.remove(file_path)
-                                log_text = f"Deleted file: {file_path}"
-                                l.log("folder", log_text)
-                                print(log_text)
-                            except Exception as e:
-                                log_text = f"Failed to delete file: {file_path}. Error: {e}"
-                                l.log("folder", log_text)
+                        try:
+                            os.remove(file_path)
+                            log_text = f"Deleted file: {file_path}"
+                            l.log("folder", log_text)
+                            print(log_text)
+                        except Exception as e:
+                            log_text = f"Failed to delete file: {file_path}. Error: {e}"
+                            l.log("folder", log_text)
                 log_text = f"Cleaned directory: {folder_path}"
                 l.log("folder", log_text)
         else:
-            print(f"Folder does not exist, creating: {folder_path}")
             os.makedirs(folder_path, exist_ok=True)
             log_text = f"Created directory: {folder_path}"
             l.log("folder", log_text)
-            print(log_text)
 
 
     def write_file(self, file_path, content):
@@ -66,6 +61,23 @@ class folders:
                 # Write to file with UTF-8 encoding
                 with open(file_path, "w", encoding="utf-8") as file:
                     file.write(content.replace('\n',''))
+                
+                file_path = file_path.encode('utf-8').decode('utf-8')
+                log_text = f"File created: {file_path}"
+                l.log("folder", log_text)
+        except Exception as e:
+            log_text = f"Error writing file: {e}"
+            l.log("folder", log_text)
+
+    def write_file_spaces(self, file_path, content):
+        try:
+            if not os.path.exists(file_path) or 'tvshow.nfo' in file_path:
+                # Ensure content is properly encoded
+                content = content.encode('utf-8').decode('utf-8')
+                
+                # Write to file with UTF-8 encoding
+                with open(file_path, "w", encoding="utf-8") as file:
+                    file.write(content)
                 
                 file_path = file_path.encode('utf-8').decode('utf-8')
                 log_text = f"File created: {file_path}"

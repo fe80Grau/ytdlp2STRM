@@ -22,18 +22,20 @@ class nfo:
             template = self.episode_template
             nfo_filename = f"{self.nfo_data['item_name']}.nfo"
         else:
-            log_text = "Invalid NFO type."
-            l.log("nfo", log_text)
+            l.log("nfo", "Invalid NFO type.")
             return
         
-        l.log("nfo", f"Creating NFO file...")
+        l.log("nfo", "Creating NFO file...")
         # Rellenar la plantilla con los datos proporcionados
         nfo_content = template.format(**self.nfo_data)
+        
+        # Agrega saltos de línea al final del archivo
+        nfo_content += '\n'
 
         # Crear el archivo NFO
-        f.folders().write_file(
+        f.folders().write_file_spaces(
             f"{self.nfo_path}/{nfo_filename}", 
-            nfo_content.strip()
+            nfo_content  # No uses nfo_content.strip()
         )
         # Descargar las imágenes correspondientes
         self.download_images(nfo_filename)
@@ -67,35 +69,34 @@ class nfo:
             l.log("nfo", f"Failed to convert image from {url} to PNG: {e}")
 
     tvshow_template = """
-    <?xml version="1.0" encoding="UTF-8"?>
-        <tvshow>
-            <title>{title}</title>
-            <plot>{plot}</plot>
-            <season>{season}</season>
-            <episode>{episode}</episode>
-            <thumb spoof="" cache="" aspect="landscape" preview="{landscape}">{landscape}</thumb>
-            <thumb spoof="" cache="" aspect="poster" preview="{poster}">{poster}</thumb>
-            <studio>{studio}</studio>
-            <!-- Agregar más campos según sea necesario -->
-        </tvshow>
+<?xml version="1.0" encoding="UTF-8"?>
+<tvshow>
+    <title>{title}</title>
+    <plot><![CDATA[{plot}]]></plot>
+    <season>{season}</season>
+    <episode>{episode}</episode>
+    <thumb spoof="" cache="" aspect="landscape" preview="{landscape}">{landscape}</thumb>
+    <thumb spoof="" cache="" aspect="poster" preview="{poster}">{poster}</thumb>
+    <studio>{studio}</studio>
+</tvshow>
     """
 
     movie_template = """
-    <?xml version="1.0" encoding="UTF-8"?>
-        <movie>
-            <title>{title}</title>
-            <plot>{plot}</plot>
-            <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
-        </movie>
+<?xml version="1.0" encoding="UTF-8"?>
+<movie>
+    <title>{title}</title>
+    <plot><![CDATA[{plot}]]></plot>
+    <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
+</movie>
     """
 
     episode_template = """
-    <?xml version="1.0" encoding="UTF-8"?>
-        <episodedetails>
-            <title>{title}</title>
-            <plot>{plot}</plot>
-            <season>{season}</season>
-            <episode>{episode}</episode>
-            <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
-        </episodedetails>
+<?xml version="1.0" encoding="UTF-8"?>
+<episodedetails>
+    <title>{title}</title>
+    <plot><![CDATA[{plot}]]></plot>
+    <season>{season}</season>
+    <episode>{episode}</episode>
+    <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
+</episodedetails>
     """

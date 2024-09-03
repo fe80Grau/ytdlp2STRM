@@ -4,6 +4,7 @@ import time
 import platform
 import subprocess
 import requests
+import html
 
 from clases.config import config as c
 from clases.worker import worker as w
@@ -614,6 +615,7 @@ def to_strm(method):
             log_text = (f'Videos detected: {len(videos)}')
             l.log("youtube", log_text)
             channel_nfo = False
+            channel_folder = False
             for video in videos:
                 video_id = video['id']
                 channel_id = video['channel_id']
@@ -623,8 +625,6 @@ def to_strm(method):
                 youtube_channel = video['uploader_id']
                 youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
                 file_content = f'http://{host}:{port}/{source_platform}/{method}/{video_id}'
-
-                print(description)
 
                 file_path = "{}/{}/{}.{}".format(
                     media_folder, 
@@ -637,19 +637,22 @@ def to_strm(method):
                     sanitize(video_name), 
                     "strm"
                 )
-                f.folders().make_clean_folder(
-                    "{}/{}".format(
-                        media_folder,  
-                        sanitize(
-                            "{} [{}]".format(
-                                youtube_channel_folder,
-                                channel_id
+                
+                if not channel_folder:
+                    f.folders().make_clean_folder(
+                        "{}/{}".format(
+                            media_folder,  
+                            sanitize(
+                                "{} [{}]".format(
+                                    youtube_channel_folder,
+                                    channel_id
+                                )
                             )
-                        )
-                    ),
-                    False,
-                    config
-                )
+                        ),
+                        False,
+                        config
+                    )
+                    channel_folder = True
 
                 if channel_url == None:
                     channel_url = f'https://www.youtube.com/channel/{channel_id}'
@@ -704,7 +707,7 @@ def to_strm(method):
                         "item_name" : sanitize(video_name),
                         "title" : sanitize(video_name),
                         "plot" : description,
-                        "season" : "",
+                        "season" : "1",
                         "episode" : "",
                         "preview" : thumbnail
                     }
