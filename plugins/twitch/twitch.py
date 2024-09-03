@@ -423,10 +423,7 @@ def direct(twitch_id):
         ]   
     ).output()
 
-    if 'ERROR' in twitch_url:
-
-
-
+    if 'ERROR' in twitch_url or twitch_url == "" or twitch_url == None:
         twitch_url = w.worker(
             [
                 'yt-dlp', 
@@ -442,7 +439,7 @@ def direct(twitch_id):
             ]   
         ).output()
 
-        if 'ERROR' in twitch_url:
+        if 'ERROR' in twitch_url or twitch_url == "" or twitch_url == None:
             twitch_url = w.worker(
                 [
                     'yt-dlp', 
@@ -455,6 +452,7 @@ def direct(twitch_id):
                 ]   
             ).output()
 
+    twitch_url = twitch_url.strip()
     return redirect(
         twitch_url, 
         code=301
