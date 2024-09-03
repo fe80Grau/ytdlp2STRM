@@ -694,7 +694,7 @@ def to_strm(method):
                         ),
                         {
                             "title" : youtube_channel,
-                            "plot" : clean_text(channel_description),
+                            "plot" : channel_description,
                             "season" : "1",
                             "episode" : "-1",
                             "landscape" : channel_landscape,
@@ -718,7 +718,7 @@ def to_strm(method):
                     {
                         "item_name" : sanitize(video_name),
                         "title" : sanitize(video_name),
-                        "plot" : clean_text(description),
+                        "plot" : description,
                         "season" : "1",
                         "episode" : "",
                         "preview" : thumbnail
