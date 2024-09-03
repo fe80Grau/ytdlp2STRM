@@ -624,6 +624,7 @@ def to_strm(method):
                 youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
                 file_content = f'http://{host}:{port}/{source_platform}/{method}/{video_id}'
 
+                print(description)
 
                 file_path = "{}/{}/{}.{}".format(
                     media_folder, 
