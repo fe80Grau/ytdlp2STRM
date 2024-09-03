@@ -1,4 +1,4 @@
-FROM python:3.9.19
+FROM python:3.12
 WORKDIR /opt/ytdlp2STRM
 COPY . /opt/ytdlp2STRM
 ENV AM_I_IN_A_DOCKER_CONTAINER Yes
