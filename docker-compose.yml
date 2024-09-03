@@ -2,13 +2,24 @@
 version: "2.1"
 services:
   ytdlp2strm:
-      image: fe80grau/ytdlp2strm
-      container_name: ytdlp2STRM
-      environment:
-        - AM_I_IN_A_DOCKER_CONTAINER=Yes
-        - DOCKER_PORT=5000
-      volumes:
-        - D:/dev/media:/media
-      ports:
-        - 5000:5000
-      restart: always
+    image: fe80grau/ytdlp2strm
+    container_name: ytdlp2STRM
+    environment:
+      - AM_I_IN_A_DOCKER_CONTAINER=Yes
+      - DOCKER_PORT=5005
+    volumes:
+      - D:/dev/media:/media
+      - D:/dev/ytdlp2strm/yt_channel_list.json:/opt/ytdlp2STRM/plugins/youtube/channel_list.json
+      - D:/dev/ytdlp2strm/yt_config.json:/opt/ytdlp2STRM/plugins/youtube/config.json
+      - D:/dev/ytdlp2strm/twitch_channel_list.json:/opt/ytdlp2STRM/plugins/youtube/twitch_channel_list.json
+      - D:/dev/ytdlp2strm/twitch_config.json:/opt/ytdlp2STRM/plugins/youtube/twitch_config.json
+      - D:/dev/ytdlp2strm/config.json:/opt/ytdlp2STRM/config/config.json
+      - D:/dev/ytdlp2strm/crons.json:/opt/ytdlp2STRM/config/crons.json
+      - ytdlp2strm-data:/opt/ytdlp2STRM
+    ports:
+      - 5005:5000
+    restart: always
+
+volumes:
+  ytdlp2strm-data:
+
