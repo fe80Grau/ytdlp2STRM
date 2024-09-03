@@ -119,7 +119,7 @@ class Ui:
             if secure_command[2] == 'cli.py':
                 
                 # Iniciar el proceso
-                process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE, text=True)
+                process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE, text=True, encoding='utf-8')
 
                 # Leer y emitir la salida en tiempo real
                 while True:
@@ -130,7 +130,7 @@ class Ui:
                         #print(output.strip())  # Debugging: Imprimir en el servidor
                         #self.handle_output(output)
                         l.log('ui', output)
-                
+
                 
                 emit('command_completed', {'data': 'Comando completado'})
 

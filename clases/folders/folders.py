@@ -38,7 +38,8 @@ class folders:
             # Write to file with UTF-8 encoding
             with open(file_path, "w", encoding="utf-8") as file:
                 file.write(content.replace('\n',''))
-                
+            
+            file_path = file_path.encode('utf-8').decode('utf-8')
             log_text = f"File created: {file_path}"
             l.log("folder", log_text)
         except Exception as e:
