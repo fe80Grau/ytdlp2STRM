@@ -15,6 +15,7 @@ services:
       - D:/dev/ytdlp2strm/twitch_config.json:/opt/ytdlp2STRM/plugins/youtube/twitch_config.json
       - D:/dev/ytdlp2strm/config.json:/opt/ytdlp2STRM/config/config.json
       - D:/dev/ytdlp2strm/crons.json:/opt/ytdlp2STRM/config/crons.json
+      - D:/dev/ytdlp2strm/ytdlp2strm.log:/opt/ytdlp2STRM/ytdlp2strm.log
       - ytdlp2strm-data:/opt/ytdlp2STRM
     ports:
       - 5005:5000
