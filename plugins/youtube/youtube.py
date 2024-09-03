@@ -30,8 +30,12 @@ channels = c.config(
 media_folder = config["strm_output_folder"]
 days_dateafter = config["days_dateafter"]
 videos_limit = config["videos_limit"]
-cookies = config["cookies"]
-cookie_value = config["cookie_value"]
+try:
+    cookies = config["cookies"]
+    cookie_value = config["cookie_value"]
+except:
+    cookies = 'cookies-from-browser'
+    cookie_value = 'chrome'
 
 source_platform = "youtube"
 host = ytdlp2strm_config['ytdlp2strm_host']
