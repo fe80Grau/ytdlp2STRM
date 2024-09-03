@@ -5,6 +5,7 @@ import platform
 import subprocess
 import requests
 import html
+import re
 
 from clases.config import config as c
 from clases.worker import worker as w
@@ -586,6 +587,17 @@ def filter_and_modify_bandwidth(m3u8_content):
 
     return final_m3u8
 
+def clean_text(text):
+    # Reemplazar los caracteres especiales habituales y eliminar los que no son necesarios
+
+    # Escapando caracteres que deben mantenerse pero asegurándote de que sean seguros
+    text = html.escape(text)
+    
+    # Eliminar cualquier carácter no deseado usando expresiones regulares
+    text = re.sub(r'[^\w\s\[\]\(\)\-\_\'\"\/\.\:\;\,]', '', text)
+    
+    return text
+
 def to_strm(method):
     for youtube_channel in channels:
         yt = Youtube(youtube_channel)
@@ -682,7 +694,7 @@ def to_strm(method):
                         ),
                         {
                             "title" : youtube_channel,
-                            "plot" : channel_description,
+                            "plot" : clean_text(channel_description),
                             "season" : "1",
                             "episode" : "-1",
                             "landscape" : channel_landscape,
@@ -706,7 +718,7 @@ def to_strm(method):
                     {
                         "item_name" : sanitize(video_name),
                         "title" : sanitize(video_name),
-                        "plot" : description,
+                        "plot" : clean_text(description),
                         "season" : "1",
                         "episode" : "",
                         "preview" : thumbnail
