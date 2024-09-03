@@ -24,7 +24,8 @@ class folders:
 
     def make_clean_folder(self, folder_path, forceclean, config):
         if os.path.exists(folder_path):
-            if forceclean or not config.get("ytdlp2strm_keep_old_strm"):
+            print(config)
+            if forceclean or config.get("ytdlp2strm_keep_old_strm") == "False":
                 # Check the contents of the directory in a simpler way
                 try:
                     file_list = os.listdir(folder_path)

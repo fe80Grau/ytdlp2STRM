@@ -662,7 +662,7 @@ def to_strm(method):
                             )
                         ),
                         False,
-                        config
+                        ytdlp2strm_config
                     )
                     channel_folder = True
 
