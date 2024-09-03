@@ -72,7 +72,7 @@ class nfo:
 <?xml version="1.0" encoding="UTF-8"?>
 <tvshow>
     <title>{title}</title>
-    <plot>{plot}></plot>
+    <plot>{plot}</plot>
     <season>{season}</season>
     <episode>{episode}</episode>
     <thumb spoof="" cache="" aspect="landscape" preview="{landscape}">{landscape}</thumb>
@@ -85,7 +85,7 @@ class nfo:
 <?xml version="1.0" encoding="UTF-8"?>
 <movie>
     <title>{title}</title>
-    <plot>{plot}></plot>
+    <plot>{plot}</plot>
     <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
 </movie>
     """
@@ -94,7 +94,7 @@ class nfo:
 <?xml version="1.0" encoding="UTF-8"?>
 <episodedetails>
     <title>{title}</title>
-    <plot>{plot}></plot>
+    <plot>{plot}</plot>
     <season>{season}</season>
     <episode>{episode}</episode>
     <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
