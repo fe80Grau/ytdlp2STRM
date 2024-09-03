@@ -613,13 +613,17 @@ def to_strm(method):
         if videos:
             log_text = (f'Videos detected: {len(videos)}')
             l.log("youtube", log_text)
+            channel_nfo = False
             for video in videos:
                 video_id = video['id']
                 channel_id = video['channel_id']
                 video_name = video['title']
+                thumbnail = video['thumbnail']
+                description = video['description']
                 youtube_channel = video['uploader_id']
                 youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
                 file_content = f'http://{host}:{port}/{source_platform}/{method}/{video_id}'
+
 
                 file_path = "{}/{}/{}.{}".format(
                     media_folder, 
@@ -661,8 +665,33 @@ def to_strm(method):
                     channel_landscape = yt.channel_landscape
                     channel_poster = yt.channel_poster
 
+                ## -- BUILD CHANNEL NFO FILE
+                if not channel_nfo:
+                    n.nfo(
+                        "tvshow",
+                        "{}/{}".format(
+                            media_folder, 
+                            "{} [{}]".format(
+                                youtube_channel,
+                                channel_id
+                            )
+                        ),
+                        {
+                            "title" : youtube_channel,
+                            "plot" : channel_description,
+                            "season" : "1",
+                            "episode" : "-1",
+                            "landscape" : channel_landscape,
+                            "poster" : channel_poster,
+                            "studio" : "Youtube"
+                        }
+                    ).make_nfo()
+                    channel_nfo = True
+                ## -- END
+
+                ## -- BUILD VIDEO NFO FILE
                 n.nfo(
-                    "tvshow",
+                    "episode",
                     "{}/{}".format(
                         media_folder, 
                         "{} [{}]".format(
@@ -671,15 +700,15 @@ def to_strm(method):
                         )
                     ),
                     {
-                        "title" : youtube_channel,
-                        "plot" : channel_description,
-                        "season" : "1",
-                        "episode" : "-1",
-                        "landscape" : channel_landscape,
-                        "poster" : channel_poster,
-                        "studio" : "Youtube"
+                        "item_name" : sanitize(video_name),
+                        "title" : sanitize(video_name),
+                        "plot" : description,
+                        "season" : "",
+                        "episode" : "",
+                        "preview" : thumbnail
                     }
                 ).make_nfo()
+                ## -- END 
 
                 if not os.path.isfile(file_path):
                     f.folders().write_file(

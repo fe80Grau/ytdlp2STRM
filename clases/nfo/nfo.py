@@ -1,3 +1,7 @@
+import requests
+from PIL import Image
+from io import BytesIO
+from clases.folders import folders as f
 from clases.log import log as l
 
 class nfo:
@@ -18,17 +22,49 @@ class nfo:
             template = self.episode_template
             nfo_filename = f"{self.nfo_data['item_name']}.nfo"
         else:
-            log_text = ("Invalid NFO type.")
-            l.log("folder", log_text)
+            log_text = "Invalid NFO type."
+            l.log("nfo", log_text)
             return
-
+        
+        l.log("nfo", f"Creating NFO file...")
         # Rellenar la plantilla con los datos proporcionados
         nfo_content = template.format(**self.nfo_data)
 
         # Crear el archivo NFO
-        with open(f"{self.nfo_path}/{nfo_filename}", "w", encoding="utf-8") as nfo_file:
-            nfo_file.write(nfo_content.strip())
+        f.folders().write_file(
+            f"{self.nfo_path}/{nfo_filename}", 
+            nfo_content.strip()
+        )
+        # Descargar las imágenes correspondientes
+        self.download_images(nfo_filename)
 
+    def download_images(self, nfo_filename):
+        try:
+            if self.nfo_type == "tvshow":
+                self.download_image(self.nfo_data['poster'], f"{self.nfo_path}/poster.png")
+                self.download_image(self.nfo_data['landscape'], f"{self.nfo_path}/banner.png")
+                self.download_image(self.nfo_data['landscape'], f"{self.nfo_path}/backdrop.png")
+            elif self.nfo_type == "episode":
+                image_url = self.nfo_data['preview']
+                self.download_image(image_url, f"{self.nfo_path}/{nfo_filename.replace('.nfo','')}.png")
+        except Exception as e:
+            print(e)
+
+    def download_image(self, url, path):
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Check if the request was successful
+            
+            # Convertir a PNG
+            image = Image.open(BytesIO(response.content))
+            png_image_path = path
+            image.save(png_image_path, 'PNG')
+            
+            l.log("nfo", f"Image downloaded and converted to PNG: {path}")
+        except requests.RequestException as e:
+            l.log("nfo", f"Failed to download image from {url}: {e}")
+        except Exception as e:
+            l.log("nfo", f"Failed to convert image from {url} to PNG: {e}")
 
     tvshow_template = """
     <?xml version="1.0" encoding="UTF-8"?>
