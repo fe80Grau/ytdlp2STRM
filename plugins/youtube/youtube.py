@@ -709,9 +709,19 @@ def direct(youtube_id):
             pass 
 
         if not m3u8_url:
-            log_text = ('No manifest detected. Check your cookies config. \n* This video is age-restricted; some formats may be missing without authentication. Use --cookies-from-browser or --cookies for the authentication')
+            log_text = ('No manifest detected. Check your cookies config. \n* This video is age-restricted; some formats may be missing without authentication. Use --cookies-from-browser or --cookies for the authentication \n* Serving SD format. Please configure your cookies appropriately to access the manifest that serves the highest quality for this video')
             l.log("youtube", log_text)
-        if m3u8_url:
+            command = [
+                'yt-dlp',
+                '-f', 'best',
+                '--get-url',
+                '--no-warnings',
+                f'{youtube_id}'
+            ]
+            Youtube().set_proxy(command)
+            sd_url = w.worker(command).output()
+            return redirect(sd_url.strip(), 301)
+        else:
             response = requests.get(m3u8_url)
             if response.status_code == 200:
                 m3u8_content = response.text
