@@ -32,15 +32,20 @@ class folders:
 
     def write_file(self, file_path, content):
         try:
+            # Ensure content is properly encoded
+            content = content.encode('utf-8').decode('utf-8')
+            
+            # Write to file with UTF-8 encoding
             with open(file_path, "w", encoding="utf-8") as file:
                 file.write(content.replace('\n',''))
-            log_text = (f"File created: {file_path}")
+                
+            log_text = f"File created: {file_path}"
             l.log("folder", log_text)
         except Exception as e:
-            log_text = (f"Error writing file: {e}")
+            log_text = f"Error writing file: {e}"
             l.log("folder", log_text)
             pass
-            
+
     def clean_waste(self, files_to_delete):
         for file_path in files_to_delete:
             try:

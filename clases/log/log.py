@@ -5,9 +5,10 @@ from flask_socketio import emit
 class log:
     def __init__(self, author, text):
         now = datetime.datetime.now()
-        message = f'[{now}] {author} : {text.strip()}'
+        text = text.strip()
+        message = f'[{now}] {author} : {text}'
         if author == 'ui':
-            message = f'{text.strip()}'
+            message = f'{text}'
         if message.strip() != "" and message:  
             print(message)
         try:
@@ -16,6 +17,6 @@ class log:
         except Exception as e:
             pass
             
-        with open('ytdlp2strm.log', 'a') as file:
+        with open('ytdlp2strm.log', 'a', encoding="utf-8") as file:
             if message.strip != "" and message:
                 file.write(message + '\n')
