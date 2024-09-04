@@ -83,6 +83,8 @@ class nfo:
 <movie>
     <title>{title}</title>
     <plot><![CDATA[{plot}]]></plot>
+    <releasedate>{upload_date}</releasedate>
+    <year>{year}</year>
     <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
 </movie>
     """
@@ -91,6 +93,8 @@ class nfo:
 <episodedetails>
     <title>{title}</title>
     <plot><![CDATA[{plot}]]></plot>
+    <releasedate>{upload_date}</releasedate>
+    <year>{year}</year>
     <season>{season}</season>
     <episode>{episode}</episode>
     <thumb aspect="thumb" preview="{preview}">{preview}</thumb>

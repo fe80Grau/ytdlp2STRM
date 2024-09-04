@@ -6,17 +6,17 @@ from flask import request  # Importa request desde Flask
 #Redirect to best pre-merget format youtube url
 @app.route("/youtube/direct/<youtube_id>")
 def youtube_direct(youtube_id):
-    return direct(youtube_id)
+    return direct(youtube_id, request.remote_addr)
 
 #Redirect to best pre-merget format youtube url
 @app.route("/youtube/bridge/<youtube_id>")
 def youtube_bridge(youtube_id):
-    return direct(youtube_id)
+    return direct(youtube_id, request.remote_addr)
 
 #Keep URL from v0 version
 @app.route("/youtube/redirect/<youtube_id>")
 def youtube_redirect(youtube_id):
-    return direct(youtube_id)
+    return direct(youtube_id, request.remote_addr)
 
 
 #Download video and semd data throught http (serve video duration info, disk usage **clean_old_videos fucntion save your money)

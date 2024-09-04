@@ -6,6 +6,7 @@ import subprocess
 import requests
 import html
 import re
+from datetime import datetime
 
 from clases.config import config as c
 from clases.worker import worker as w
@@ -634,6 +635,9 @@ def to_strm(method):
                 video_name = video['title']
                 thumbnail = video['thumbnail']
                 description = video['description']
+                date = datetime.strptime(video['upload_date'], '%Y%m%d')
+                upload_date = date.strftime('%Y-%m-%d')
+                year = date.year
                 youtube_channel = video['uploader_id']
                 youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
                 file_content = f'http://{host}:{port}/{source_platform}/{method}/{video_id}'
@@ -694,7 +698,7 @@ def to_strm(method):
                         ),
                         {
                             "title" : youtube_channel,
-                            "plot" : channel_description,
+                            "plot" : channel_description.replace('\n', ' <br/>'),
                             "season" : "1",
                             "episode" : "-1",
                             "landscape" : channel_landscape,
@@ -718,7 +722,9 @@ def to_strm(method):
                     {
                         "item_name" : sanitize(video_name),
                         "title" : sanitize(video_name),
-                        "plot" : description,
+                        "upload_date" : upload_date,
+                        "year" : year,
+                        "plot" : description.replace('\n', ' <br/>\n '),
                         "season" : "1",
                         "episode" : "",
                         "preview" : thumbnail
@@ -735,7 +741,9 @@ def to_strm(method):
             log_text = (" no videos detected...") 
             l.log("youtube", log_text)
 
-def direct(youtube_id):
+def direct(youtube_id, remote_addr):
+    log_text = f'[{remote_addr}] Playing {youtube_id}'
+    l.log("youtube", log_text)
     if not '-audio' in youtube_id:
         command = [
             'yt-dlp', 

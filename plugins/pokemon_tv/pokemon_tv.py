@@ -161,7 +161,9 @@ def to_strm(method):
                     "plot" : item['description'],
                     "season" : item['season'],
                     "episode" : item['episode'],
-                    "preview" : item['images']['large']
+                    "preview" : item['images']['large'],
+                    "upload_date" : "",
+                    "year" : ""
                 }
             ).make_nfo()
 

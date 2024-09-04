@@ -396,8 +396,8 @@ def to_strm(method):
 ## -- END
 
 ## --  REDIRECT VIDEO DATA 
-def direct(twitch_id): 
-    log_text = (twitch_id)
+def direct(twitch_id, remote_addr): 
+    log_text = f'[{remote_addr}] Playing {twitch_id}'
     l.log("twitch", log_text)
     channel = twitch_id.split("@")[0]
     video_id = twitch_id.split("@")[1]
