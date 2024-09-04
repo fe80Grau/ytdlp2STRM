@@ -347,11 +347,11 @@ def to_strm(method):
                                 )
                             ),
                             "title" : sanitize(f'!000-live-{video_name}'),
-                            "upload_date" : upload_date,
-                            "year" : year,
+                            "upload_date" : "",
+                            "year" : "",
                             "plot" : description.replace('\n', ' <br/>\n '),
                             "season" : "1",
-                            "episode" : "9999",
+                            "episode" : "",
                             "preview" : thumbnail
                         }
                     ).make_nfo()
@@ -455,8 +455,6 @@ def to_strm(method):
 
 ## --  REDIRECT VIDEO DATA 
 def direct(twitch_id, remote_addr): 
-    log_text = f'[{remote_addr}] Playing {twitch_id}'
-    l.log("twitch", log_text)
     channel = twitch_id.split("@")[0]
     video_id = twitch_id.split("@")[1]
     command = [
