@@ -4,6 +4,7 @@ import os
 import requests
 import time
 import sys
+from datetime import datetime
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
@@ -50,7 +51,7 @@ class Twitch:
         l.log("twitch", log_text)
         command = [
             'yt-dlp', 
-            '--print', '"%(id)s;%(title)s"', 
+            '--print', '"%(id)s;%(title)s;%(description)s;%(thumbnail)s;%(upload_date)s"', 
             '--ignore-errors',
             '--no-warnings',
             '{}'.format(
@@ -169,7 +170,7 @@ class Twitch:
     def get_videos(self):
         command = [
             'yt-dlp', 
-            '--print', '"%(id)s;%(title)s;%(upload_date)s"', 
+            '--print', '"%(id)s;%(title)s;%(description)s;%(thumbnail)s;%(upload_date)s"', 
             '--dateafter', "today-{}days".format(days_after),
             '--playlist-start', '1', 
             '--playlist-end', videos_limit, 
@@ -223,32 +224,30 @@ def to_strm(method):
 
         # -- MAKES CHANNEL DIR IF NOT EXIST,
         f.folders().make_clean_folder(
-            "{}/{}/{}".format(
+            "{}/{}".format(
                 media_folder,  
                 sanitize(
                     "{}".format(
                         twitch.channel
                     )
-                ),
-                'live'
+                )
             ),
             False,
-            config
+            ytdlp2strm_config
         )
         ## -- END
         # -- MAKES CHANNEL DIR IF NOT EXIST,
         f.folders().make_clean_folder(
-            "{}/{}/{}".format(
+            "{}/{}".format(
                 media_folder,  
                 sanitize(
                     "{}".format(
                         twitch.channel
                     )
-                ),
-                'videos'
+                )
             ),
             False,
-            config
+            ytdlp2strm_config
         )
         ## -- END
 
@@ -276,13 +275,12 @@ def to_strm(method):
         ## -- GET ON AIR STREAMING
         for line in twitch.direct:
             if line != "":
-                file_path = "{}/{}/{}/{}.{}".format(
+                file_path = "{}/{}/{}.{}".format(
                     media_folder,  
                     sanitize(
                         "{}".format(
                             twitch_channel)
                         ), 
-                    'live',
                     sanitize(
                         "!000-live-{}".format(
                             twitch_channel
@@ -293,7 +291,14 @@ def to_strm(method):
 
                 if not 'ERROR' in line:
                     video_id = str(line).rstrip().split(';')[0]
-                    video_name = str(line).rstrip().split(';')[1].split(" ")
+                    video_name = str(line).rstrip().split(';')[1]
+                    description = str(line).rstrip().split(';')[2]
+                    if description == "NA":
+                        description = ""
+                    thumbnail = str(line).rstrip().split(';')[3]
+                    date = datetime.strptime(str(line).rstrip().split(';')[4], '%Y%m%d')
+                    upload_date = date.strftime('%Y-%m-%d')
+                    year = date.year
                     try:
                         video_name.pop(3)
                     except:
@@ -326,9 +331,36 @@ def to_strm(method):
                             file_path, 
                             file_content
                         )
+                    ## -- BUILD VIDEO NFO FILE
+                    n.nfo(
+                        "episode",
+                        "{}/{}".format(
+                            media_folder, 
+                            "{}".format(
+                                twitch.channel
+                            )
+                        ),
+                        {
+                            "item_name" : sanitize(
+                                "!000-live-{}".format(
+                                    twitch.channel
+                                )
+                            ),
+                            "title" : sanitize(f'!000-live-{video_name}'),
+                            "upload_date" : upload_date,
+                            "year" : year,
+                            "plot" : description.replace('\n', ' <br/>\n '),
+                            "season" : "1",
+                            "episode" : "9999",
+                            "preview" : thumbnail
+                        }
+                    ).make_nfo()
+                    ## -- END 
                 else:
                     try:
                         os.remove( file_path )
+                        os.remove( file_path.replace('.strm','.nfo'))
+                        os.remove( file_path.replace('.strm','.png'))
                     except:
                         pass
         ## -- END
@@ -339,7 +371,13 @@ def to_strm(method):
                 if not 'ERROR' in line:
                     video_id = str(line).rstrip().split(';')[0]
                     video_name = str(line).rstrip().split(';')[1].split(" ")
-                    upload_date = str(line).rstrip().split(';')[2]
+                    description = str(line).rstrip().split(';')[2]
+                    if description == "NA":
+                        description = ""
+                    thumbnail = str(line).rstrip().split(';')[3]
+                    date = datetime.strptime(str(line).rstrip().split(';')[4], '%Y%m%d')
+                    upload_date = date.strftime('%Y-%m-%d')
+                    year = date.year
                     try:
                         video_name.pop(3)
                     except:
@@ -363,17 +401,15 @@ def to_strm(method):
                         )
                     )
 
-                    file_path = "{}/{}/{}/{}.{}".format(
+                    file_path = "{}/{}/{}.{}".format(
                         media_folder,  
                         sanitize(
                             "{}".format(
                                 twitch_channel
                             )
                         ), 
-                        'videos',
                         sanitize(
-                            "{}-{}".format(
-                                upload_date,
+                            "{}".format(
                                 video_name
                             )
                         ), 
@@ -384,7 +420,29 @@ def to_strm(method):
                         "video_id" : video_id, 
                         "video_name" : video_name
                     }
-                    
+
+                    ## -- BUILD VIDEO NFO FILE
+                    n.nfo(
+                        "episode",
+                        "{}/{}".format(
+                            media_folder, 
+                            "{}".format(
+                                twitch.channel
+                            )
+                        ),
+                        {
+                            "item_name" : sanitize(video_name),
+                            "title" : sanitize(video_name),
+                            "upload_date" : upload_date,
+                            "year" : year,
+                            "plot" : description.replace('\n', ' <br/>\n '),
+                            "season" : "1",
+                            "episode" : "",
+                            "preview" : thumbnail
+                        }
+                    ).make_nfo()
+                    ## -- END 
+
                     if not os.path.isfile(file_path):
                         f.folders().write_file(
                             file_path, 
