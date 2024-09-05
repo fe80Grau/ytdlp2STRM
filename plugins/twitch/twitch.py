@@ -271,24 +271,23 @@ def to_strm(method):
             }
         ).make_nfo()
         ## -- END 
-
+        
         ## -- GET ON AIR STREAMING
         for line in twitch.direct:
-            if line != "":
-                file_path = "{}/{}/{}.{}".format(
-                    media_folder,  
-                    sanitize(
-                        "{}".format(
-                            twitch_channel)
-                        ), 
-                    sanitize(
-                        "!000-live-{}".format(
-                            twitch_channel
-                        )
+            file_path = "{}/{}/{}.{}".format(
+                media_folder,  
+                sanitize(
+                    "{}".format(
+                        twitch_channel)
                     ), 
-                    "strm"
-                )
-
+                sanitize(
+                    "!000-live-{}".format(
+                        twitch_channel
+                    )
+                ), 
+                "strm"
+            )
+            if line != "":
                 if not 'ERROR' in line:
                     video_id = str(line).rstrip().split(';')[0]
                     video_name = str(line).rstrip().split(';')[1]
@@ -356,13 +355,15 @@ def to_strm(method):
                         }
                     ).make_nfo()
                     ## -- END 
-                else:
-                    try:
-                        os.remove( file_path )
-                        os.remove( file_path.replace('.strm','.nfo'))
-                        os.remove( file_path.replace('.strm','.png'))
-                    except:
-                        pass
+            else:
+                log_text = ("The channel is not currently live")
+                l.log("twitch", log_text)
+                try:
+                    os.remove( file_path )
+                    os.remove( file_path.replace('.strm','.nfo'))
+                    os.remove( file_path.replace('.strm','.png'))
+                except:
+                    pass
         ## -- END
 
         ## -- GET VIDEOS TAB
