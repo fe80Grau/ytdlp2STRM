@@ -59,9 +59,12 @@ class Twitch:
             )
         ]
 
-        return w.worker(
-            command
-        ).output().split('\n')
+        return [
+            w.worker(
+                command
+            ).output()
+        ]
+
 
     def get_pictures(self):
         headers = {
