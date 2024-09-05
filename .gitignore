@@ -8,7 +8,7 @@ __pycache__/
 *.m4a
 *.session
 *.log
-log.txt
+log_cleanup\.txt
 channel_list.json
 config.json
 crons.json
