@@ -218,7 +218,7 @@ class Youtube:
                 data = json.loads(line)
                 
                 video = {
-                    'id': f'{data.get('id')}-audio',
+                    'id': f"{data.get('id')}-audio",
                     'title': data.get('title'),
                     'upload_date': data.get('upload_date'),
                     'thumbnail': data.get('thumbnail'),
@@ -257,7 +257,7 @@ class Youtube:
             if line.strip():
                 data = json.loads(line)
                 video = {
-                    'id': f'{data.get('id')}-audio',
+                    'id': f"{data.get('id')}-audio",
                     'title': data.get('title'),
                     'upload_date': data.get('upload_date'),
                     'thumbnail': data.get('thumbnail'),
@@ -288,7 +288,7 @@ class Youtube:
                 data = json.loads(line)
                 
                 video = {
-                    'id': f'{data.get('id')}-audio',
+                    'id': f"{data.get('id')}-audio",
                     'title': data.get('title'),
                     'upload_date': data.get('upload_date'),
                     'thumbnail': data.get('thumbnail'),

@@ -1,5 +1,5 @@
 from __main__ import app
-from plugins.crunchyroll.crunchyroll import direct, download, streams, remux_streams
+from plugins.crunchyroll.crunchyroll_old import direct, download, streams, remux_streams
 
 ### CRUNCHY ZONE
 @app.route("/crunchyroll/direct/<crunchyroll_id>")
