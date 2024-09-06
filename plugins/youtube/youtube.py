@@ -749,7 +749,7 @@ def direct(youtube_id, remote_addr):
             'yt-dlp', 
             '-j',
             '--no-warnings',
-            youtube_id
+            f'https://www.youtube.com/watch?v={youtube_id}'
         ]
         Youtube().set_cookies(command)
         Youtube().set_proxy(command)
@@ -773,7 +773,7 @@ def direct(youtube_id, remote_addr):
                 '-f', 'best',
                 '--get-url',
                 '--no-warnings',
-                f'{youtube_id}'
+                f'https://www.youtube.com/watch?v={youtube_id}'
             ]
             Youtube().set_proxy(command)
             sd_url = w.worker(command).output()
@@ -809,7 +809,7 @@ def direct(youtube_id, remote_addr):
 
 def bridge(youtube_id):
     s_youtube_id = youtube_id.split('-audio')[0]
-
+    s_youtube_id = f'https://www.youtube.com/watch?v={s_youtube_id}'
     def generate():
         startTime = time.time()
         buffer = []
