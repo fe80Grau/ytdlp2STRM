@@ -373,6 +373,7 @@ def to_strm(method):
         for line in twitch.videos:
             if line != "":
                 if not 'ERROR' in line:
+                    line = line.replace('"','')
                     video_id = str(line).rstrip().split(';')[0]
                     video_name = str(line).rstrip().split(';')[1].split(" ")
                     description = str(line).rstrip().split(';')[2]

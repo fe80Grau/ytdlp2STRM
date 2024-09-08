@@ -1,5 +1,5 @@
 from __main__ import app
-from flask import request, render_template, session
+from flask import request, render_template, session, send_from_directory, jsonify
 from flask_socketio import SocketIO
 import json
 import logging
@@ -170,6 +170,29 @@ def plugin_channels(plugin):
         request=request.method
     )
 
+@app.route('/log')
+def view_log():
+    log_file = 'ytdlp2strm.log'
+    try:
+        log_content = []
+        with open(log_file, 'r', encoding='utf-8') as file:
+            for line in file:
+                # Si la línea empieza con '[', formatear el texto dentro de los primeros corchetes
+                if line.startswith('['):
+                    end_idx = line.find(']')
+                    if end_idx != -1:
+                        formatted_line = '[<span style="color:green;">' + line[1:end_idx] + '</span>]' + line[end_idx+1:]
+                    else:
+                        formatted_line = line  # Si no hay un cierre de corchete, deja la línea como está
+                else:
+                    formatted_line = line
+                # Añadir un <br/> al final de cada línea
+                log_content.append(formatted_line + '<br/>')
+        return render_template('log.html', log_content=log_content)
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+
+    
 @socketio.on('execute_command')
 def handle_command(command):
     _ui.handle_command(command)

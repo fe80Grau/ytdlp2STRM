@@ -137,9 +137,8 @@ class Youtube:
             self.channel_url
         ]
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 
@@ -174,9 +173,8 @@ class Youtube:
             command.pop(8)
 
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 
@@ -211,9 +209,8 @@ class Youtube:
             command.pop(8)
 
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 
@@ -250,10 +247,9 @@ class Youtube:
 
 
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         # Procesa la salida JSON
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 video = {
@@ -281,9 +277,8 @@ class Youtube:
             self.channel_url
         ]
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 
@@ -319,13 +314,11 @@ class Youtube:
             f'{cu}'
         ]
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         # Procesa la salida JSON
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
-                data = json.loads(line)
-                
+                data = json.loads(line)                
                 video = {
                     'id': data.get('id'),
                     'title': data.get('title'),
@@ -344,7 +337,7 @@ class Youtube:
         if 'playlist' in self.channel_url:
             command = ['yt-dlp', 
                     '--compat-options', 'no-youtube-unavailable-videos',
-                    '--print', '"%(playlist_title)s"', 
+                    '--print', '%(playlist_title)s', 
                     '--playlist-items', '1',
                     '--restrict-filenames',
                     '--ignore-errors',
@@ -356,7 +349,7 @@ class Youtube:
         else:
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-unavailable-videos',
-                        '--print', '"%(channel)s"',
+                        '--print', '%(channel)s"',
                         '--restrict-filenames',
                         '--ignore-errors',
                         '--no-warnings',
@@ -369,7 +362,7 @@ class Youtube:
         return sanitize(
             self.channel_name
         )
-    
+     
     def get_channel_description(self):
         #get description
         if platform.system() == "Linux":
@@ -402,7 +395,7 @@ class Youtube:
             )
             
 
-            self.channel_description = w.worker(command).output()
+            self.channel_description = w.worker(command).shell()
             try:
                 os.remove("{}/{}.description".format(media_folder,sanitize(self.channel_name)))
             except:
@@ -439,7 +432,7 @@ class Youtube:
             )
 
             try:
-                self.channel_description = w.worker(command).output()
+                self.channel_description = w.worker(command).shell()
             except:
                 d_file = open(
                     "{}/{}.description".format(
