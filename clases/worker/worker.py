@@ -26,7 +26,7 @@ class worker:
             text=True
         )
         if process.stderr:
-            if not 'The channel is not currently live' in process.stderr:
+            if not 'The channel is not currently live' in process.stderr and not '[twitch:stream] videos: videos does not exist' in process.stderr:
                 l.log("worker", process.stderr)
         return process.stdout
     

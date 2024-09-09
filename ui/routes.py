@@ -181,7 +181,7 @@ def view_log():
                 if line.startswith('['):
                     end_idx = line.find(']')
                     if end_idx != -1:
-                        formatted_line = '[<span style="color:green;">' + line[1:end_idx] + '</span>]' + line[end_idx+1:]
+                        formatted_line = '[<span style="color:yellowgreen;">' + line[1:end_idx] + '</span>]' + line[end_idx+1:]
                     else:
                         formatted_line = line  # Si no hay un cierre de corchete, deja la línea como está
                 else:

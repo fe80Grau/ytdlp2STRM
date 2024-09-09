@@ -14,7 +14,7 @@
         <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - LOG</h1>
         <div class="mb-3"> 
             <label class="form-label">./ytdlp2strm.log</label>             
-            <div id="plugin-fields" style="max-height: 40vh;overflow: hidden;overflow-y: auto;background:black;">
+            <div id="plugin-fields" style="max-height: 40vh;overflow: hidden;overflow-y: auto;background:black;scroll-behavior: smooth;">
                 {% for line in log_content %}
                     <div class="log-line">{{ line|safe }}</div>
                 {% endfor %}
