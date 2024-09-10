@@ -89,7 +89,7 @@ class ConfigChangeHandler(FileSystemEventHandler):
         self.callback = callback
 
     def on_modified(self, event):
-        l.log('cron', f"Detected file modification in {event.src_path}.")
+        #l.log('cron', f"Detected file modification in {event.src_path}.")
         if event.src_path == config_path:
             l.log('cron', f'{config_path} has been modified')
             self.callback()
