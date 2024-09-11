@@ -10,18 +10,31 @@ import pytz
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import os
+import hashlib
 
 # -- LOAD CONFIG AND CHANNELS FILES
 config_path = os.path.abspath('./config/crons.json')
 
+def calculate_hash(file_path):
+    """Calcula el hash SHA-256 del archivo especificado."""
+    sha256 = hashlib.sha256()
+    try:
+        with open(file_path, 'rb') as f:
+            while chunk := f.read(8192):
+                sha256.update(chunk)
+        return sha256.hexdigest()
+    except FileNotFoundError:
+        return None
+
 def load_crons():
     return c.config(config_path).get_config()
-
+    
 class Cron(threading.Thread):
     def __init__(self, stop_event):
         super().__init__(daemon=True)
         self.stop_event = stop_event
         self.observer = Observer()  # Mueve el observador aquí para detenerlo más tarde
+        self.config_hash = None
 
     def run(self):
         self.default_tz = get_localzone()        
@@ -29,6 +42,12 @@ class Cron(threading.Thread):
         self.watch_config()
 
     def schedule_tasks(self):
+        new_hash = calculate_hash(config_path)
+        if self.config_hash == new_hash:
+            l.log('cron', "Configuration hasn't changed. Skipping re-scheduling.")
+            return
+        
+        self.config_hash = new_hash
         self.crons = load_crons()
         l.log('cron', "Scheduling tasks according to the latest crons configuration.")
 
@@ -69,7 +88,7 @@ class Cron(threading.Thread):
                 l.log('cron', f"Scheduled task {cron['do']} every {qty} {cron['every']}.")
 
     def watch_config(self):
-        event_handler = ConfigChangeHandler(callback=self.schedule_tasks)
+        event_handler = ConfigChangeHandler(config_path, callback=self.schedule_tasks)
         self.observer.schedule(event_handler, path=os.path.dirname(config_path), recursive=False)
         self.observer.start()
 
@@ -85,11 +104,15 @@ class Cron(threading.Thread):
         self.observer.join()
 
 class ConfigChangeHandler(FileSystemEventHandler):
-    def __init__(self, callback):
+    def __init__(self, file_path, callback):
+        self.file_path = file_path
         self.callback = callback
+        self.last_hash = calculate_hash(file_path)
 
     def on_modified(self, event):
-        #l.log('cron', f"Detected file modification in {event.src_path}.")
-        if event.src_path == config_path:
-            l.log('cron', f'{config_path} has been modified')
+        if event.event_type == 'modified' and event.src_path == self.file_path:
+            new_hash = calculate_hash(self.file_path)
+
+            l.log('cron', f'{self.file_path} has been modified')
+            self.last_hash = new_hash
             self.callback()
