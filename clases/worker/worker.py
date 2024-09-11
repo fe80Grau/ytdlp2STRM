@@ -20,6 +20,18 @@ class worker:
 
     def output(self):
         process = subprocess.run(
+            self.command,  # Unimos el comando en una cadena de texto
+            #shell=True,
+            capture_output=True,  # Capturamos stdout y stderr
+            text=True
+        )
+        if process.stderr:
+            if not 'The channel is not currently live' in process.stderr and not '[twitch:stream] videos: videos does not exist' in process.stderr:
+                l.log("worker", process.stderr)
+        return process.stdout
+    
+    def shell(self):
+        process = subprocess.run(
             ' '.join(self.command),  # Unimos el comando en una cadena de texto
             shell=True,
             capture_output=True  # Capturamos stdout y stderr
@@ -29,18 +41,7 @@ class worker:
         except UnicodeDecodeError:
             return process.stdout.decode('latin1')  # Intentamos decodificar con latin1
 
-    def pipe(self):
-        return subprocess.Popen(
-            self.command, 
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            universal_newlines=True,
-            #encoding='latin-1',
-            cwd=self.wd
-            #bufsize=1,
-            #shell=True
-        )
-
+    
     def call(self):
         return subprocess.call(
             self.command

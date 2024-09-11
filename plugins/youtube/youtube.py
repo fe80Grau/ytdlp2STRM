@@ -7,6 +7,7 @@ import requests
 import html
 import re
 from datetime import datetime
+from cachetools import TTLCache
 
 from clases.config import config as c
 from clases.worker import worker as w
@@ -16,6 +17,8 @@ from clases.log import log as l
 
 from sanitize_filename import sanitize
 from flask import stream_with_context, Response, send_file, redirect, abort, request
+
+recent_requests = TTLCache(maxsize=200, ttl=30)
 
 ## -- LOAD CONFIG AND CHANNELS FILES
 ytdlp2strm_config = c.config(
@@ -137,9 +140,8 @@ class Youtube:
             self.channel_url
         ]
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 
@@ -174,9 +176,8 @@ class Youtube:
             command.pop(8)
 
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 
@@ -211,9 +212,8 @@ class Youtube:
             command.pop(8)
 
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 
@@ -250,10 +250,9 @@ class Youtube:
 
 
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         # Procesa la salida JSON
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 video = {
@@ -281,9 +280,8 @@ class Youtube:
             self.channel_url
         ]
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
                 data = json.loads(line)
                 
@@ -319,13 +317,11 @@ class Youtube:
             f'{cu}'
         ]
         result = w.worker(command).output()
-        result = subprocess.run(command, capture_output=True, text=True)
         # Procesa la salida JSON
         videos = []
-        for line in result.stdout.split('\n'):
+        for line in result.split('\n'):
             if line.strip():
-                data = json.loads(line)
-                
+                data = json.loads(line)                
                 video = {
                     'id': data.get('id'),
                     'title': data.get('title'),
@@ -344,7 +340,7 @@ class Youtube:
         if 'playlist' in self.channel_url:
             command = ['yt-dlp', 
                     '--compat-options', 'no-youtube-unavailable-videos',
-                    '--print', '"%(playlist_title)s"', 
+                    '--print', '%(playlist_title)s', 
                     '--playlist-items', '1',
                     '--restrict-filenames',
                     '--ignore-errors',
@@ -356,7 +352,7 @@ class Youtube:
         else:
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-unavailable-videos',
-                        '--print', '"%(channel)s"',
+                        '--print', '%(channel)s"',
                         '--restrict-filenames',
                         '--ignore-errors',
                         '--no-warnings',
@@ -369,7 +365,7 @@ class Youtube:
         return sanitize(
             self.channel_name
         )
-    
+     
     def get_channel_description(self):
         #get description
         if platform.system() == "Linux":
@@ -402,7 +398,7 @@ class Youtube:
             )
             
 
-            self.channel_description = w.worker(command).output()
+            self.channel_description = w.worker(command).shell()
             try:
                 os.remove("{}/{}.description".format(media_folder,sanitize(self.channel_name)))
             except:
@@ -439,7 +435,7 @@ class Youtube:
             )
 
             try:
-                self.channel_description = w.worker(command).output()
+                self.channel_description = w.worker(command).shell()
             except:
                 d_file = open(
                     "{}/{}.description".format(
@@ -544,18 +540,22 @@ class Youtube:
         command.append(f'--{cookies}')
         command.append(cookie_value)
 
+
 def filter_and_modify_bandwidth(m3u8_content):
     lines = m3u8_content.splitlines()
     
     highest_bandwidth = 0
     best_video_info = None
     best_video_url = None
+    
     media_lines = []
     
     high_audio = False
     sd_audio = ""
+    
     for i in range(len(lines)):
         line = lines[i]
+        
         if line.startswith("#EXT-X-STREAM-INF:"):
             info = line
             url = lines[i + 1]
@@ -573,7 +573,7 @@ def filter_and_modify_bandwidth(m3u8_content):
             else:
                 sd_audio = line
 
-    if not high_audio:
+    if not high_audio and sd_audio:
         media_lines.append(sd_audio)
 
     # Create the final M3U8 content
@@ -583,7 +583,7 @@ def filter_and_modify_bandwidth(m3u8_content):
     for media_line in media_lines:
         final_m3u8 += f"{media_line}\n"
 
-    if best_video_info:
+    if best_video_info and best_video_url:
         final_m3u8 += f"{best_video_info}\n{best_video_url}\n"
 
     return final_m3u8
@@ -741,15 +741,23 @@ def to_strm(method):
             log_text = (" no videos detected...") 
             l.log("youtube", log_text)
 
+
 def direct(youtube_id, remote_addr):
-    log_text = f'[{remote_addr}] Playing {youtube_id}'
-    l.log("youtube", log_text)
-    if not '-audio' in youtube_id:
+    current_time = time.time()
+    cache_key = f"{remote_addr}_{youtube_id}"
+    
+    # Check if the request is already cached
+    if cache_key not in recent_requests:
+        log_text = f'[{remote_addr}] Playing {youtube_id}'
+        l.log("youtube", log_text)
+        recent_requests[cache_key] = current_time
+
+    if '-audio' not in youtube_id:
         command = [
             'yt-dlp', 
             '-j',
             '--no-warnings',
-            youtube_id
+            f'https://www.youtube.com/watch?v={youtube_id}'
         ]
         Youtube().set_cookies(command)
         Youtube().set_proxy(command)
@@ -773,7 +781,7 @@ def direct(youtube_id, remote_addr):
                 '-f', 'best',
                 '--get-url',
                 '--no-warnings',
-                f'{youtube_id}'
+                f'https://www.youtube.com/watch?v={youtube_id}'
             ]
             Youtube().set_proxy(command)
             sd_url = w.worker(command).output()
@@ -785,6 +793,7 @@ def direct(youtube_id, remote_addr):
                 filtered_content = filter_and_modify_bandwidth(m3u8_content)
                 headers = {
                     'Content-Type': 'application/vnd.apple.mpegurl',
+                    'Content-Disposition': 'inline; filename="playlist.m3u8"',
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache',
                     'Expires': '0'
@@ -798,7 +807,7 @@ def direct(youtube_id, remote_addr):
             '-f', 'bestaudio',
             '--get-url',
             '--no-warnings',
-            f'{s_youtube_id}'
+            f'https://www.youtube.com/watch?v={s_youtube_id}'
         ]
         Youtube().set_cookies(command)
         Youtube().set_proxy(command)
@@ -809,7 +818,7 @@ def direct(youtube_id, remote_addr):
 
 def bridge(youtube_id):
     s_youtube_id = youtube_id.split('-audio')[0]
-
+    s_youtube_id = f'https://www.youtube.com/watch?v={s_youtube_id}'
     def generate():
         startTime = time.time()
         buffer = []

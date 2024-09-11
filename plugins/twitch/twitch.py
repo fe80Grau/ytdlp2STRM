@@ -5,11 +5,13 @@ import requests
 import time
 import sys
 from datetime import datetime
+from cachetools import TTLCache
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
 from clases.log import log as l
+
 
 ## -- TWITCH CLASS
 class Twitch:
@@ -189,6 +191,8 @@ class Twitch:
         ).output().split('\n')
 ## -- END
 
+recent_requests = TTLCache(maxsize=200, ttl=30)
+
 ## -- LOAD CONFIG AND CHANNELS FILES
 ytdlp2strm_config = c.config(
     './config/config.json'
@@ -292,6 +296,7 @@ def to_strm(method):
             )
             if line != "":
                 if not 'ERROR' in line:
+                    line = line.replace('"', '')
                     video_id = str(line).rstrip().split(';')[0]
                     video_name = str(line).rstrip().split(';')[1]
                     description = str(line).rstrip().split(';')[2]
@@ -373,6 +378,7 @@ def to_strm(method):
         for line in twitch.videos:
             if line != "":
                 if not 'ERROR' in line:
+                    line = line.replace('"','')
                     video_id = str(line).rstrip().split(';')[0]
                     video_name = str(line).rstrip().split(';')[1].split(" ")
                     description = str(line).rstrip().split(';')[2]
@@ -459,64 +465,51 @@ def to_strm(method):
 
 ## --  REDIRECT VIDEO DATA 
 def direct(twitch_id, remote_addr): 
+    current_time = time.time()
+    cache_key = f"{remote_addr}_{twitch_id}"
+    
+    # Check if the request is already cached
+    if cache_key not in recent_requests:
+        log_text = f'[{remote_addr}] Playing {twitch_id}'
+        l.log("twitch", log_text)
+        recent_requests[cache_key] = current_time
+
     channel = twitch_id.split("@")[0]
     video_id = twitch_id.split("@")[1]
     command = [
         'yt-dlp', 
         '-f', 'best',
         '--no-warnings',
-        'https://www.twitch.tv/videos/{}'.format(
-            video_id
-        ),
+        f'https://www.twitch.tv/videos/{video_id}',
         '--get-url'
     ]
 
-    twitch_url = w.worker(
-        [
-            'yt-dlp', 
-            '-f', 'best',
-            '--no-warnings',
-            'https://www.twitch.tv/videos/{}'.format(
-                video_id
-            ),
-            '--get-url'
-        ]   
-    ).output()
+    twitch_url = w.worker(command).output()
 
-    if 'ERROR' in twitch_url or twitch_url == "" or twitch_url == None:
+    if 'ERROR' in twitch_url or not twitch_url:
         twitch_url = w.worker(
             [
                 'yt-dlp', 
                 '-f', 'best',
                 '--no-warnings',
-                'https://www.twitch.tv/videos/{}'.format(
-                    video_id.replace(
-                        'v',
-                        ''
-                    )            
-                ),
+                f'https://www.twitch.tv/videos/{video_id.replace("v", "")}',
                 '--get-url'
             ]   
         ).output()
 
-        if 'ERROR' in twitch_url or twitch_url == "" or twitch_url == None:
+        if 'ERROR' in twitch_url or not twitch_url:
             twitch_url = w.worker(
                 [
                     'yt-dlp', 
                     '-f', 'best',
                     '--no-warnings',
-                    'https://www.twitch.tv/{}'.format(
-                        channel          
-                    ),
+                    f'https://www.twitch.tv/{channel}',
                     '--get-url'
                 ]   
             ).output()
 
     twitch_url = twitch_url.strip()
-    return redirect(
-        twitch_url, 
-        code=301
-    )
+    return redirect(twitch_url, code=301)
 
 def bridge(twitch_id):
     channel = twitch_id.split("@")[0]

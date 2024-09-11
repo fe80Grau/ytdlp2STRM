@@ -11,3 +11,5 @@ pytz
 ffmpeg-python
 flask_socketio
 pillow
+watchdog
+cachetools
