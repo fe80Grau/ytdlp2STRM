@@ -44,7 +44,6 @@ class Cron(threading.Thread):
     def schedule_tasks(self):
         new_hash = calculate_hash(config_path)
         if self.config_hash == new_hash:
-            l.log('cron', "Configuration hasn't changed. Skipping re-scheduling.")
             return
         
         self.config_hash = new_hash
@@ -54,7 +53,6 @@ class Cron(threading.Thread):
         # Cancel any existing scheduled jobs
         for job in schedule.get_jobs():
             schedule.cancel_job(job)
-        #l.log('cron', "Cancelled all existing scheduled jobs.")
 
         # Schedule all new tasks
         for cron in self.crons:
@@ -113,6 +111,5 @@ class ConfigChangeHandler(FileSystemEventHandler):
         if event.event_type == 'modified' and event.src_path == self.file_path:
             new_hash = calculate_hash(self.file_path)
 
-            l.log('cron', f'{self.file_path} has been modified')
             self.last_hash = new_hash
             self.callback()

@@ -393,10 +393,12 @@ def to_strm(method):
                     except:
                         pass
 
+                    video_name = ' '.join(
+                        video_name
+                    )
+                    video_name = video_name.rsplit(' ', 1)[0]
                     video_name = "{} [{}]".format(
-                        ' '.join(
-                            video_name
-                        ), 
+                        video_name,
                         video_id
                     )
 
