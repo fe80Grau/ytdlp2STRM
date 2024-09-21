@@ -2,6 +2,7 @@ from flask import stream_with_context, Response, send_file, redirect
 from sanitize_filename import sanitize
 import os
 import requests
+import re
 import time
 import sys
 from datetime import datetime
@@ -396,7 +397,7 @@ def to_strm(method):
                     video_name = ' '.join(
                         video_name
                     )
-                    video_name = video_name.rsplit(' ', 1)[0]
+                    video_name = re.sub(r'\d{4}-\d{2}-\d{2} \d{4}', '', video_name).strip()
                     video_name = "{} [{}]".format(
                         video_name,
                         video_id
