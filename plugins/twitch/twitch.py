@@ -222,6 +222,17 @@ else:
     videos_limit = "10"
 ## -- END
 
+
+def video_id_exists_in_content(media_folder, video_id):
+    for root, dirs, files in os.walk(media_folder):
+        for file in files:
+            if file.endswith(".strm"):
+                file_path = os.path.join(root, file)
+                with open(file_path, 'r') as f:
+                    if video_id in f.read():
+                        return True
+    return False
+
 ## -- MANDATORY TO_STRM FUNCTION 
 def to_strm(method):
     for twitch_channel in channels:
@@ -428,6 +439,20 @@ def to_strm(method):
                         ), 
                         "strm"
                     )
+
+
+                    folder_path = "{}/{}".format(
+                        media_folder,  
+                        sanitize(
+                            "{}".format(
+                                twitch_channel
+                            )
+                        )
+                    )
+
+                    if video_id_exists_in_content(folder_path, video_id):
+                        l.log("youtube", f'Video {video_id} already exists')
+                        continue
 
                     data = {
                         "video_id" : video_id, 

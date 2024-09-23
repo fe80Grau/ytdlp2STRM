@@ -599,6 +599,16 @@ def clean_text(text):
     
     return text
 
+def video_id_exists_in_content(media_folder, video_id):
+    for root, dirs, files in os.walk(media_folder):
+        for file in files:
+            if file.endswith(".strm"):
+                file_path = os.path.join(root, file)
+                with open(file_path, 'r') as f:
+                    if video_id in f.read():
+                        return True
+    return False
+
 def to_strm(method):
     for youtube_channel in channels:
         yt = Youtube(youtube_channel)
@@ -653,7 +663,21 @@ def to_strm(method):
                     sanitize(video_name), 
                     "strm"
                 )
-                
+
+                folder_path = "{}/{}".format(
+                    media_folder, 
+                    sanitize(
+                        "{} [{}]".format(
+                            youtube_channel_folder,
+                            channel_id
+                        )
+                    )
+                )
+
+                if video_id_exists_in_content(folder_path, video_id):
+                    l.log("youtube", f'Video {video_id} already exists')
+                    continue
+
                 if not channel_folder:
                     f.folders().make_clean_folder(
                         "{}/{}".format(
