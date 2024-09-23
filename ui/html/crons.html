@@ -97,6 +97,10 @@
                 newInput5.className = 'form-control';
                 newInput5.type = 'text';
                 newInput5.name = 'at[]';
+                var newInput6 = document.createElement('input');
+                newInput6.className = 'form-control';
+                newInput6.type = 'text';
+                newInput6.name = 'timezone[]';
 
                 var deleteButton = document.createElement('button');
                 deleteButton.className = 'btn btn-danger';
@@ -113,6 +117,7 @@
                 newField.appendChild(newInput3);
                 newField.appendChild(newInput4);
                 newField.appendChild(newInput5);
+                newField.appendChild(newInput6);
 
                 newField.appendChild(deleteButton);
                 pluginFields.appendChild(newField);
