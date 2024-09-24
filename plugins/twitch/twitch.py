@@ -451,7 +451,7 @@ def to_strm(method):
                     )
 
                     if video_id_exists_in_content(folder_path, video_id):
-                        l.log("youtube", f'Video {video_id} already exists')
+                        l.log("twitch", f'Video {video_id} already exists')
                         continue
 
                     data = {
