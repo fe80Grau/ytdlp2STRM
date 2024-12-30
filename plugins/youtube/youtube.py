@@ -781,6 +781,7 @@ def direct(youtube_id, remote_addr):
             'yt-dlp', 
             '-j',
             '--no-warnings',
+            '--extractor-args', 'youtube:player-client=default,web_safari',
             f'https://www.youtube.com/watch?v={youtube_id}'
         ]
         Youtube().set_cookies(command)
@@ -848,7 +849,7 @@ def bridge(youtube_id):
         buffer = []
         sentBurst = False
         if config["sponsorblock"]:
-            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'best', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
+            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'bestvideo+bestaudio', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
         else:
             command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'best', '--restrict-filenames', s_youtube_id]
         Youtube().set_proxy(command)
