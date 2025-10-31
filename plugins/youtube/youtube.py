@@ -8,15 +8,14 @@ import html
 import re
 from datetime import datetime
 from cachetools import TTLCache
-
+from utils.episode_numbering import format_episode_title
+from sanitize_filename import sanitize
+from flask import stream_with_context, Response, send_file, redirect, abort, request
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
 from clases.log import log as l
-
-from sanitize_filename import sanitize
-from flask import stream_with_context, Response, send_file, redirect, abort, request
 
 recent_requests = TTLCache(maxsize=200, ttl=30)
 
@@ -42,6 +41,11 @@ try:
 except:
     cookies = 'cookies-from-browser'
     cookie_value = 'chrome'
+
+try:
+    lang = config["lang"]
+except:
+    lang = 'en'
 
 source_platform = "youtube"
 host = ytdlp2strm_config['ytdlp2strm_host']
@@ -139,6 +143,8 @@ class Youtube:
             '--dump-json',
             self.channel_url
         ]
+        self.set_cookies(command)
+        self.set_language(command)
         result = w.worker(command).output()
         videos = []
         for line in result.split('\n'):
@@ -162,7 +168,7 @@ class Youtube:
         keyword = self.channel.split('-')[1]
         command = [
             'yt-dlp', 
-            '-f', 'best', 'ytsearch10:["{}"]'.format(keyword),
+            '-f', 'best', 'ytsearch:["{}"]'.format(keyword),
             '--compat-options', 'no-youtube-channel-redirect',
             '--compat-options', 'no-youtube-unavailable-videos',
             '--playlist-start', '1', 
@@ -170,6 +176,8 @@ class Youtube:
             '--no-warning',
             '--dump-json'
         ]
+        self.set_cookies(command)
+        self.set_language(command)
 
         if config['days_dateafter'] == "0":
             command.pop(8)
@@ -206,6 +214,8 @@ class Youtube:
             '--no-warning',
             '--dump-json'
         ]
+        self.set_cookies(command)
+        self.set_language(command)
 
         if config['days_dateafter'] == "0":
             command.pop(8)
@@ -247,7 +257,8 @@ class Youtube:
             '--dump-json',
             f'{cu}'
         ]
-
+        self.set_cookies(command)
+        self.set_language(command)
 
         result = w.worker(command).output()
         # Procesa la salida JSON
@@ -279,6 +290,8 @@ class Youtube:
             '--dump-json',
             self.channel_url
         ]
+        self.set_cookies(command)
+        self.set_language(command)
         result = w.worker(command).output()
         videos = []
         for line in result.split('\n'):
@@ -316,6 +329,8 @@ class Youtube:
             '--dump-json',
             f'{cu}'
         ]
+        self.set_cookies(command)
+        self.set_language(command)
         result = w.worker(command).output()
         # Procesa la salida JSON
         videos = []
@@ -352,7 +367,7 @@ class Youtube:
         else:
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-unavailable-videos',
-                        '--print', '%(channel)s"',
+                        '--print', '%(channel)s',
                         '--restrict-filenames',
                         '--ignore-errors',
                         '--no-warnings',
@@ -360,8 +375,10 @@ class Youtube:
                         '--compat-options', 'no-youtube-channel-redirect',
                         f'{self.channel_url}'
             ]
+        self.set_cookies(command)
+        self.set_language(command)
         self.set_proxy(command)
-        self.channel_name = w.worker(command).output()
+        self.channel_name = w.worker(command).output().strip().replace('"', '')
         return sanitize(
             self.channel_name
         )
@@ -379,6 +396,8 @@ class Youtube:
                     sanitize(self.channel_name)
                 )
             ]
+            self.set_cookies(command)
+            self.set_language(command)
             self.set_proxy(command)
             command = (
                 command 
@@ -416,6 +435,8 @@ class Youtube:
                 ),
                 self.channel_url, 
             ]
+            self.set_cookies(command)
+            self.set_language(command)
             self.set_proxy(command)
             command = (
                 command 
@@ -475,6 +496,8 @@ class Youtube:
                     '--playlist-items', '0',
                     self.channel_url
         ]
+        self.set_cookies(command)
+        self.set_language(command)
         self.set_proxy(command)
         landscape = None
         poster = None
@@ -539,6 +562,11 @@ class Youtube:
     def set_cookies(self, command):
         command.append(f'--{cookies}')
         command.append(cookie_value)
+    
+    def set_language(self, command):
+        """Configura el idioma para YouTube según la configuración"""
+        if lang:
+            command.extend(['--extractor-args', f'youtube:lang={lang}'])
 
 
 def filter_and_modify_bandwidth(m3u8_content):
@@ -637,8 +665,10 @@ def to_strm(method):
         if videos:
             log_text = (f'Videos detected: {len(videos)}')
             l.log("youtube", log_text)
+            # Reverse video list so oldest videos get lower episode numbers
+            videos.reverse()
             channel_nfo = False
-            channel_folder = False
+            channel_folder_created = False
             for video in videos:
                 video_id = video['id']
                 channel_id = video['channel_id']
@@ -652,15 +682,25 @@ def to_strm(method):
                 youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
                 file_content = f'http://{host}:{port}/{source_platform}/{method}/{video_id}'
 
-                file_path = "{}/{}/{}.{}".format(
-                    media_folder, 
-                    sanitize(
-                        "{} [{}]".format(
-                            youtube_channel_folder,
-                            channel_id
-                        )
-                    ),  
-                    sanitize(video_name), 
+                channel_folder = sanitize(
+                    "{} [{}]".format(
+                        youtube_channel_folder,
+                        channel_id
+                    )
+                )
+                
+                # Create season folder based on video year
+                season_folder = f"Season {year}"
+                folder_full_path = "{}/{}/{}".format(media_folder, channel_folder, season_folder)
+                
+                # Format title with episode number
+                formatted_title = format_episode_title(video_name, folder_full_path)
+                
+                file_path = "{}/{}/{}/{}.{}".format(
+                    media_folder,
+                    channel_folder,
+                    season_folder,
+                    sanitize(formatted_title),
                     "strm"
                 )
 
@@ -678,7 +718,7 @@ def to_strm(method):
                     l.log("youtube", f'Video {video_id} already exists')
                     continue
 
-                if not channel_folder:
+                if not channel_folder_created:
                     f.folders().make_clean_folder(
                         "{}/{}".format(
                             media_folder,  
@@ -692,7 +732,12 @@ def to_strm(method):
                         False,
                         ytdlp2strm_config
                     )
-                    channel_folder = True
+                    channel_folder_created = True
+                
+                # Create season folder if it doesn't exist
+                season_folder_path = "{}/{}/{}".format(media_folder, channel_folder, season_folder)
+                if not os.path.exists(season_folder_path):
+                    os.makedirs(season_folder_path, exist_ok=True)
 
                 if channel_url == None:
                     channel_url = f'https://www.youtube.com/channel/{channel_id}'
@@ -736,16 +781,17 @@ def to_strm(method):
                 ## -- BUILD VIDEO NFO FILE
                 n.nfo(
                     "episode",
-                    "{}/{}".format(
+                    "{}/{}/{}".format(
                         media_folder, 
                         "{} [{}]".format(
                             youtube_channel,
                             channel_id
-                        )
+                        ),
+                        season_folder
                     ),
                     {
-                        "item_name" : sanitize(video_name),
-                        "title" : sanitize(video_name),
+                        "item_name" : sanitize(formatted_title),
+                        "title" : sanitize(formatted_title),
                         "upload_date" : upload_date,
                         "year" : year,
                         "plot" : description.replace('\n', ' <br/>\n '),
@@ -840,7 +886,7 @@ def direct(youtube_id, remote_addr):
         return redirect(audio_url, 301)
 
     return "Manifest URL not found or failed to redirect.", 404
-
+    
 def bridge(youtube_id):
     s_youtube_id = youtube_id.split('-audio')[0]
     s_youtube_id = f'https://www.youtube.com/watch?v={s_youtube_id}'
@@ -852,6 +898,8 @@ def bridge(youtube_id):
             command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'bestvideo+bestaudio', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
         else:
             command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'best', '--restrict-filenames', s_youtube_id]
+        Youtube().set_cookies(command)
+        Youtube().set_language(command)
         Youtube().set_proxy(command)
         if '-audio' in youtube_id:
             command[5] = 'bestaudio'
@@ -901,14 +949,18 @@ def download(youtube_id):
         command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '-o',  os.path.join(temp_dir, '%(title)s.%(ext)s'), '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
     else:
         command = ['yt-dlp', '-f', 'bv*+ba+ba.2', '-o',  os.path.join(temp_dir, '%(title)s.%(ext)s'), '--restrict-filenames', s_youtube_id]
+    Youtube().set_cookies(command)
+    Youtube().set_language(command)
     Youtube().set_proxy(command)
     if '-audio' in youtube_id:
         command[2] = 'bestaudio'
 
     w.worker(command).call()
-    filename = w.worker(
-        ['yt-dlp', '--print', 'filename', '--restrict-filenames', "{}".format(youtube_id)]
-    ).output()
+    
+    filename_command = ['yt-dlp', '--print', 'filename', '--restrict-filenames', "{}".format(youtube_id)]
+    Youtube().set_cookies(filename_command)
+    Youtube().set_language(filename_command)
+    filename = w.worker(filename_command).output()
     return send_file(
         os.path.join(temp_dir, filename)
     )

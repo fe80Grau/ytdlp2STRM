@@ -34,21 +34,84 @@ class Crunchyroll:
             self.videos = self.get_videos()
     
     def get_videos(self):
+        # Autenticamos usando credenciales del config.json
+        auth_command = [
+            'node', 'D:\\opt\\multi-downloader-nx\\lib\\index.js',
+            '--service', 'crunchy',
+            '-u', crunchyroll_username,
+            '-p', crunchyroll_password,
+            '--auth'
+        ]
+        l.log("crunchyroll", "Authenticating with Crunchyroll...")
+        l.log("crunchyroll", f"Auth command: node index.js --service crunchy -u {crunchyroll_username} -p *** --auth")
+        result = subprocess.run(auth_command, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        if result.returncode != 0:
+            l.log("crunchyroll", f"Auth error: {result.stderr}")
+        else:
+            l.log("crunchyroll", "Authentication successful")
+
+        # Extraemos el ID de la serie de la URL
+        # Formato: https://www.crunchyroll.com/es/series/GY5P48XEY/demon-slayer-kimetsu-no-yaiba
+        # Necesitamos el ID (GY5P48XEY), no el slug (demon-slayer-kimetsu-no-yaiba)
+        url_parts = self.channel_url.split('/')
+        if 'series' in url_parts:
+            series_index = url_parts.index('series')
+            series_id = url_parts[series_index + 1]  # El ID está después de 'series'
+        else:
+            series_id = url_parts[-1]  # Fallback al último elemento
+
+        # Convertir locale a formato válido (ja-JP -> und para japonés, es-419 para español, etc)
+        # Según la ayuda, los locales válidos son: en-US, es-419, pt-BR, fr-FR, de-DE, etc
+        locale_map = {
+            'ja-JP': 'und',  # Japonés
+            'es-ES': 'es-ES',
+            'es-419': 'es-419',
+            'en-US': 'en-US',
+            'pt-BR': 'pt-BR',
+            'fr-FR': 'fr-FR',
+            'de-DE': 'de-DE'
+        }
+        valid_locale = locale_map.get(subtitle_language, 'en-US')
+        
+        # Obtener lista de episodios
         command = [
-            'yt-dlp', 
-            '--print', '%(season_number)s;%(season)s;%(episode_number)s;%(episode)s;%(webpage_url)s;%(playlist_autonumber)s', 
-            '--no-download',
-            '--no-warnings',
-            '--match-filter', 'language={}'.format(audio_language),
-            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-            '{}'.format(self.channel_url),
-            '--replace-in-metadata', '"season,episode"', '"[;/]"', '"-"'
+            'node', 'D:\\opt\\multi-downloader-nx\\lib\\index.js',
+            '--service', 'crunchy',
+            '--series', series_id,
+            '--locale', valid_locale
         ]
         
-        self.set_auth(command)
+        l.log("crunchyroll", f"Getting episodes for series: {series_id}")
+        l.log("crunchyroll", f"Command: {' '.join(command)}")
         self.set_proxy(command)
-        self.set_start_episode(command)
-        return w.worker(command).pipe() 
+        
+        # Ejecutar con stdin para enviar "0" (seleccionar todas las temporadas)
+        process = subprocess.Popen(
+            command, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            stdin=subprocess.PIPE,  # Permitir entrada
+            text=True, 
+            bufsize=1, 
+            universal_newlines=True
+        )
+        
+        # Leer salida hasta que aparezca el prompt de selección, luego enviar "0"
+        import threading
+        def send_selection():
+            import time
+            time.sleep(3)  # Esperar 3 segundos para que muestre el menú
+            try:
+                process.stdin.write("0\n")
+                process.stdin.flush()
+                l.log("crunchyroll", "Sent selection: 0")
+            except Exception as e:
+                l.log("crunchyroll", f"Error sending selection: {e}")
+        
+        # Enviar selección en un thread separado
+        threading.Thread(target=send_selection, daemon=True).start()
+        
+        return process
 
     def get_start_episode(self):
         last_episode = 0
@@ -65,15 +128,8 @@ class Crunchyroll:
         return last_episode
 
     def set_start_episode(self, command):
-        if not self.new_content:
-            try:
-                next_episode = int(self.last_episode)
-            except:
-                next_episode = 1
-            if next_episode < 1:
-                next_episode = 1
-            command.append('--playlist-start')
-            command.append('{}'.format(next_episode))
+        # multi-downloader-nx no usa --playlist-start, filtramos después
+        pass
 
     def set_last_episode(self, playlist_count):
         if self.new_content:
@@ -89,40 +145,8 @@ class Crunchyroll:
             )
 
     def set_auth(self, command, quotes=False):
-        if config['crunchyroll_auth'] == "browser":
-            command.append('--cookies-from-browser')
-            if quotes:
-                command.append(
-                    '"{}"'.format(
-                        config['crunchyroll_browser']
-                    )
-                )
-            else:
-                command.append(config['crunchyroll_browser'])
-
-        if config['crunchyroll_auth'] == "cookies":
-            command.append('--cookies')
-            command.append(config['crunchyroll_cookies_file'])
-
-        if config['crunchyroll_auth'] == "login":
-            command.append('--username')
-            command.append(config['crunchyroll_username'])
-            command.append('--password')
-            command.append(config['crunchyroll_password'])
-
-        command.append('--user-agent')
-        if quotes:
-            command.append(
-                '"{}"'.format(
-                    config['crunchyroll_useragent']
-                )
-            )
-        else:
-            command.append(
-                '{}'.format(
-                    config['crunchyroll_useragent']
-                )
-            )
+        # La autenticación es manejada por multi-downloader-nx
+        pass
 
     def set_proxy(self, command):
         if proxy:
@@ -152,9 +176,10 @@ mutate_values = c.config(
 source_platform = "crunchyroll"
 media_folder = config["strm_output_folder"]
 channels_list = config["channels_list_file"]
-cookies_file = config["crunchyroll_cookies_file"]
 subtitle_language = config["crunchyroll_subtitle_language"]
 audio_language = config['crunchyroll_audio_language']
+crunchyroll_username = config.get('crunchyroll_username', '')
+crunchyroll_password = config.get('crunchyroll_password', '')
 jellyfin_preload = False
 jellyfin_preload_last_episode = False
 port = ytdlp2strm_config['ytdlp2strm_port']
@@ -209,26 +234,34 @@ def to_strm(method):
         process = crunchyroll.videos
         file_content = ""
         try:
-            for line in iter(process.stdout.readline, b''):
-                if line != "" and not 'ERROR' in line and not 'WARNING' in line:
-                    # Extrae los valores dividiendo la línea una sola vez y procesa según sea necesario.
-                    split_line = str(line).rstrip().split(';')
-                    season_number = split_line[0].zfill(2)
-                    season = split_line[1]
-                    episode_number = split_line[2].zfill(4)
-                    episode = split_line[3]
-                    url = split_line[4].replace('https://www.crunchyroll.com/', '').replace('/', '_')
-                    playlist_count = split_line[5]
-
-                    # Diccionario para almacenar los valores extraídos para comparación y posible reemplazo.
-                    data = {
-                        'season_number': season_number,
-                        'season': season,
-                        'episode_number': episode_number,
-                        'episode': episode,
-                        'url': url,
-                        'playlist_count': playlist_count,
-                    }
+            for line in iter(process.stdout.readline, ''):
+                if line:
+                    line_str = line.rstrip()
+                    l.log("crunchyroll", f"Output: {line_str}")  # Debug
+                    
+                    if not line_str or 'ERROR' in line_str or 'WARNING' in line_str:
+                        continue
+                    
+                    if '[S' in line_str and 'E' in line_str and '] - ' in line_str:
+                        # Ejemplo: [S206E1] - El Pilar de las Llamas, Kyojuro Rengoku [✓ Japanese]
+                        season_info = line_str[line_str.find('[')+1:line_str.find(']')]
+                        episode_title = line_str[line_str.find('] - ')+4:line_str.rfind('[')].strip()
+                        
+                        season_number = season_info[1:4]  # 206
+                        episode_number = season_info[5:].replace('E', '')  # 1
+                        
+                        # Crear la URL usando el formato de Crunchyroll
+                        url = self.channel_url + '/episode-' + episode_number
+                        
+                        # Diccionario para almacenar los valores extraídos para comparación y posible reemplazo.
+                        data = {
+                            'season_number': season_number,
+                            'season': episode_title,
+                            'episode_number': episode_number.zfill(4),
+                            'episode': episode_title,
+                            'url': url.replace('https://www.crunchyroll.com/', '').replace('/', '_'),
+                            'playlist_count': '1'
+                        }
 
                     # Verifica si hay mutaciones especificadas para este canal.
                     if crunchyroll_channel in mutate_values:
@@ -326,6 +359,11 @@ def to_strm(method):
                         if 'http' in file_content:
                             w.worker(file_content).preload()
                     break
+            
+            # Leer stderr para ver errores
+            stderr_output = process.stderr.read()
+            if stderr_output:
+                l.log("crunchyroll", f"Stderr: {stderr_output}")
                 
         finally:
             process.kill()
@@ -338,15 +376,13 @@ def to_strm(method):
 def direct(crunchyroll_id): 
     '''
     command = [
-        'yt-dlp', 
-        '-f', 'best',
-        '--no-warnings',
-        '--match-filter', '"language={}"'.format(audio_language),
-        '--extractor-args', '"crunchyrollbeta:hardsub={}"'.format(subtitle_language),
-        'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+        'D:\\opt\\multi-downloader-nx-cli\\aniDL.exe',
+        '--service', 'crunchy',
+        '--url', 'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+        '--quality', 'best',
+        '--locale', f'{audio_language}',
         '--get-url'
     ]
-    Crunchyroll().set_auth(command,True)
     Crunchyroll().set_proxy(command)
     crunchyroll_url = w.worker(command).output()
     return redirect(crunchyroll_url, code=301)
@@ -355,95 +391,56 @@ def direct(crunchyroll_id):
     return download(crunchyroll_id)
 
 def download(crunchyroll_id):
-
     current_dir = os.getcwd()
-
-    # Construyes la ruta hacia la carpeta 'temp' dentro del directorio actual
     temp_dir = os.path.join(current_dir, 'temp')
-
-    def extract_media(command):
-        subprocess.run(command)
-
-    def preprocess_video(input_video, input_audio, output_file):
-        """Pre-procesa el video y el audio para optimizarlo para streaming usando ffmpeg-python."""
-        # Construir el gráfico de procesamiento de flujo para la entrada de video
-        video_stream = ffmpeg.input(input_video)
-        # Construir el gráfico de procesamiento de flujo para la entrada de audio
-        audio_stream = ffmpeg.input(input_audio)
-        
-        # Combinar los flujos de video y audio, copiarlos sin recodificación y optimizarlos para el inicio rápido
-        ffmpeg.output(
-            video_stream, 
-            audio_stream, 
-            output_file, 
-            c='copy', 
-            movflags='faststart'
-        ).run(overwrite_output=True)
-    isin = False
     
+    # Extraer series ID y episode number del crunchyroll_id
+    # Formato esperado: series_episode-X donde X es el número de episodio
+    url_parts = crunchyroll_id.replace('_', '/')
+    
+    # Buscar archivo ya descargado
+    existing_file = None
     for filename in os.listdir(temp_dir):
-        if crunchyroll_id in filename:
-            isin = True
-
-    if not isin:        
-        command_video = [
-            'yt-dlp', 
-            '-f', 'bestvideo',
-            '--no-warnings',
-            '--no-mtime',
-            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-            'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+        if crunchyroll_id in filename and (filename.endswith('.mp4') or filename.endswith('.mkv')):
+            existing_file = os.path.join(temp_dir, filename)
+            break
+    
+    if not existing_file:
+        l.log("crunchyroll", f"Downloading episode: {crunchyroll_id}")
+        
+        # Comando de descarga usando multi-downloader-nx
+        command = [
+            'node', 'D:\\opt\\multi-downloader-nx\\lib\\index.js',
+            '--service', 'crunchy',
+            '--url', f'https://www.crunchyroll.com/{url_parts}',
+            '--tsd',  # Descargar temporadas completas
+            '--locale', audio_language,
+            '--syncTiming',  # Sincronizar subtítulos
+            '--dlsubs', subtitle_language if subtitle_language else 'all',
             '--output', os.path.join(temp_dir, f'{crunchyroll_id}.mp4')
         ]
-        Crunchyroll().set_auth(command_video,False)
-        Crunchyroll().set_proxy(command_video)
-
-        command_audio = [
-            'yt-dlp', 
-            '-f', 'bestaudio',
-            '--no-warnings',
-            '--no-mtime',
-            '--match-filter', 'language={}'.format(audio_language),
-            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-            'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
-            '--output', os.path.join(temp_dir, f'{crunchyroll_id}.m4a')
-        ]
-        Crunchyroll().set_auth(command_audio,False)
-        Crunchyroll().set_proxy(command_audio)
-
-        video = threading.Thread(target=extract_media, args=(command_video,))
-        audio = threading.Thread(target=extract_media, args=(command_audio,))
-
-        video.start()
-        audio.start()
-
-        video.join()
-        audio.join()
         
-        preprocess_video(
-            os.path.join(temp_dir, f'{crunchyroll_id}.mp4'), 
-            os.path.join(temp_dir, f'{crunchyroll_id}.m4a'), 
-            os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')
-        )
-
+        Crunchyroll().set_proxy(command)
         
-        f.folders().clean_waste(
-            [
-                os.path.join(temp_dir, f'{crunchyroll_id}.mp4'), 
-                os.path.join(temp_dir, f'{crunchyroll_id}.m4a')
-            ]
-        )
-
-
-    if isin and not os.path.isfile(os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')):
-        while not os.path.isfile(os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')):
-            time.sleep(5)
-        isin = False
+        # Ejecutar descarga
+        process = subprocess.run(command, capture_output=True, text=True)
         
-    return send_file(
-        os.path.join(temp_dir, f'crunchyroll-{crunchyroll_id}.mp4')
-    )
-    #return stream_video(f'{crunchyroll_id}.mp4', f'{crunchyroll_id}.m4a')
+        if process.returncode != 0:
+            l.log("crunchyroll", f"Error downloading: {process.stderr}")
+            abort(500)
+        
+        # Buscar el archivo descargado
+        for filename in os.listdir(temp_dir):
+            if crunchyroll_id in filename and (filename.endswith('.mp4') or filename.endswith('.mkv')):
+                existing_file = os.path.join(temp_dir, filename)
+                break
+        
+        if not existing_file:
+            l.log("crunchyroll", "Downloaded file not found")
+            abort(404)
+    
+    l.log("crunchyroll", f"Serving file: {existing_file}")
+    return send_file(existing_file)
 
 #experimental not works.
 def streams(media, crunchyroll_id):
@@ -454,26 +451,24 @@ def streams(media, crunchyroll_id):
     if media == 'audio':
         mimetype = 'audio/mp4'
         command = [
-            'yt-dlp', 
-            '-f', 'bestaudio[ext=m4a]/bestaudio',
-            '--no-warnings',
-            '--no-part',
-            '--no-mtime',
-            '--match-filter', 'language={}'.format(audio_language),
-            'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+            'node', 'D:\\opt\\multi-downloader-nx\\lib\\index.js',
+            '--service', 'crunchy',
+            '--url', 'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+            '--quality', 'best',
+            '--locale', f'{audio_language}',
+            '--format', 'bestaudio',
             '-o-'
         ]
 
     if media == 'video':
         mimetype = 'video/mp4'
         command = [
-            'yt-dlp', 
-            '-f', 'bestvideo',
-            '--no-warnings',
-            '--no-part',
-            '--no-mtime',
-            '--extractor-args', 'crunchyrollbeta:hardsub={}'.format(subtitle_language),
-            'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+            'node', 'D:\\opt\\multi-downloader-nx\\lib\\index.js',
+            '--service', 'crunchy',
+            '--url', 'https://www.crunchyroll.com/{}'.format(crunchyroll_id.replace('_','/')),
+            '--quality', 'best',
+            '--locale', f'{audio_language}',
+            '--format', 'bestvideo',
             '-o-'
         ]
 

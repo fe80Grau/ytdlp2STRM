@@ -11,89 +11,126 @@ document.addEventListener('DOMContentLoaded', function() {
         // Asegurarte de que este es tu selector correcto para el input.
         const input = document.querySelector('#terminal .input-line input');
         if(input) {
-            input.focus();
+            input.focus({ preventScroll: true });
         }
     });
 
     document.querySelectorAll('.play-btn').forEach(function(button) {
       button.addEventListener('click', function() {
         if(!run_block){
-          run_block = true;
           const mediaName = this.getAttribute('data-media-name');
           const command = `python cli.py --media ${mediaName} --params direct`;
           
-          // Asume que esta función simula escribir el comando y presionar 'Enter'.
-          // Si no tienes una función como esta, tendrías que implementar una.
-          emitCommand(command);
+          // Remover el input si existe antes de ejecutar
+          const existingInput = document.querySelector('#terminal .input-line');
+          if(existingInput) {
+            existingInput.remove();
+          }
+          
+          // Hacer scroll hacia el CLI
+          const cliSection = document.getElementById('terminal');
+          if(cliSection) {
+            cliSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          
+          // Emitir el comando directamente
+          addLine(command, true);
+          socket.emit('execute_command', command);
         }else{
           alert('Wait for the current run to finish.');
         }
       });
     });
 
+    // Función para hacer scroll al final del terminal
+    function scrollToBottom() {
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
     // Función modificada para agregar líneas de texto al terminal
     function addLine(text, isCommand=false) {
-        const line = document.createElement('div');
+        const codeElement = terminal.querySelector('code');
         if(isCommand) {
-            const prompt = document.createElement('span');
-            prompt.textContent = '$ ';
-            line.appendChild(prompt);
-            const content = document.createElement('span');
-            content.textContent = text;
-            line.appendChild(content);
+            codeElement.textContent += '$ ' + text + '\n';
         } else {
-            line.textContent = text;
+            codeElement.textContent += text + '\n';
         }
-        terminal.appendChild(line);
         
         // Realiza el scroll automático después de cada agregación
-        terminal.scrollTop = terminal.scrollHeight;
+        scrollToBottom();
     }
     
     // Función para gestionar la entrada de comandos
     function handleCommandInput() {
+        const codeElement = terminal.querySelector('code');
         const inputLine = document.createElement('div');
-        inputLine.className = 'input-line';
+        inputLine.className = 'input-line flex items-center gap-2';
+        inputLine.style.cssText = 'margin-top: 8px;';
         const prompt = document.createElement('span');
         prompt.textContent = '$ ';
+        prompt.style.cssText = 'color: #9ca3af;';
         const input = document.createElement('input');
         input.type = 'text';
+        input.style.cssText = 'background: transparent; border: none; outline: none; color: #d1d5db; flex: 1; font-family: monospace; font-size: 0.875rem;';
         inputLine.appendChild(prompt);
         inputLine.appendChild(input);
         terminal.appendChild(inputLine);
-        input.focus();
+        
+        // Hacer focus sin scroll automático
+        input.focus({ preventScroll: true });
         
         input.addEventListener('keydown', function(event) {
             if(event.key === 'Enter' && input.value.trim() !== '') {
                 const command = input.value.trim();
-                socket.emit('execute_command', command);
-                
                 addLine(command, true); // Refleja el comando en el terminal
+                socket.emit('execute_command', command);
                 inputLine.remove(); // Asegúrate de remover el inputLine
             }
         });
-    }
-    function emitCommand(command) {
-      const input = document.querySelector('#terminal .input-line input');
-
-      if(input) {
-        // Establece el valor del comando en el input.
-        input.value = command;
-        
-        // Crea un nuevo evento 'keydown' y configura 'key' como 'Enter'.
-        let event = new KeyboardEvent('keydown', { key: 'Enter' });
-        
-        // Dispara el evento 'keydown' en el input.
-        // Nota: Algunos navegadores pueden no permitir simular eventos de teclado de esta manera para acciones protegidas.
-        input.dispatchEvent(event);
-      }
     }
 
     // Escuchadores de eventos (listeners) de Socket.IO
     
     socket.on('connect', function() {
-        // addLine("Connected to server.", false);
-        // No necesitamos llamar a handleCommandInput() aquí puesto que se llama después de 'command_completed'
+        // El servidor enviará el estado de ejecución, esperamos a recibirlo
+    });
+
+    socket.on('execution_status', function(data) {
+        // Ocultar skeleton y mostrar contenido real
+        const skeleton = document.getElementById('cli-skeleton');
+        const cliContent = terminal.querySelector('pre');
+        if(skeleton) {
+            skeleton.classList.add('hidden');
+        }
+        if(cliContent) {
+            cliContent.classList.remove('hidden');
+        }
+        
+        // Sincronizar el estado de ejecución con el servidor
+        run_block = data.is_running;
+        
+        // Solo crear el input si no hay ejecución en curso
+        if(!run_block) {
+            // Remover input existente si lo hay
+            const existingInput = document.querySelector('#terminal .input-line');
+            if(existingInput) {
+                existingInput.remove();
+            }
+            handleCommandInput();
+        }
+        
+        // Hacer scroll al final después de cargar el historial
+        setTimeout(scrollToBottom, 100);
+    });
+
+    socket.on('execution_started', function() {
+        // Marcar que hay una ejecución en curso
+        run_block = true;
+        // Remover el input si existe
+        const existingInput = document.querySelector('#terminal .input-line');
+        if(existingInput) {
+            existingInput.remove();
+        }
     });
 
     socket.on('command_output', function(msg) {
@@ -103,9 +140,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Escucha para cuando un comando ha finalizado
     socket.on('command_completed', function() {
         run_block = false;
+        // Remover input existente si lo hay antes de crear uno nuevo
+        const existingInput = document.querySelector('#terminal .input-line');
+        if(existingInput) {
+            existingInput.remove();
+        }
         handleCommandInput(); // Asegura que el input se vuelva a crear y esté listo para el siguiente comando
+        
+        // Hacer scroll al final
+        setTimeout(scrollToBottom, 50);
     });
-
-    // Inicializa el primer prompt
-    handleCommandInput(); 
 });

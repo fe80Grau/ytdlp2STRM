@@ -32,7 +32,9 @@ class config:
                 with open(self.config_file, "r") as file:
                     config_data = json.load(file)
             else:
-                return None
+                log_text = (f"No {self.config_file} or example file found. Returning empty config.")
+                l.log("config", log_text)
+                return []
 
         return config_data
     
@@ -60,6 +62,6 @@ class config:
                 with open(self.config_file, "r") as file:
                     config_data = json.load(file)
             else:
-                return None
+                return []
 
         return config_data

@@ -2,5 +2,7 @@
     "strm_output_folder" : "/media/Twitch",
     "channels_list_file" : "./plugins/twitch/channel_list.json",
     "days_dateafter" : "10", 
-    "videos_limit" : "10"
+    "videos_limit" : "10",
+    "cookies" : "",
+    "cookie_value" : ""
 }

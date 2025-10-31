@@ -3,6 +3,7 @@ from sanitize_filename import sanitize
 import os
 import requests
 import re
+from utils.episode_numbering import format_episode_title
 import time
 import sys
 from datetime import datetime
@@ -23,14 +24,20 @@ class Twitch:
         self.images = self.get_thumbs()
         self.direct = self.get_direct()
         self.videos = self.get_videos()
+    
+    def set_cookies(self, command):
+        if cookies and cookie_value and cookies.strip() and cookie_value.strip():
+            command.append(f'--{cookies}')
+            command.append(cookie_value)
 
     def get_name(self):
+        l.log("twitch", f"Getting name for channel: {self.channel}")
         command = [
             'yt-dlp', 
-            'https://www.twitch.tv/{}'.format(
+            'https://www.twitch.tv/{}/videos'.format(
                 self.channel
             ), 
-            '--print', '"%(uploader)s"', 
+            '--print', '%(uploader)s', 
             '--playlist-items', '1',
             '--restrict-filenames',
             '--ignore-errors',
@@ -38,20 +45,24 @@ class Twitch:
             '--compat-options', 'no-youtube-channel-redirect',
             '--no-warnings'
         ]
+        
+        self.set_cookies(command)
+        #l.log("twitch", f"Executing command: {' '.join(command)}")
 
         channel_name = w.worker(
             command
-        ).output()
+        ).output().strip().replace('"', '')
         
-        if 'ERROR' in channel_name:
+        l.log("twitch", f"Got channel name: {channel_name}")
+        
+        if 'ERROR' in channel_name or not channel_name.strip():
             channel_name = self.channel
         
         return channel_name
 
     def get_direct(self):
         #Get current livestream
-        log_text = ("Processing live video in channel")
-        l.log("twitch", log_text)
+        l.log("twitch", "Getting direct stream (live)")
         command = [
             'yt-dlp', 
             '--print', '"%(id)s;%(title)s;%(description)s;%(thumbnail)s;%(upload_date)s"', 
@@ -61,12 +72,12 @@ class Twitch:
                 self.twitch_channel_url
             )
         ]
+        
+        self.set_cookies(command)
 
-        return [
-            w.worker(
-                command
-            ).output()
-        ]
+        result = w.worker(command).output()
+        l.log("twitch", f"Direct stream result obtained")
+        return [result]
 
 
     def get_pictures(self):
@@ -111,6 +122,7 @@ class Twitch:
     
     def get_thumbs(self):
         #Table thumbnails
+        l.log("twitch", f"Getting thumbnails for channel: {self.channel}")
         c = 0
         command = [
             'yt-dlp', 
@@ -124,6 +136,10 @@ class Twitch:
             '--no-download',
             '--playlist-items', '1'
         ]
+        
+        # No agregar cookies para thumbnails (son públicas)
+        # self.set_cookies(command)
+        l.log("twitch", f"Executing thumbnails command")
         #The madness begins... 
         #No comments between lines, smoke a joint if you want understand it
         lines = w.worker(
@@ -145,6 +161,7 @@ class Twitch:
                         thumbnails.append(row)
                 c += 1
         #finally...
+        l.log("twitch", f"Thumbnails processed, found {len(thumbnails)} thumbnails")
 
         preview = ""
         try:
@@ -156,7 +173,10 @@ class Twitch:
         except:
             log_text = ("No poster detected")
             l.log("twitch", log_text)
+        
+        l.log("twitch", f"Getting pictures from Twitch API")
         pictures = self.get_pictures()
+        l.log("twitch", f"Pictures obtained")
         poster = ""
         landscape = ""
 
@@ -174,6 +194,7 @@ class Twitch:
         }
 
     def get_videos(self):
+        l.log("twitch", f"Getting videos for channel")
         command = [
             'yt-dlp', 
             '--print', '"%(id)s;%(title)s;%(description)s;%(thumbnail)s;%(upload_date)s"', 
@@ -187,9 +208,12 @@ class Twitch:
                 "videos"
             )
         ]
-        return w.worker(
-            command
-        ).output().split('\n')
+        
+        self.set_cookies(command)
+        
+        result = w.worker(command).output().split('\n')
+        l.log("twitch", f"Got {len(result)} video entries")
+        return result
 ## -- END
 
 recent_requests = TTLCache(maxsize=200, ttl=30)
@@ -220,6 +244,20 @@ if 'days_dateafter' in config:
 else:
     days_after = "10"
     videos_limit = "10"
+
+try:
+    cookies = config["cookies"]
+    cookie_value = config["cookie_value"]
+except:
+    cookies = ''
+    cookie_value = ''
+
+# Función helper para agregar cookies a comandos
+def set_cookies_to_command(command):
+    if cookies and cookie_value and cookies.strip() and cookie_value.strip():
+        command.append(f'--{cookies}')
+        command.append(cookie_value)
+
 ## -- END
 
 
@@ -387,7 +425,9 @@ def to_strm(method):
         ## -- END
 
         ## -- GET VIDEOS TAB
-        for line in twitch.videos:
+        # Reverse video list so oldest videos get lower episode numbers
+        reversed_videos = list(reversed(twitch.videos))
+        for line in reversed_videos:
             if line != "":
                 if not 'ERROR' in line:
                     line = line.replace('"','')
@@ -425,21 +465,26 @@ def to_strm(method):
                         )
                     )
 
-                    file_path = "{}/{}/{}.{}".format(
-                        media_folder,  
-                        sanitize(
-                            "{}".format(
-                                twitch_channel
-                            )
-                        ), 
-                        sanitize(
-                            "{}".format(
-                                video_name
-                            )
-                        ), 
+                    channel_folder = sanitize(
+                        "{}".format(
+                            twitch.channel
+                        )
+                    )
+                    
+                    # Create season folder based on video year
+                    season_folder = f"Season {year}"
+                    folder_full_path = "{}/{}/{}".format(media_folder, channel_folder, season_folder)
+                    
+                    # Format title with episode number
+                    formatted_title = format_episode_title(video_name, folder_full_path)
+                    
+                    file_path = "{}/{}/{}/{}.{}".format(
+                        media_folder,
+                        channel_folder,
+                        season_folder,
+                        sanitize(formatted_title),
                         "strm"
                     )
-
 
                     folder_path = "{}/{}".format(
                         media_folder,  
@@ -458,19 +503,25 @@ def to_strm(method):
                         "video_id" : video_id, 
                         "video_name" : video_name
                     }
+                    
+                    # Create season folder if it doesn't exist (BEFORE creating NFO)
+                    season_folder_path = "{}/{}/{}".format(media_folder, channel_folder, season_folder)
+                    if not os.path.exists(season_folder_path):
+                        os.makedirs(season_folder_path, exist_ok=True)
 
                     ## -- BUILD VIDEO NFO FILE
                     n.nfo(
                         "episode",
-                        "{}/{}".format(
+                        "{}/{}/{}".format(
                             media_folder, 
                             "{}".format(
                                 twitch.channel
-                            )
+                            ),
+                            season_folder
                         ),
                         {
-                            "item_name" : sanitize(video_name),
-                            "title" : sanitize(video_name),
+                            "item_name" : sanitize(formatted_title),
+                            "title" : sanitize(formatted_title),
                             "upload_date" : upload_date,
                             "year" : year,
                             "plot" : description.replace('\n', ' <br/>\n '),
@@ -479,7 +530,7 @@ def to_strm(method):
                             "preview" : thumbnail
                         }
                     ).make_nfo()
-                    ## -- END 
+                    ## -- END
 
                     if not os.path.isfile(file_path):
                         f.folders().write_file(
@@ -511,30 +562,31 @@ def direct(twitch_id, remote_addr):
         f'https://www.twitch.tv/videos/{video_id}',
         '--get-url'
     ]
+    set_cookies_to_command(command)
 
     twitch_url = w.worker(command).output()
 
     if 'ERROR' in twitch_url or not twitch_url:
-        twitch_url = w.worker(
-            [
+        command_retry = [
+            'yt-dlp', 
+            '-f', 'best',
+            '--no-warnings',
+            f'https://www.twitch.tv/videos/{video_id.replace("v", "")}',
+            '--get-url'
+        ]
+        set_cookies_to_command(command_retry)
+        twitch_url = w.worker(command_retry).output()
+
+        if 'ERROR' in twitch_url or not twitch_url:
+            command_live = [
                 'yt-dlp', 
                 '-f', 'best',
                 '--no-warnings',
-                f'https://www.twitch.tv/videos/{video_id.replace("v", "")}',
+                f'https://www.twitch.tv/{channel}',
                 '--get-url'
-            ]   
-        ).output()
-
-        if 'ERROR' in twitch_url or not twitch_url:
-            twitch_url = w.worker(
-                [
-                    'yt-dlp', 
-                    '-f', 'best',
-                    '--no-warnings',
-                    f'https://www.twitch.tv/{channel}',
-                    '--get-url'
-                ]   
-            ).output()
+            ]
+            set_cookies_to_command(command_live)
+            twitch_url = w.worker(command_live).output()
 
     twitch_url = twitch_url.strip()
     return redirect(twitch_url, code=301)
@@ -546,15 +598,15 @@ def bridge(twitch_id):
     turl = 'https://www.twitch.tv/videos/{}'.format(
         video_id
     )
-    twitch_url = w.worker(
-        [
-            'yt-dlp', 
-            '-f', 'best',
-            '--no-warnings',
-            turl,
-            '--get-url'
-        ]   
-    ).output()
+    command = [
+        'yt-dlp', 
+        '-f', 'best',
+        '--no-warnings',
+        turl,
+        '--get-url'
+    ]
+    set_cookies_to_command(command)
+    twitch_url = w.worker(command).output()
 
     if 'ERROR' in twitch_url:
 
@@ -565,15 +617,15 @@ def bridge(twitch_id):
             )
         )
 
-        twitch_url = w.worker(
-            [
-                'yt-dlp', 
-                '-f', 'best',
-                '--no-warnings',
-                turl,
-                '--get-url'
-            ]   
-        ).output()
+        command_retry = [
+            'yt-dlp', 
+            '-f', 'best',
+            '--no-warnings',
+            turl,
+            '--get-url'
+        ]
+        set_cookies_to_command(command_retry)
+        twitch_url = w.worker(command_retry).output()
 
         if 'ERROR' in twitch_url:
 
@@ -581,17 +633,17 @@ def bridge(twitch_id):
                 channel          
             )
 
-            twitch_url = w.worker(
-                [
-                    'yt-dlp', 
-                    '-f', 'best',
-                    '--no-warnings',
-                    'https://www.twitch.tv/{}'.format(
-                        channel          
-                    ),
-                    '--get-url'
-                ]   
-            ).output()
+            command_live = [
+                'yt-dlp', 
+                '-f', 'best',
+                '--no-warnings',
+                'https://www.twitch.tv/{}'.format(
+                    channel          
+                ),
+                '--get-url'
+            ]
+            set_cookies_to_command(command_live)
+            twitch_url = w.worker(command_live).output()
 
 
 
@@ -608,6 +660,8 @@ def bridge(twitch_id):
             turl
         ]
 
+        set_cookies_to_command(command)
+        
         process = w.worker(command).pipe()
         try:
             while True:

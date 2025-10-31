@@ -1,5 +1,8 @@
 import json
 import shlex
+import os
+import datetime
+import schedule
 from clases.config import config as c
 from clases.cron import cron as cron
 from clases.log import log as l
@@ -7,6 +10,10 @@ from flask_socketio import emit
 from subprocess import Popen, PIPE
 
 class Ui:
+    cli_history = []  # Historial del CLI compartido entre todas las instancias
+    max_history_lines = 1000  # Máximo de líneas a mantener
+    is_running = False  # Estado de ejecución compartido
+
     def __init__(self):
         self.config_file = 'config/config.json'
         self.plugins_file = 'config/plugins.py'
@@ -44,12 +51,22 @@ class Ui:
         
         for plugin in self.plugins_py.split('\n'):
             if 'plugins.' in plugin:
-                if not '#' in plugin:
+                # Determinar si el plugin está habilitado
+                is_enabled = not '#' in plugin
+                
+                # Extraer el nombre del plugin (con o sin #)
+                if is_enabled:
                     name = plugin.split('plugins.')[1].split(' ')[0]
-                    path = '{}/{}'.format(
-                        './plugins',
-                        name
-                    )
+                else:
+                    # Si está comentado, remover el # para obtener el nombre
+                    name = plugin.split('plugins.')[1].split(' ')[0]
+                
+                path = '{}/{}'.format(
+                    './plugins',
+                    name
+                )
+                
+                try:
                     config = c.config(
                         '{}/{}'.format(
                             path,
@@ -60,16 +77,20 @@ class Ui:
                     channels = c.config(
                         config['channels_list_file']
                     ).get_channels()
+                except:
+                    # Si no se puede cargar la config, usar valores por defecto
+                    config = {}
+                    channels = None
 
-                    plugins.append(
-                        {
-                            'name' : name,
-                            'path' : path,
-                            'enabled' : True if not '#' in plugin else False,
-                            'config' :  config,
-                            'channels' : channels
-                        }
-                    )
+                plugins.append(
+                    {
+                        'name' : name,
+                        'path' : path,
+                        'enabled' : is_enabled,
+                        'config' :  config,
+                        'channels' : channels
+                    }
+                )
 
         return plugins
     
@@ -103,10 +124,85 @@ class Ui:
         with open(self.crons_file, 'w', newline="") as file:
             file.write(data)
 
+    def get_last_executions(self):
+        """Obtiene la última ejecución de cada plugin desde los logs"""
+        log_file = 'ytdlp2strm.log'
+        last_executions = {}
+        
+        if not os.path.exists(log_file):
+            return last_executions
+        
+        try:
+            with open(log_file, 'r', encoding='utf-8', errors='ignore') as file:
+                lines = file.readlines()
+                
+                # Leer el archivo de atrás hacia adelante para encontrar la última ejecución
+                for line in reversed(lines):
+                    try:
+                        # Buscar líneas que contengan "Running <plugin> with"
+                        if 'CLI : Running' in line and 'with' in line:
+                            # Extraer timestamp
+                            timestamp_str = line.split(']')[0][1:]
+                            log_time = datetime.datetime.fromisoformat(timestamp_str)
+                            
+                            # Extraer nombre del plugin
+                            plugin_name = line.split('Running ')[1].split(' with')[0].strip()
+                            
+                            # Solo guardar si no tenemos ya una ejecución más reciente
+                            if plugin_name not in last_executions:
+                                last_executions[plugin_name] = log_time
+                    except (ValueError, IndexError):
+                        continue
+        except Exception as e:
+            pass
+        
+        return last_executions
+
+    def get_next_executions(self):
+        """Obtiene la próxima ejecución de cada CRON desde schedule"""
+        next_executions = {}
+        
+        try:
+            # Obtener todos los jobs programados
+            jobs = schedule.get_jobs()
+            
+            for job in jobs:
+                try:
+                    # El job tiene la información del comando en job.job_func.args
+                    if hasattr(job.job_func, 'args') and job.job_func.args:
+                        command_args = job.job_func.args[0]
+                        if isinstance(command_args, list) and len(command_args) > 1:
+                            # Extraer el nombre del plugin del comando
+                            plugin_name = command_args[1]
+                            
+                            # Obtener la próxima ejecución
+                            next_run = job.next_run
+                            
+                            # Solo guardar si no tenemos ya una ejecución más cercana
+                            if plugin_name not in next_executions or next_run < next_executions[plugin_name]:
+                                next_executions[plugin_name] = next_run
+                except (AttributeError, IndexError, TypeError):
+                    continue
+        except Exception as e:
+            pass
+        
+        return next_executions
+
     def handle_output(self, output):
-        emit('command_output', output.strip())  # Enviar a cliente
+        output_text = output.strip()
+        # Agregar al historial
+        Ui.cli_history.append(output_text)
+        # Mantener solo las últimas max_history_lines líneas
+        if len(Ui.cli_history) > Ui.max_history_lines:
+            Ui.cli_history = Ui.cli_history[-Ui.max_history_lines:]
+        # Enviar a todos los clientes conectados
+        emit('command_output', output_text, broadcast=True)
 
     def handle_command(self, command):
+        # Marcar que hay una ejecución en curso
+        Ui.is_running = True
+        emit('execution_started', {}, broadcast=True)
+        
         # Asegurarse de que el comando se ejecuta sin buffering
         if not '-u' in command:
             if 'python3' in command:
@@ -127,12 +223,13 @@ class Ui:
                     if output == '' and process.poll() is not None:
                         break
                     if output:
-                        #print(output.strip())  # Debugging: Imprimir en el servidor
-                        #self.handle_output(output)
+                        self.handle_output(output)
                         l.log('ui', output)
 
                 
-                emit('command_completed', {'data': 'Comando completado'})
+                # Marcar que la ejecución terminó
+                Ui.is_running = False
+                emit('command_completed', {'data': 'Comando completado'}, broadcast=True)
 
                 # Manejar salida de error si existe
                 _, stderr = process.communicate()
@@ -142,8 +239,10 @@ class Ui:
                 # Importante: Emitir 'command_completed' al finalizar el comando
                 #emit('command_completed', {'data': 'Comando completado'})
             else:
-                emit('command_output', 'only python cli.py command can be executed from here.')
-                emit('command_completed', {'data': 'Comando completado'})
+                self.handle_output('only python cli.py command can be executed from here.')
+                Ui.is_running = False
+                emit('command_completed', {'data': 'Comando completado'}, broadcast=True)
         except:
-            emit('command_output', 'only python cli.py command can be executed from here.')
-            emit('command_completed', {'data': 'Comando completado'})
+            self.handle_output('only python cli.py command can be executed from here.')
+            Ui.is_running = False
+            emit('command_completed', {'data': 'Comando completado'}, broadcast=True)

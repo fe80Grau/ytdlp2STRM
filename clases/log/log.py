@@ -18,10 +18,7 @@ class log:
         if self.message != "" and self.message:
             print(self.message)
             sys.stdout.flush()  # Forzar el vaciado del buffer
-            try:
-                emit('command_output', f'{self.message}')
-            except Exception as e:
-                self.write()
+            self.write()
 
         # Limpiar el archivo de registros antiguos
         self.cleanup_log_once_a_day()

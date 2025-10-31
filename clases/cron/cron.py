@@ -110,6 +110,6 @@ class ConfigChangeHandler(FileSystemEventHandler):
     def on_modified(self, event):
         if event.event_type == 'modified' and event.src_path == self.file_path:
             new_hash = calculate_hash(self.file_path)
-
-            self.last_hash = new_hash
-            self.callback()
+            if new_hash != self.last_hash:
+                self.last_hash = new_hash
+                self.callback()

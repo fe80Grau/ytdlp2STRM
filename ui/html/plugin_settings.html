@@ -1,43 +1,148 @@
 <!DOCTYPE html>
-<html data-bs-theme=”auto”>
+<html class="dark" lang="en">
 <head>
-    <title>ytdlp2STRM - {{ plugin.name }} Settings</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css" integrity="sha384-b6lVK+yci+bfDmaY1u0zE8YYJt0TZxLEAFyYSLHId4xoVvsrQu3INevFKo+Xir8e" crossorigin="anonymous">
-    <link rel="stylesheet" href="/styles.css" crossorigin="anonymous">
-    <script src="/bs-theme-mode.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ytdlp2STRM - {{ plugin.name }} Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#1d4ed8",
+            "background-light": "#f3f4f6",
+            "background-dark": "#111827",
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+          },
+        },
+      },
+    };
+  </script>
+<style type="text/tailwindcss">
+    @layer base {
+      body {
+        @apply font-display;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        @apply bg-gray-200 dark:bg-gray-700;
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-gray-400 dark:bg-gray-500;
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        @apply bg-gray-500 dark:bg-gray-400;
+      }
+    }
+  </style>
 </head>
-<body>
-    <div class="col-lg-10 mx-auto p-3 py-md-5">
-        <h1 class="d-flex align-items-center pb-3 mb-5 border-bottom">ytdlp2STRM - {{ plugin.name }} Settings</h1>
-        {% if request == "POST": %}
-            {% if result: %}
-                <div class="alert alert-success mt-5" role="alert">
-                    {{ plugin.path }}/config.json saved.
-                </div>
-            {% else %}
-                <iv class="alert alert-danger mt-5" role="alert">
-                    Error
-                </div>
-            {% endif %}
-        {% endif %}
-        <label class="form-label">{{ plugin.path }}/config.json</label>
-        <form method="post">
-            {% for key, value in plugin.config.items() %}
-                <div class="mb-3">
-                    <label class="form-label">{{ key }}</label>
-                    <input class="form-control" type="text" name="{{ key }}" value="{{ value }}">
-                </div>
-            {% endfor %}
-            <button class="btn btn-primary" type="submit">Save</button>
-            <a href="/" class="btn btn-primary">Go back</a>
-        </form>
-        <footer class="pt-5 my-5 text-muted border-top">
-            <a href="https://github.com/fe80Grau/ytdlp2STRM" target="_blank"><i class="bi bi-github"></i> fe80grau / ytdlp2STRM</a>
-            <a style="float:right" href="https://www.buymeacoffee.com/fe80grau" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="width: 90px !important;" ></a>
-          </footer>
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200 min-h-screen">
+<div class="flex h-screen">
+<aside class="w-64 bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-800">
+<div class="h-20 flex items-center px-6 border-b border-gray-200 dark:border-gray-800">
+<h1 class="text-xl font-bold text-gray-900 dark:text-white">ytdlp2STRM</h1>
+</div>
+<nav class="flex-1 px-4 py-6 space-y-2">
+<a class="flex items-center gap-3 px-4 py-2 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" href="/">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" href="/general">
+<span class="material-symbols-outlined">settings</span>
+<span>General Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded bg-blue-100 dark:bg-blue-900/50 text-primary dark:text-blue-300 font-semibold" href="/plugins">
+<span class="material-symbols-outlined">extension</span>
+<span>Plugins</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" href="/crons">
+<span class="material-symbols-outlined">schedule</span>
+<span>CRONS</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" href="/log">
+<span class="material-symbols-outlined">description</span>
+<span>Logs</span>
+</a>
+</nav>
+<div class="p-4 border-t border-gray-200 dark:border-gray-800">
+<p class="text-sm text-gray-500 dark:text-gray-400">Version 1.0.0</p>
+<a href="https://github.com/fe80Grau/ytdlp2STRM" target="_blank" class="text-xs text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-blue-300 transition-colors">
+<span class="inline-flex items-center gap-1">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+fe80grau
+</span>
+</a>
+</div>
+</aside>
+<main class="flex-1 flex flex-col overflow-hidden">
+<header class="h-20 flex items-center justify-between px-8 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+<h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ plugin.name }} Settings</h2>
+<div class="flex items-center gap-4">
+<a href="https://www.buymeacoffee.com/fe80grau" target="_blank" class="text-sm px-4 py-2 rounded-md bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium transition-colors">
+☕ Buy me a coffee
+</a>
+</div>
+</header>
+<div class="flex-1 p-8 overflow-y-auto custom-scrollbar">
+{% if request == "POST" %}
+  {% if result %}
+    <div class="mb-6 p-4 rounded-lg bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>{{ plugin.path }}/config.json saved successfully.</span>
+      </div>
     </div>
+  {% else %}
+    <div class="mb-6 p-4 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined">error</span>
+        <span>Error saving configuration.</span>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+<div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
+<div class="p-6 border-b border-gray-200 dark:border-gray-800">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white">Plugin Configuration</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ plugin.path }}/config.json</p>
+</div>
+<form method="post" class="p-6">
+<div class="space-y-6">
+{% for key, value in plugin.config.items() %}
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ key }}</label>
+<input type="text" name="{{ key }}" value="{{ value }}" class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+</div>
+{% endfor %}
+</div>
+<div class="flex items-center gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+<button type="submit" class="flex items-center gap-2 px-6 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors">
+<span class="material-symbols-outlined text-base">save</span>
+Save Changes
+</button>
+<a href="/" class="flex items-center gap-2 px-6 py-2.5 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium transition-colors">
+<span class="material-symbols-outlined text-base">arrow_back</span>
+Go Back
+</a>
+</div>
+</form>
+</div>
+</div>
+</main>
+</div>
 </body>
 </html>

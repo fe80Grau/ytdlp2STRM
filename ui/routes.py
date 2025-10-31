@@ -13,10 +13,14 @@ logging.getLogger('werkzeug').setLevel(logging.WARNING)
 @app.route('/')
 def index():
     crons = _ui.crons
+    last_executions = _ui.get_last_executions()
+    next_executions = _ui.get_next_executions()
     return render_template(
         'index.html',
         plugins=_ui.plugins,
-        crons=crons
+        crons=crons,
+        last_executions=last_executions,
+        next_executions=next_executions
     )
 
 # Ruta para las opciones generales
@@ -192,7 +196,15 @@ def view_log():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
-    
+@socketio.on('connect')
+def handle_connect():
+    # Enviar el historial del CLI al cliente que se acaba de conectar
+    from ui.ui import Ui
+    for line in Ui.cli_history:
+        socketio.emit('command_output', line)
+    # Enviar el estado de ejecución actual
+    socketio.emit('execution_status', {'is_running': Ui.is_running})
+
 @socketio.on('execute_command')
 def handle_command(command):
     _ui.handle_command(command)
