@@ -2,7 +2,7 @@ run_block = false;
 document.addEventListener('DOMContentLoaded', function() {
 
     const terminal = document.getElementById('terminal');
-    const socket = io.connect('http://' + document.domain + ':' + location.port);
+    const socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
    
 
     //listener

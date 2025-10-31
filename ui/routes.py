@@ -6,7 +6,7 @@ import logging
 from clases.worker import worker as w
 from ui.ui import Ui
 _ui = Ui()
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
 # Ruta principal
