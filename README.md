@@ -6,7 +6,7 @@
 * Watch Twitch through Jellyfin or Emby 
 * ~~Watch Crunchyroll through Jellyfin or Emby~~ https://github.com/fe80Grau/ytdlp2STRM/issues/52
 ![ytdlp2STRM](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/cc31ee7c-5e4b-450b-9a3b-526f191d18d8)
-![image](https://github.com/fe80Grau/ytdlp2STRM/assets/6680464/7bee7f75-2f8d-483d-ac7d-2e0250d96d32)
+<img width="2872" height="1662" alt="image" src="https://github.com/user-attachments/assets/42a7ffb4-5364-48ba-a47c-f62ba0e4c8b0" />
 
 
 ## Prerequisite
