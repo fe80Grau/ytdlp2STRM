@@ -145,14 +145,31 @@ Where:
 # Additional info
 * After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch ~~and /media/Crunchyroll~~ as folders in Library and enjoy it!
 
+## New in v1.1.0
+* **Season folders by year**: YouTube and Twitch videos are now organized in year-based Season folders
+  - Structure: `Channel/Season {year}/S{year}E{XX} - video.strm`
+  - Example: `Channel [ID]/Season 2025/S2025E01 - Video Title.strm`
+* **UI improvements**:
+  - New UI
+* **Authentication improvements**:
+  - All yt-dlp commands now properly use cookie authentication
+  - Better handling of subscriber-only content on Twitch
+
 ## Youtube
 * SponsorBlock doesn't work in redirect mode.
 * Local NFO for each video
 * audio- prefix
+* **Season folders by year**: Videos are organized in `Season {year}` folders (e.g., Season 2025, Season 2026)
+* **Episode numbering**: Files are named `S{year}E{XX}` format, resetting to E01 each year
+* **Cookie authentication**: Supports both browser cookies and cookie files for age-restricted content
+* **Language configuration**: Configurable audio language via `lang` parameter in config.json
 
 ## Twitch
 * If a live video is on air the !000-live-channel.strm will be created. The script will download the strm for each video in the /videos channel tab in any manner. Take a look at the limits and daterange values for videos in ./plugins/twitch/config.json.
 * SponsorBlock doesn't work in redirect mode, Twitch only works in direct mode at the moment.
+* **Season folders by year**: Videos are organized in `Season {year}` folders (e.g., Season 2025, Season 2026)
+* **Episode numbering**: Files are named `S{year}E{XX}` format, resetting to E01 each year
+* **Cookie authentication**: Supports browser cookies for subscriber-only content
 
 ## TV3
 * Plugin for 3cat, content in Catalan.
@@ -169,10 +186,6 @@ Where:
 * ~~bridge mode. Given the latest updates, it is necessary to obtain the audio and video streams separately, redirect their output, and remux both tracks to finally serve them over HTTP. Experimental, sometimes it may fail to start playback and you need to try playing it again. There is no timestamp and it is not possible to navigate through the video's timeline.~~
 * ~~With download mode, the audio and video streams will be downloaded separately, and after downloading, they will be remuxed to finally serve a final video/mp4 file. The files will be downloaded to `./temp/` and their lifespan will be 24 hours. This is configurable in `config.json` -> `ytdlp2strm_temp_file_duration`. The Crunchyroll plugin in download mode will automatically download the latest discovered episode of each series declared in `channel_list.json`.~~
 * ~~In the `config.json` file, and specifically for the Crunchyroll plugin, there are 4 parameters: `jellyfin_preload_last_episode`, `jellyfin_base_url`, `jellyfin_user_id`, and `jellyfin_api_key`. When configured with their correct values, they allow detecting if an episode is being played and pre-downloading the next one to achieve a seamless playback flow without interruptions.~~
-
-## Pokemon TV _The Pokémon TV app and website are closing, and the service will end on March 28, 2024._
-* Thank you https://github.com/seiya-dev 
-* This doesn't need a channel_list.json file
 
 
 ## main.py 
