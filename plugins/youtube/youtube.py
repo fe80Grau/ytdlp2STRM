@@ -365,9 +365,11 @@ class Youtube:
                     f'{self.channel_url}'
             ]
         else:
+            # Use uploader (friendly name) instead of channel (@-name)
+            # Fallback to channel if uploader is not available
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-unavailable-videos',
-                        '--print', '%(channel)s',
+                        '--print', '%(uploader|channel)s',
                         '--restrict-filenames',
                         '--ignore-errors',
                         '--no-warnings',
@@ -487,7 +489,6 @@ class Youtube:
         return self.channel_description
     
     def get_channel_images(self):
-        c = 0
         command = ['yt-dlp', 
                     '--list-thumbnails',
                     '--restrict-filenames',
@@ -501,51 +502,31 @@ class Youtube:
         self.set_proxy(command)
         landscape = None
         poster = None
+        
         try:
-            lines = (
-                w.worker(
-                    command
-                ).output()
-                .split('\n')
-            )
+            output = w.worker(command).output()
+            lines = output.split('\n')
 
-            headers = []
-            thumbnails = []
+            # Parse thumbnails looking for specific IDs
             for line in lines:
-                line = ' '.join(line.split())
-                if not '[' in line:
-                    data = line.split(' ')
-                    if c == 0:
-                        headers = data
-                    else:
-                        if not 'ID' in data[0]:
-                            row = {}
-                            for i, d in enumerate(data):
-                                row[headers[i]] = d
-                            thumbnails.append(row)
-                    c += 1
-
-            poster = ""
-            try:
-                url_avatar_uncropped_index = next(
-                    (index for (index, d) in enumerate(thumbnails) if d["ID"] == "avatar_uncropped"), 
-                    None
-                )
-                poster = thumbnails[url_avatar_uncropped_index]['URL']
-            except:
-                pass
-
-            landscape = ""
-            try:
-                url_max_landscape_index = next(
-                    (index for (index, d) in enumerate(thumbnails) if d["ID"] == "banner_uncropped"), 
-                    None
-                )
-
-                landscape = thumbnails[url_max_landscape_index-1]['URL']
-            except:
-                pass
-        except:
+                line = line.strip()
+                
+                # Look for avatar_uncropped (poster)
+                if 'avatar_uncropped' in line:
+                    parts = line.split()
+                    # URL is the last part
+                    if len(parts) >= 4:
+                        poster = parts[-1]
+                
+                # Look for banner_uncropped (landscape)
+                if 'banner_uncropped' in line:
+                    parts = line.split()
+                    # URL is the last part
+                    if len(parts) >= 4:
+                        landscape = parts[-1]
+                        
+        except Exception as e:
+            l.log("youtube", f"Error getting channel images: {e}")
             pass
 
         return {
@@ -567,7 +548,7 @@ class Youtube:
     
     def set_language(self, command):
         """Configura el idioma para YouTube según la configuración"""
-        if lang:
+        if lang and lang.strip():
             command.extend(['--extractor-args', f'youtube:lang={lang}'])
 
 
@@ -671,6 +652,42 @@ def to_strm(method):
             videos.reverse()
             channel_nfo = False
             channel_folder_created = False
+            
+            # Get channel_id from first video to create channel folder and NFO
+            first_video = videos[0]
+            channel_id = first_video['channel_id']
+            youtube_channel_folder = first_video['uploader_id'].replace('/user/','@').replace('/streams','')
+            
+            # Create channel folder
+            channel_folder = sanitize(
+                "{} [{}]".format(
+                    youtube_channel_folder,
+                    channel_id
+                )
+            )
+            f.folders().make_clean_folder(
+                "{}/{}".format(media_folder, channel_folder),
+                False,
+                ytdlp2strm_config
+            )
+            
+            # Create channel NFO with correct images
+            n.nfo(
+                "tvshow",
+                "{}/{}".format(media_folder, channel_folder),
+                {
+                    "title" : channel_name,
+                    "plot" : channel_description.replace('\n', ' <br/>'),
+                    "season" : "1",
+                    "episode" : "-1",
+                    "landscape" : yt.channel_landscape,
+                    "poster" : yt.channel_poster,
+                    "studio" : "Youtube"
+                }
+            ).make_nfo()
+            channel_nfo = True
+            channel_folder_created = True
+            
             for video in videos:
                 video_id = video['id']
                 channel_id = video['channel_id']
@@ -768,7 +785,7 @@ def to_strm(method):
                             )
                         ),
                         {
-                            "title" : youtube_channel,
+                            "title" : channel_name,  # Use friendly name instead of @-handle
                             "plot" : channel_description.replace('\n', ' <br/>'),
                             "season" : "1",
                             "episode" : "-1",

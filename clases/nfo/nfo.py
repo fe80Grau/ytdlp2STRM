@@ -52,8 +52,14 @@ class nfo:
             print(e)
 
     def download_image(self, url, path):
+        # Skip if URL is None, empty, or invalid
+        if not url or url == 'None' or url.strip() == '' or url == 'unknown':
+            l.log("nfo", f"Skipping image download - no valid URL provided for {path}")
+            return
+        
         try:
-            response = requests.get(url)
+            l.log("nfo", f"Attempting to download image from: {url}")
+            response = requests.get(url, timeout=10)
             response.raise_for_status()  # Check if the request was successful
             
             # Convertir a PNG
