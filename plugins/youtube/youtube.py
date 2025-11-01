@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 from cachetools import TTLCache
 from utils.episode_numbering import format_episode_title
-from sanitize_filename import sanitize
+from utils.sanitize import sanitize
 from flask import stream_with_context, Response, send_file, redirect, abort, request
 from clases.config import config as c
 from clases.worker import worker as w
@@ -560,8 +560,10 @@ class Youtube:
                 command.append(proxy_url)
     
     def set_cookies(self, command):
-        command.append(f'--{cookies}')
-        command.append(cookie_value)
+        # Only add cookies if cookie_value is not empty
+        if cookie_value and cookie_value.strip():
+            command.append(f'--{cookies}')
+            command.append(cookie_value)
     
     def set_language(self, command):
         """Configura el idioma para YouTube según la configuración"""
@@ -860,17 +862,24 @@ def direct(youtube_id, remote_addr):
         else:
             response = requests.get(m3u8_url)
             if response.status_code == 200:
+                # Ensure UTF-8 encoding
+                response.encoding = 'utf-8'
                 m3u8_content = response.text
                 filtered_content = filter_and_modify_bandwidth(m3u8_content)
-                headers = {
-                    'Content-Type': 'application/vnd.apple.mpegurl',
-                    'Content-Disposition': 'inline; filename="playlist.m3u8"',
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
-                }
                 
-                return Response(filtered_content, mimetype='application/vnd.apple.mpegurl', headers=headers)
+                # Create Response with headers optimized for VLC and media players
+                flask_response = Response(filtered_content, mimetype='application/vnd.apple.mpegurl')
+                flask_response.headers['Content-Type'] = 'application/vnd.apple.mpegurl; charset=utf-8'
+                flask_response.headers['Content-Disposition'] = 'inline; filename="index.m3u8"'
+                flask_response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+                flask_response.headers['Pragma'] = 'no-cache'
+                flask_response.headers['Expires'] = '0'
+                flask_response.headers['Accept-Ranges'] = 'bytes'
+                flask_response.headers['Access-Control-Allow-Origin'] = '*'
+                flask_response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+                flask_response.headers['Access-Control-Allow-Headers'] = 'Range'
+                
+                return flask_response
     else:
         s_youtube_id = youtube_id.split('-audio')[0]
         command = [

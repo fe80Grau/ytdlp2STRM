@@ -2,7 +2,7 @@ from datetime import datetime
 import argparse
 import config.plugins as plugins
 from clases.log import log as l
-from sanitize_filename import sanitize
+from utils.sanitize import sanitize
 
 def main(raw_args=None):
     parser=argparse.ArgumentParser()

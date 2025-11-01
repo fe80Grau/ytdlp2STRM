@@ -7,7 +7,7 @@ import threading
 import subprocess
 from multiprocessing import Process
 from telethon import TelegramClient
-from sanitize_filename import sanitize
+from utils.sanitize import sanitize
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f

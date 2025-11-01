@@ -1,5 +1,5 @@
 from flask import stream_with_context, Response, send_file, redirect
-from sanitize_filename import sanitize
+from utils.sanitize import sanitize
 import os
 import requests
 import re

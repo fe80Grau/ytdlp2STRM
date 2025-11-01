@@ -51,11 +51,25 @@
       }
     }
   </style>
+  <style>
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+    }
+  </style>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200 min-h-screen">
+  <!-- Mobile overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+  
   <div class="flex h-screen">
-    <aside class="w-64 bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-800">
+    <aside id="sidebar" class="sidebar fixed md:static w-64 bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-800 z-50 h-full">
       <div class="h-20 flex items-center px-6 border-b border-gray-200 dark:border-gray-800">
         <h1 class="text-xl font-bold text-gray-900 dark:text-white">ytdlp2STRM</h1>
       </div>
@@ -100,28 +114,34 @@
         </a>
       </div>
     </aside>
-    <main class="flex-1 flex flex-col">
+    <main class="flex-1 flex flex-col w-full md:w-auto">
       <header
-        class="h-20 flex items-center justify-between px-8 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h2>
-        <div class="flex items-center gap-4">
+        class="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        <div class="flex items-center gap-3">
+          <button id="menu-toggle" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            <span class="material-symbols-outlined text-gray-700 dark:text-gray-300">menu</span>
+          </button>
+          <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h2>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4">
           <a href="https://www.buymeacoffee.com/fe80grau" target="_blank"
-            class="text-sm px-4 py-2 rounded-md bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium transition-colors">
-            ☕ Buy me a coffee
+            class="text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-md bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium transition-colors">
+            <span class="hidden sm:inline">☕ Buy me a coffee</span>
+            <span class="sm:hidden">☕</span>
           </a>
         </div>
       </header>
-      <div class="flex-1 p-8 overflow-y-auto custom-scrollbar">
-        <div class="space-y-10">
+      <div class="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar">
+        <div class="space-y-6 md:space-y-10">
           <div>
-            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Plugins</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+            <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900 dark:text-white">Plugins</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6">
               {% for value in plugins %}
               <div
-                class="bg-white dark:bg-gray-900 p-5 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+                class="bg-white dark:bg-gray-900 p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between">
                 <div>
                   <div class="flex items-center justify-between mb-3">
-                    <h4 class="font-bold text-lg text-gray-900 dark:text-white">{{ value.name }}</h4>
+                    <h4 class="font-bold text-base md:text-lg text-gray-900 dark:text-white">{{ value.name }}</h4>
                     {% if value.enabled == True %}
                     <span
                       class="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">ENABLED</span>
@@ -131,19 +151,19 @@
                     {% endif %}
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-col sm:flex-row items-stretch gap-2">
                   <a href="/plugin/{{ value.name }}"
-                    class="flex-1 flex items-center justify-center gap-2 text-sm px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors">
-                    <span class="material-symbols-outlined text-base">settings</span>Settings
+                    class="flex-1 flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors">
+                    <span class="material-symbols-outlined text-base">settings</span><span class="hidden sm:inline">Settings</span>
                   </a>
                   {% if value.channels != None %}
                   <a href="/plugin/{{ value.name }}/channels"
-                    class="flex-1 flex items-center justify-center gap-2 text-sm px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors">
-                    <span class="material-symbols-outlined text-base">video_library</span>Channels
+                    class="flex-1 flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors">
+                    <span class="material-symbols-outlined text-base">video_library</span><span class="hidden sm:inline">Channels</span>
                   </a>
                   {% endif %}
                   <button
-                    class="flex-1 flex items-center justify-center gap-2 text-sm px-3 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors play-btn"
+                    class="flex-1 flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors play-btn"
                     data-media-name="{{ value.name }}" {% if value.enabled !=True %}disabled{% endif %}>
                     <span class="material-symbols-outlined text-base">play_arrow</span>Run
                   </button>
@@ -153,11 +173,11 @@
             </div>
           </div>
           <div>
-            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">CRON Jobs</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900 dark:text-white">CRON Jobs</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {% for value in crons %}
               <div
-                class="bg-white dark:bg-gray-900 p-5 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+                class="bg-white dark:bg-gray-900 p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between">
                 <div>
                   <div class="flex items-start justify-between mb-4">
                     <div>
@@ -171,7 +191,7 @@
                       class="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">ACTIVE</span>
                   </div>
                   <div class="mb-5">
-                    <p class="text-gray-800 dark:text-gray-200 text-2xl font-semibold">Every {{ value.qty }} {{
+                    <p class="text-gray-800 dark:text-gray-200 text-lg md:text-2xl font-semibold">Every {{ value.qty }} {{
                       value.every }} 
                       {% if value.at != "" %}
                         <lower>at {{ value.at }}h</lower>
@@ -210,9 +230,9 @@
             </div>
           </div>
           <div>
-            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">CLI Output</h3>
-            <div class="bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
-              <div id="terminal" class="bg-black-900 p-4 rounded-md min-h-[400px] max-h-[600px] overflow-y-auto custom-scrollbar">
+            <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900 dark:text-white">CLI Output</h3>
+            <div class="bg-black rounded-lg p-2 md:p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
+              <div id="terminal" class="bg-black-900 p-2 md:p-4 rounded-md min-h-[300px] md:min-h-[400px] max-h-[500px] md:max-h-[600px] overflow-y-auto custom-scrollbar">
                 <div id="cli-skeleton" class="space-y-2">
                   <div class="h-4 bg-gray-700 rounded animate-pulse w-3/4"></div>
                   <div class="h-4 bg-gray-700 rounded animate-pulse w-full"></div>
@@ -222,7 +242,7 @@
                   <div class="h-4 bg-gray-700 rounded animate-pulse w-full"></div>
                   <div class="h-4 bg-gray-700 rounded animate-pulse w-3/5"></div>
                 </div>
-                <pre class="text-sm text-gray-300 font-mono whitespace-pre-wrap hidden"><code></code></pre>
+                <pre class="text-xs md:text-sm text-gray-300 font-mono whitespace-pre-wrap hidden"><code></code></pre>
               </div>
             </div>
           </div>
@@ -230,6 +250,7 @@
       </div>
     </main>
   </div>
+  <script src="/mobile-menu.js"></script>
   <script src="/cli.js?v=2"></script>
 </body>
 

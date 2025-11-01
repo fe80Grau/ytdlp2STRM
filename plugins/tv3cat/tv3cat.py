@@ -7,7 +7,7 @@ from clases.worker import worker as w
 from clases.folders import folders as f
 from clases.nfo import nfo as n
 from clases.log import log as l
-from sanitize_filename import sanitize
+from utils.sanitize import sanitize
 
 class tv3cat:
     def __init__(self, channel=False):

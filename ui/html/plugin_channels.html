@@ -49,10 +49,23 @@
       }
     }
   </style>
+  <style>
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+    }
+  </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200 min-h-screen">
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+  
 <div class="flex h-screen">
-<aside class="w-64 bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-800">
+<aside id="sidebar" class="sidebar fixed md:static w-64 bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-800 z-50 h-full">
 <div class="h-20 flex items-center px-6 border-b border-gray-200 dark:border-gray-800">
 <h1 class="text-xl font-bold text-gray-900 dark:text-white">ytdlp2STRM</h1>
 </div>
@@ -88,16 +101,22 @@ fe80grau
 </a>
 </div>
 </aside>
-<main class="flex-1 flex flex-col overflow-hidden">
-<header class="h-20 flex items-center justify-between px-8 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-<h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ plugin.name }} Channels</h2>
-<div class="flex items-center gap-4">
-<a href="https://www.buymeacoffee.com/fe80grau" target="_blank" class="text-sm px-4 py-2 rounded-md bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium transition-colors">
-☕ Buy me a coffee
-</a>
+<main class="flex-1 flex flex-col w-full md:w-auto overflow-hidden">
+<header class="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+        <div class="flex items-center gap-3">
+          <button id="menu-toggle" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+            <span class="material-symbols-outlined text-gray-700 dark:text-gray-300">menu</span>
+          </button>
+          <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{{ plugin.name }} Channels</h2>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4">
+<a href="https://www.buymeacoffee.com/fe80grau" target="_blank" class="text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-md bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium transition-colors">
+<span class="hidden sm:inline">☕ Buy me a coffee</span>
+            <span class="sm:hidden">☕</span>
+          </a>
 </div>
 </header>
-<div class="flex-1 p-8 overflow-y-auto custom-scrollbar">
+<div class="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar">
 {% if request == "POST" %}
   {% if result %}
     <div class="mb-6 p-4 rounded-lg bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300">
@@ -179,5 +198,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+  <script src="/mobile-menu.js"></script>
 </body>
 </html>

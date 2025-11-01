@@ -191,7 +191,7 @@ def view_log():
                 else:
                     formatted_line = line
                 # Añadir un <br/> al final de cada línea
-                log_content.append(formatted_line + '<br/>')
+                log_content.append(formatted_line)
         return render_template('log.html', log_content=log_content)
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
