@@ -366,10 +366,10 @@ class Youtube:
             ]
         else:
             # Use uploader (friendly name) instead of channel (@-name)
-            # Fallback to channel if uploader is not available
+            # First try to get uploader (friendly name)
             command = ['yt-dlp', 
                         '--compat-options', 'no-youtube-unavailable-videos',
-                        '--print', '%(uploader|channel)s',
+                        '--print', '%(uploader)s',
                         '--restrict-filenames',
                         '--ignore-errors',
                         '--no-warnings',
@@ -380,10 +380,31 @@ class Youtube:
         self.set_cookies(command)
         self.set_language(command)
         self.set_proxy(command)
-        self.channel_name = w.worker(command).output().strip().replace('"', '')
-        return sanitize(
-            self.channel_name
-        )
+        channel_name = w.worker(command).output().strip().replace('"', '')
+        
+        # If uploader is empty, NA, or literally "channel", try channel field
+        if not channel_name or channel_name == 'NA' or channel_name.lower() == 'channel':
+            command = ['yt-dlp', 
+                        '--compat-options', 'no-youtube-unavailable-videos',
+                        '--print', '%(channel)s',
+                        '--restrict-filenames',
+                        '--ignore-errors',
+                        '--no-warnings',
+                        '--playlist-items', '1',
+                        '--compat-options', 'no-youtube-channel-redirect',
+                        f'{self.channel_url}'
+            ]
+            self.set_cookies(command)
+            self.set_language(command)
+            self.set_proxy(command)
+            channel_name = w.worker(command).output().strip().replace('"', '')
+        
+        # Final fallback: use URL
+        if not channel_name or channel_name == 'NA':
+            channel_name = self.channel_url.split('/')[-1]
+        
+        self.channel_name = channel_name
+        return sanitize(self.channel_name)
      
     def get_channel_description(self):
         #get description
