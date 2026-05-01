@@ -9,6 +9,7 @@
     "cookie_value" : "firefox",
     "lang" : "en",
     "episode_format" : "sequential",
+    "download_subtitles" : false,
     "jellyfin_integration" : "False",
     "jellyfin_base_url" : "http://localhost:8096",
     "jellyfin_api_key" : "",

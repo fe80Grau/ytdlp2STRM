@@ -8,6 +8,7 @@ import html
 import re
 from datetime import datetime
 from cachetools import TTLCache
+from urllib.parse import quote
 from utils.episode_numbering import format_episode_title
 from utils.sanitize import sanitize
 from flask import stream_with_context, Response, send_file, redirect, abort, request
@@ -52,6 +53,11 @@ try:
     episode_format = config["episode_format"]
 except:
     episode_format = 'sequential'
+
+try:
+    download_subtitles = str(config["download_subtitles"]).lower() in ("true", "1", "yes", "on")
+except:
+    download_subtitles = False
 
 source_platform = "youtube"
 host = ytdlp2strm_config['ytdlp2strm_host']
@@ -604,7 +610,98 @@ class Youtube:
             command.extend(['--extractor-args', ';'.join(extractor_args)])
 
 
-def filter_and_modify_bandwidth(m3u8_content):
+def get_subtitle_info_from_video_info(video_info, preferred_lang=None):
+    preferred_lang = preferred_lang or (lang if lang and lang.strip() else 'en')
+    subtitle_sources = []
+    for source_name in ('subtitles', 'automatic_captions'):
+        source = video_info.get(source_name) or {}
+        for subtitle_lang, subtitle_entries in source.items():
+            subtitle_sources.append((subtitle_lang, subtitle_entries))
+
+    if not subtitle_sources:
+        return None
+
+    def lang_score(subtitle_lang):
+        if subtitle_lang == preferred_lang:
+            return 0
+        if subtitle_lang.startswith(f'{preferred_lang}-'):
+            return 1
+        if preferred_lang.startswith(f'{subtitle_lang}-'):
+            return 2
+        if subtitle_lang.split('-')[0] == preferred_lang.split('-')[0]:
+            return 3
+        if subtitle_lang.startswith('en'):
+            return 4
+        return 5
+
+    subtitle_sources.sort(key=lambda item: lang_score(item[0]))
+
+    for subtitle_lang, subtitle_entries in subtitle_sources:
+        vtt_entries = [entry for entry in subtitle_entries if entry.get('ext') == 'vtt' and entry.get('url')]
+        entries = vtt_entries or [entry for entry in subtitle_entries if entry.get('url')]
+        if entries:
+            return {
+                'lang': subtitle_lang,
+                'name': subtitle_lang,
+                'url': entries[0]['url']
+            }
+
+    return None
+
+def get_subtitle_info(youtube_id, preferred_lang=None):
+    command = [
+        'yt-dlp',
+        '-j',
+        '--skip-download',
+        '--no-warnings',
+        f'https://www.youtube.com/watch?v={youtube_id}'
+    ]
+    Youtube().set_cookies(command)
+    Youtube().set_language(command)
+    Youtube().set_proxy(command)
+    try:
+        video_info = json.loads(w.worker(command).output())
+        return get_subtitle_info_from_video_info(video_info, preferred_lang)
+    except Exception as e:
+        l.log("youtube", f"Error getting subtitles for {youtube_id}: {e}")
+        return None
+
+def download_subtitles_for_video(youtube_id, file_path):
+    if not download_subtitles or '-audio' in youtube_id:
+        return
+
+    base_path = os.path.splitext(file_path)[0]
+    subtitle_dir = os.path.dirname(base_path)
+    subtitle_base = os.path.basename(base_path)
+    if os.path.isdir(subtitle_dir):
+        for fname in os.listdir(subtitle_dir):
+            if fname.startswith(subtitle_base + '.') and fname.endswith(('.vtt', '.srt', '.ass')):
+                return
+
+    sub_langs = f'{lang},{lang}-orig,en,en-orig'
+    command = [
+        'yt-dlp',
+        '--skip-download',
+        '--write-subs',
+        '--write-auto-subs',
+        '--sub-langs', sub_langs,
+        '--sub-format', 'vtt',
+        '--no-warnings',
+        '--ignore-errors',
+        '-o', f'{base_path}.%(ext)s',
+        f'https://www.youtube.com/watch?v={youtube_id}'
+    ]
+    Youtube().set_cookies(command)
+    Youtube().set_language(command)
+    Youtube().set_proxy(command)
+    try:
+        w.worker(command).output()
+        l.log("youtube", f"Subtitles downloaded for {youtube_id}")
+        time.sleep(2)
+    except Exception as e:
+        l.log("youtube", f"Error downloading subtitles for {youtube_id}: {e}")
+
+def filter_and_modify_bandwidth(m3u8_content, subtitle_info=None, youtube_id=None):
     lines = m3u8_content.splitlines()
     
     highest_bandwidth = 0
@@ -613,31 +710,24 @@ def filter_and_modify_bandwidth(m3u8_content):
     
     media_lines = []
     
-    high_audio = False
-    sd_audio = ""
-    
     for i in range(len(lines)):
         line = lines[i]
         
-        if line.startswith("#EXT-X-STREAM-INF:"):
+        if line.startswith("#EXT-X-STREAM-INF:") and i + 1 < len(lines):
             info = line
             url = lines[i + 1]
-            bandwidth = int(info.split("BANDWIDTH=")[1].split(",")[0])
+            try:
+                bandwidth = int(info.split("BANDWIDTH=")[1].split(",")[0])
+            except:
+                bandwidth = 0
 
             if bandwidth > highest_bandwidth:
                 highest_bandwidth = bandwidth
-                best_video_info = info.replace(f"BANDWIDTH={bandwidth}", "BANDWIDTH=279001")
+                best_video_info = info
                 best_video_url = url
         
-        if line.startswith("#EXT-X-MEDIA:URI"):
-            if '234' in line:
-                high_audio = True
-                media_lines.append(line)
-            else:
-                sd_audio = line
-
-    if not high_audio and sd_audio:
-        media_lines.append(sd_audio)
+        if line.startswith("#EXT-X-MEDIA:"):
+            media_lines.append(line)
 
     # Create the final M3U8 content
     final_m3u8 = "#EXTM3U\n#EXT-X-INDEPENDENT-SEGMENTS\n"
@@ -645,6 +735,14 @@ def filter_and_modify_bandwidth(m3u8_content):
     # Add all EXT-X-MEDIA lines
     for media_line in media_lines:
         final_m3u8 += f"{media_line}\n"
+
+    if subtitle_info and youtube_id:
+        subtitle_lang = subtitle_info['lang']
+        subtitle_name = subtitle_info['name']
+        subtitle_uri = f"/youtube/subtitles/{youtube_id}.vtt?lang={quote(subtitle_lang)}"
+        final_m3u8 += f'#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="{subtitle_name}",DEFAULT=YES,AUTOSELECT=YES,LANGUAGE="{subtitle_lang}",URI="{subtitle_uri}"\n'
+        if best_video_info and 'SUBTITLES=' not in best_video_info:
+            best_video_info = f'{best_video_info},SUBTITLES="subs"'
 
     if best_video_info and best_video_url:
         final_m3u8 += f"{best_video_info}\n{best_video_url}\n"
@@ -786,6 +884,7 @@ def to_strm(method):
 
                 if video_id_exists_in_content(folder_path, video_id):
                     l.log("youtube", f'Video {video_id} already exists')
+                    download_subtitles_for_video(video_id, file_path)
                     continue
 
                 if not channel_folder_created:
@@ -875,6 +974,7 @@ def to_strm(method):
                         file_path, 
                         file_content
                     )
+                download_subtitles_for_video(video_id, file_path)
             
             # Notify Jellyfin/Emby after processing all videos for this channel
             jellyfin_notifier = JellyfinNotifier(config)
@@ -896,19 +996,25 @@ def direct(youtube_id, remote_addr):
         recent_requests[cache_key] = current_time
 
     if '-audio' not in youtube_id:
+        extractor_args = ['youtube:player-client=default,web_safari']
+        if lang and lang.strip():
+            extractor_args.append(f'youtube:lang={lang}')
+        extractor_args.append('youtubetab:skip=authcheck')
         command = [
             'yt-dlp', 
             '-j',
             '--no-warnings',
-            '--extractor-args', 'youtube:player-client=default,web_safari',
+            '--extractor-args', ';'.join(extractor_args),
             f'https://www.youtube.com/watch?v={youtube_id}'
         ]
         Youtube().set_cookies(command)
         Youtube().set_proxy(command)
         full_info_json_str = w.worker(command).output()
         m3u8_url = None
+        subtitle_info = None
         try:
             full_info_json = json.loads(full_info_json_str)
+            subtitle_info = get_subtitle_info_from_video_info(full_info_json)
 
             for fmt in full_info_json["formats"]:
                 if "manifest_url" in fmt.keys():
@@ -927,16 +1033,18 @@ def direct(youtube_id, remote_addr):
                 '--no-warnings',
                 f'https://www.youtube.com/watch?v={youtube_id}'
             ]
+            Youtube().set_cookies(command)
+            Youtube().set_language(command)
             Youtube().set_proxy(command)
             sd_url = w.worker(command).output()
             return redirect(sd_url.strip(), 301)
         else:
-            response = requests.get(m3u8_url)
+            response = requests.get(m3u8_url, timeout=15)
             if response.status_code == 200:
                 # Ensure UTF-8 encoding
                 response.encoding = 'utf-8'
                 m3u8_content = response.text
-                filtered_content = filter_and_modify_bandwidth(m3u8_content)
+                filtered_content = filter_and_modify_bandwidth(m3u8_content, subtitle_info, youtube_id)
                 
                 # Create Response with headers optimized for VLC and media players
                 flask_response = Response(filtered_content, mimetype='application/vnd.apple.mpegurl')
@@ -961,63 +1069,119 @@ def direct(youtube_id, remote_addr):
             f'https://www.youtube.com/watch?v={s_youtube_id}'
         ]
         Youtube().set_cookies(command)
+        Youtube().set_language(command)
         Youtube().set_proxy(command)
         audio_url = w.worker(command).output()
         return redirect(audio_url, 301)
 
     return "Manifest URL not found or failed to redirect.", 404
+
+def subtitles(youtube_id):
+    subtitle_lang = request.args.get('lang')
+    subtitle_info = get_subtitle_info(youtube_id, subtitle_lang)
+    if not subtitle_info:
+        return "Subtitles not found.", 404
+
+    try:
+        response = requests.get(subtitle_info['url'], timeout=15)
+        if response.status_code != 200:
+            return "Subtitles not found.", 404
+        flask_response = Response(response.content, mimetype='text/vtt')
+        flask_response.headers['Content-Type'] = 'text/vtt; charset=utf-8'
+        flask_response.headers['Cache-Control'] = 'public, max-age=3600'
+        flask_response.headers['Access-Control-Allow-Origin'] = '*'
+        return flask_response
+    except Exception as e:
+        l.log("youtube", f"Error serving subtitles for {youtube_id}: {e}")
+        return "Subtitles not found.", 404
     
 def bridge(youtube_id):
     s_youtube_id = youtube_id.split('-audio')[0]
-    s_youtube_id = f'https://www.youtube.com/watch?v={s_youtube_id}'
+    s_youtube_id_url = f'https://www.youtube.com/watch?v={s_youtube_id}'
+
+    # Get info for duration and size
+    duration = None
+    file_size = None
+    try:
+        command_info = ['yt-dlp', '--dump-json', '--no-warnings', s_youtube_id_url]
+        Youtube().set_cookies(command_info)
+        Youtube().set_proxy(command_info)
+        info = json.loads(w.worker(command_info).output())
+        
+        duration = info.get('duration')
+        file_size = info.get('filesize') or info.get('filesize_approx')
+    except Exception as e:
+        l.log("youtube", f"Error getting info: {e}")
+
+    # Parse Range Header
+    range_header = request.headers.get('Range', None)
+    byte_start = 0
+    byte_end = None
+    length = file_size
+
+    if range_header and file_size:
+        match = re.search(r'(\d+)-(\d*)', range_header)
+        if match:
+            start_str, end_str = match.groups()
+            byte_start = int(start_str)
+            if end_str:
+                byte_end = int(end_str)
+            else:
+                byte_end = file_size - 1
+            
+            length = byte_end - byte_start + 1
+
+    # Calculate start time for yt-dlp
+    start_time = 0
+    if byte_start > 0 and file_size and duration:
+        start_time = (byte_start / file_size) * duration
+
     def generate():
-        startTime = time.time()
-        buffer = []
-        sentBurst = False
         if config["sponsorblock"]:
-            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'bestvideo+bestaudio', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames', s_youtube_id]
+            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'bestvideo+bestaudio', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames']
         else:
-            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'best', '--restrict-filenames', s_youtube_id]
+            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'best', '--restrict-filenames']
+
+        if start_time > 0:
+            command.extend(['--download-sections', f'*{start_time}-inf'])
+        
+        command.append(s_youtube_id_url)
+        
         Youtube().set_cookies(command)
         Youtube().set_language(command)
         Youtube().set_proxy(command)
+
         if '-audio' in youtube_id:
-            command[5] = 'bestaudio'
+            try:
+                f_index = command.index('-f')
+                command[f_index + 1] = 'bestaudio'
+            except ValueError:
+                pass
         
-
-        #process = w.worker(command).pipe()
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        time.sleep(3)
+        
         try:
-
             while True:
-                # Get some data from ffmpeg
-                #time.sleep(0.1)  # Espera brevemente por más datos
-                line = process.stdout.read(1024)
-                
-                if not line:
+                data = process.stdout.read(4096)
+                if not data:
                     break
-                # We buffer everything before outputting it
-                buffer.append(line)
-
-                # Minimum buffer time, 3 seconds
-                if sentBurst is False and time.time() > startTime + 3 and len(buffer) > 0:
-                    sentBurst = True
-
-                    for i in range(0, len(buffer) - 2):
-                        yield buffer.pop(0)
-
-                elif time.time() > startTime + 3 and len(buffer) > 0:
-                    yield buffer.pop(0)
-
-                process.poll()
+                yield data
         finally:
             process.kill()
 
-    return Response(
+    response = Response(
         stream_with_context(generate()), 
         mimetype = "video/mp4"
-    ) 
+    )
+
+    response.headers['Accept-Ranges'] = 'bytes'
+    if file_size:
+        response.headers['Content-Length'] = str(length)
+        if range_header:
+            response.status_code = 206
+            response.headers['Content-Range'] = f'bytes {byte_start}-{byte_end}/{file_size}'
+
+    return response 
 
 def download(youtube_id):
     s_youtube_id = youtube_id.split('-audio')[0]
