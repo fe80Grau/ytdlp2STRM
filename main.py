@@ -27,7 +27,7 @@ def run_flask_app(stop_event, port):
                 func()
     
     try:
-        app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+        socketio.run(app, host='0.0.0.0', port=port, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
     except Exception as e:
         log_text = (f"Exception in Flask app: {e}")
         l.log("main", log_text)
@@ -63,6 +63,7 @@ if __name__ == "__main__":
 
     # Importar rutas después de inicializar variables globales
     import config.routes
+    from ui.routes import socketio
 
     # Crear una instancia de Cron con el evento de parada
     crons = cron.Cron(stop_event)
@@ -89,6 +90,11 @@ if __name__ == "__main__":
     try:
         # Mantener el hilo principal activo hasta que se establezca el evento de parada
         while not stop_event.is_set():
+            if not crons.is_alive():
+                l.log("main", "Crons thread is not alive. Restarting it.")
+                crons = cron.Cron(stop_event)
+                crons.start()
+                l.log("main", " * Crons thread restarted")
             time.sleep(1)
 
         log_text = ('Threads and process terminated.')
