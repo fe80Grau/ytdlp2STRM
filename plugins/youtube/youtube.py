@@ -583,15 +583,23 @@ class Youtube:
             command.append(cookie_value)
     
     def set_language(self, command):
-        """Configura el idioma para YouTube según la configuración"""
+        """Configura el idioma para YouTube según la configuración.
+
+        - Añade --extractor-args youtube:lang=<lang> (idioma de metadatos/UI).
+        - Añade -S "lang:<lang>" para priorizar la pista de audio del idioma
+          configurado cuando el video tiene varias (doblajes). Issue #105.
+        """
         extractor_args = []
-        
+
         if lang and lang.strip():
             extractor_args.append(f'youtube:lang={lang}')
-        
+            # Priorizar audio track del idioma configurado sin romper si no existe
+            if '-S' not in command and '--format-sort' not in command:
+                command.extend(['-S', f'lang:{lang}'])
+
         # Agregar skip=authcheck para evitar errores con playlists que requieren autenticación
         extractor_args.append('youtubetab:skip=authcheck')
-        
+
         if extractor_args:
             command.extend(['--extractor-args', ';'.join(extractor_args)])
 
