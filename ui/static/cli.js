@@ -2,6 +2,28 @@ run_block = false;
 document.addEventListener('DOMContentLoaded', function() {
 
     const terminal = document.getElementById('terminal');
+    let statusReceived = false;
+    
+    function showTerminalContent(message) {
+        const skeleton = document.getElementById('cli-skeleton');
+        const cliContent = terminal.querySelector('pre');
+        const codeElement = terminal.querySelector('code');
+        if(skeleton) {
+            skeleton.classList.add('hidden');
+        }
+        if(cliContent) {
+            cliContent.classList.remove('hidden');
+        }
+        if(message && codeElement) {
+            codeElement.textContent += message + '\n';
+        }
+    }
+    
+    if(typeof io === 'undefined') {
+        showTerminalContent('Socket.IO no está disponible. No se puede cargar la consola web.');
+        return;
+    }
+    
     const socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
    
 
@@ -95,16 +117,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // El servidor enviará el estado de ejecución, esperamos a recibirlo
     });
 
+    socket.on('connect_error', function() {
+        showTerminalContent('No se pudo conectar con Socket.IO. Revisa el servicio backend.');
+    });
+
     socket.on('execution_status', function(data) {
+        statusReceived = true;
         // Ocultar skeleton y mostrar contenido real
-        const skeleton = document.getElementById('cli-skeleton');
-        const cliContent = terminal.querySelector('pre');
-        if(skeleton) {
-            skeleton.classList.add('hidden');
-        }
-        if(cliContent) {
-            cliContent.classList.remove('hidden');
-        }
+        showTerminalContent();
         
         // Sincronizar el estado de ejecución con el servidor
         run_block = data.is_running;
@@ -122,6 +142,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hacer scroll al final después de cargar el historial
         setTimeout(scrollToBottom, 100);
     });
+
+    setTimeout(function() {
+        if(!statusReceived) {
+            showTerminalContent('No se recibió el estado de la consola web.');
+        }
+    }, 5000);
 
     socket.on('execution_started', function() {
         // Marcar que hay una ejecución en curso

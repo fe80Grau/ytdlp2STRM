@@ -8,7 +8,7 @@ import subprocess
 from clases.worker import worker as w
 from ui.ui import Ui
 _ui = Ui()
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', manage_session=False)
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
 # Ruta principal
@@ -203,9 +203,9 @@ def handle_connect():
     # Enviar el historial del CLI al cliente que se acaba de conectar
     from ui.ui import Ui
     for line in Ui.cli_history:
-        socketio.emit('command_output', line)
+        socketio.emit('command_output', line, to=request.sid)
     # Enviar el estado de ejecución actual
-    socketio.emit('execution_status', {'is_running': Ui.is_running})
+    socketio.emit('execution_status', {'is_running': Ui.is_running}, to=request.sid)
 
 @socketio.on('execute_command')
 def handle_command(command):
