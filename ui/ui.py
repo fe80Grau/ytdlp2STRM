@@ -1,6 +1,7 @@
 import json
 import shlex
 import os
+import sys
 import datetime
 import schedule
 from clases.config import config as c
@@ -202,20 +203,27 @@ class Ui:
         # Marcar que hay una ejecución en curso
         Ui.is_running = True
         emit('execution_started', {}, broadcast=True)
-        
+
+        # Tokenizar respetando el SO (evita que shlex en modo posix rompa
+        # rutas con barras invertidas en Windows).
+        parts = shlex.split(command, posix=(os.name != 'nt'))
+
+        # Fix #106: la UI envia "python cli.py ..." pero en muchos Linux
+        # solo existe "python3". Usamos el interprete que esta corriendo
+        # para que funcione en cualquier SO.
+        if parts and parts[0] in ('python', 'python3', 'py'):
+            parts[0] = sys.executable
+
         # Asegurarse de que el comando se ejecuta sin buffering
-        if not '-u' in command:
-            if 'python3' in command:
-                command = command.replace('python3', 'python3 -u')
-            else:
-                command = command.replace('python', 'python -u')
-        
-        secure_command = command.split(' ')
+        if '-u' not in parts and len(parts) > 1:
+            parts.insert(1, '-u')
+
+        secure_command = parts
         try :
-            if secure_command[2] == 'cli.py':
-                
+            if len(secure_command) > 2 and secure_command[2] == 'cli.py':
+
                 # Iniciar el proceso
-                process = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE, text=True, encoding='utf-8')
+                process = Popen(secure_command, stdout=PIPE, stderr=PIPE, text=True, encoding='utf-8')
 
                 # Leer y emitir la salida en tiempo real
                 while True:
