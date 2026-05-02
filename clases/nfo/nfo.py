@@ -28,8 +28,13 @@ class nfo:
             return
         
         l.log("nfo", "Creating NFO file...")
+        # Defaults para campos opcionales nuevos (p.ej. runtime/duration en
+        # episodes) y para evitar KeyError en plantillas existentes cuando
+        # el plugin aun no los pasa.
+        defaults = {"runtime": "", "duration_seconds": ""}
+        nfo_data = {**defaults, **self.nfo_data}
         # Rellenar la plantilla con los datos proporcionados
-        nfo_content = template.format(**self.nfo_data)
+        nfo_content = template.format(**nfo_data)
 
         # Crear el archivo NFO
         f.folders().write_file_spaces(
@@ -102,5 +107,13 @@ class nfo:
     <season>{season}</season>
     <episode>{episode}</episode>
     <thumb aspect="thumb" preview="{preview}">{preview}</thumb>
+    <runtime>{runtime}</runtime>
+    <fileinfo>
+        <streamdetails>
+            <video>
+                <durationinseconds>{duration_seconds}</durationinseconds>
+            </video>
+        </streamdetails>
+    </fileinfo>
 </episodedetails>
     """

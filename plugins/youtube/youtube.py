@@ -179,7 +179,8 @@ class Youtube:
                     'thumbnail': data.get('thumbnail'),
                     'description': data.get('description'),
                     'channel_id': self.channel_url.split('list=')[1],
-                    'uploader_id': sanitize(self.channel_name)
+                    'uploader_id': sanitize(self.channel_name),
+                    'duration': data.get('duration')
                 }
                 videos.append(video)
         
@@ -217,7 +218,8 @@ class Youtube:
                     'thumbnail': data.get('thumbnail'),
                     'description': data.get('description'),
                     'channel_id': data.get('channel_id'),
-                    'uploader_id': data.get('uploader_id')
+                    'uploader_id': data.get('uploader_id'),
+                    'duration': data.get('duration')
                 }
                 videos.append(video)
         
@@ -255,7 +257,8 @@ class Youtube:
                     'thumbnail': data.get('thumbnail'),
                     'description': data.get('description'),
                     'channel_id': data.get('channel_id'),
-                    'uploader_id': data.get('uploader_id')
+                    'uploader_id': data.get('uploader_id'),
+                    'duration': data.get('duration')
                 }
                 videos.append(video)
         
@@ -294,7 +297,8 @@ class Youtube:
                     'thumbnail': data.get('thumbnail'),
                     'description': data.get('description'),
                     'channel_id': data.get('channel_id'),
-                    'uploader_id': data.get('uploader_id')
+                    'uploader_id': data.get('uploader_id'),
+                    'duration': data.get('duration')
                 }
                 videos.append(video)
         
@@ -326,7 +330,8 @@ class Youtube:
                     'thumbnail': data.get('thumbnail'),
                     'description': data.get('description'),
                     'channel_id': self.channel_url.split('list=')[1],
-                    'uploader_id': sanitize(self.channel_name)
+                    'uploader_id': sanitize(self.channel_name),
+                    'duration': data.get('duration')
                 }
                 videos.append(video)
         
@@ -365,7 +370,8 @@ class Youtube:
                     'thumbnail': data.get('thumbnail'),
                     'description': data.get('description'),
                     'channel_id': data.get('channel_id'),
-                    'uploader_id': data.get('uploader_id')
+                    'uploader_id': data.get('uploader_id'),
+                    'duration': data.get('duration')
                 }
                 videos.append(video)
         
@@ -887,6 +893,15 @@ def to_strm(method):
                 description = video['description']
                 date = datetime.strptime(video['upload_date'], '%Y%m%d')
                 upload_date = date.strftime('%Y-%m-%d')
+                # Issue #111: expose duration in the NFO so Jellyfin/Emby
+                # can show content length without having to play the video.
+                raw_duration = video.get('duration')
+                try:
+                    duration_seconds = int(raw_duration) if raw_duration else 0
+                except (TypeError, ValueError):
+                    duration_seconds = 0
+                # Kodi/Jellyfin/Emby <runtime> is expressed in minutes.
+                runtime_minutes = max(1, (duration_seconds + 59) // 60) if duration_seconds else ""
                 year = date.year
                 youtube_channel = video['uploader_id']
                 youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
@@ -1007,7 +1022,9 @@ def to_strm(method):
                         "plot" : description.replace('\n', ' <br/>\n '),
                         "season" : "1",
                         "episode" : "",
-                        "preview" : thumbnail
+                        "preview" : thumbnail,
+                        "runtime" : runtime_minutes,
+                        "duration_seconds" : duration_seconds or ""
                     }
                 ).make_nfo()
                 ## -- END 
