@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import os
+from collections import Counter
 from clases.config import config as c
 from clases.worker import worker as w
 from clases.folders import folders as f
@@ -17,7 +18,23 @@ class tv3cat:
 
         if program_id and seasons:
             self.episodes = self.fetch_json_data(program_id, seasons)
-            self.channel_name = self.episodes[0]['programa']
+            # Issue #116: el listado de 3cat (tipus_contingut=PPD) puede
+            # mezclar capitulos del programa con contenidos relacionados
+            # (especiales, peliculas vinculadas...) que llevan otro 'programa'.
+            # Tomar siempre el primero hace que el nombre de la carpeta acabe
+            # siendo el del especial. Usamos la moda (nombre mas frecuente)
+            # entre los episodios numerados como nombre canonico del programa.
+            programa_values = [
+                ep.get('programa')
+                for ep in self.episodes
+                if ep.get('programa') and isinstance(ep.get('capitulo'), int)
+            ]
+            if programa_values:
+                self.channel_name = Counter(programa_values).most_common(1)[0][0]
+            elif self.episodes:
+                self.channel_name = self.episodes[0].get('programa')
+            else:
+                self.channel_name = None
         else:
             log_text = ("No se pudo extraer el programId o las temporadas.")
             l.log("tv3cat", log_text)
