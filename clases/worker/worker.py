@@ -1,10 +1,59 @@
 import os
+import re
 import subprocess
 import shlex
 import requests
 import time
 import threading
 from clases.log import log as l
+
+
+# Patrones de errores "benignos" que yt-dlp emite cuando un video del feed
+# de un canal no es accesible sin credenciales. El cron sigue funcionando
+# igualmente, asi que los colapsamos en un unico resumen para no llenar el
+# log en cada ejecucion. Issue #109.
+_BENIGN_YTDLP_PATTERNS = (
+    'members-only',
+    'member-only',
+    "channel's members",
+    'join this channel',
+    'private video',
+    'video unavailable',
+    'this video has been removed',
+    'sign in to confirm your age',
+    'premium members',
+    'requires payment',
+    'video is not available',
+)
+
+_YOUTUBE_ID_RE = re.compile(r'\[youtube\][^:]*?\b([A-Za-z0-9_-]{11})\b')
+
+
+def _classify_stderr(stderr):
+    """Separa stderr de yt-dlp en (benign_ids, benign_count, other_lines).
+
+    - benign_ids: set de IDs de YouTube detectados en lineas consideradas
+      benignas (miembros de canal, privado, no disponible, etc).
+    - benign_count: numero total de lineas benignas (incluye las que no
+      llevan ID extraible).
+    - other_lines: resto de lineas, loggeadas tal cual.
+    """
+    benign_ids = set()
+    benign_count = 0
+    other_lines = []
+    for raw in stderr.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        lowered = line.lower()
+        if any(p in lowered for p in _BENIGN_YTDLP_PATTERNS):
+            benign_count += 1
+            match = _YOUTUBE_ID_RE.search(line)
+            if match:
+                benign_ids.add(match.group(1))
+            continue
+        other_lines.append(line)
+    return benign_ids, benign_count, other_lines
 
 # Inicializa un objeto Lock para el control de concurrencia
 preload_lock = threading.Lock()
@@ -26,8 +75,28 @@ class worker:
             text=True
         )
         if process.stderr:
-            if not 'The channel is not currently live' in process.stderr and not '[twitch:stream] videos: videos does not exist' in process.stderr:
-                l.log("worker", process.stderr)
+            if 'The channel is not currently live' in process.stderr or '[twitch:stream] videos: videos does not exist' in process.stderr:
+                pass
+            else:
+                benign_ids, benign_count, other_lines = _classify_stderr(process.stderr)
+                if benign_count:
+                    unique = len(benign_ids)
+                    if unique:
+                        l.log(
+                            "worker",
+                            "Skipped {} inaccessible video(s) (members-only/private/unavailable): {}".format(
+                                unique, ', '.join(sorted(benign_ids))
+                            ),
+                        )
+                    else:
+                        l.log(
+                            "worker",
+                            "Skipped {} inaccessible video(s) (members-only/private/unavailable)".format(
+                                benign_count
+                            ),
+                        )
+                if other_lines:
+                    l.log("worker", '\n'.join(other_lines))
         return process.stdout
     
     def shell(self):
