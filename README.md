@@ -10,8 +10,15 @@
 
 
 ## Prerequisite
-* Python 3 https://www.python.org/downloads/
-* FFmpeg https://ffmpeg.org/
+* **Python 3** https://www.python.org/downloads/
+  * Tested with Python 3.10 and 3.11. Very new major/minor releases occasionally ship breaking changes against some of the Python dependencies; if you hit unexplained import or runtime errors, try Python 3.11.
+  * On Windows make sure "Add Python to PATH" is checked during install.
+* **FFmpeg** https://ffmpeg.org/ — must be available on the system `PATH` (`ffmpeg -version` from a terminal should work).
+* **yt-dlp** https://github.com/yt-dlp/yt-dlp — must be available on the system `PATH` as a binary (`yt-dlp --version` must work from a terminal), because ytdlp2STRM calls it as an external process.
+  * `pip install -r requierments.txt` installs the Python package, but on some systems the entry-point binary is not picked up on `PATH`. If that happens, install it as a binary instead:
+    * Windows (PowerShell): `winget install yt-dlp.yt-dlp`
+    * Linux (Debian/Ubuntu): `sudo apt install yt-dlp` or grab the release binary from the yt-dlp repo.
+    * macOS: `brew install yt-dlp`.
 
 ## Installation and usage
 * To allocate ytdlp2STRM, I suggest using /opt/ in Linux or C:\ProgramData in Windows.
@@ -251,6 +258,24 @@ You can change --media value for another plugin
 ## Service
 * LINUX: ytdlp2strm.service example service to run main.py with systemctl. 
 * WINDOWS: MS-TASK-ytdlp2STRM.xml example scheduled task with schtasks.
+
+## Jellyfin / Emby integration
+ytdlp2STRM generates `.strm` files under the `strm_output_folder` configured in each plugin (`plugins/<media>/config.json`). Each `.strm` just contains a URL that points back to this service, so **Jellyfin/Emby must have access both to the STRM files and to the ytdlp2STRM HTTP server** (`http://<host>:5000` by default).
+
+Typical setup:
+1. Decide where the STRM files will live, e.g. `/media/Youtube` on Linux or `D:\media\Youtube` on Windows.
+2. Make sure that same path is the `strm_output_folder` value in `plugins/youtube/config.json` (and equivalent for Twitch/etc.).
+3. In Jellyfin/Emby create a **Library of type "Shows"** and point it to that folder (`/media/Youtube`). Do the same for Twitch if you use that plugin.
+4. Each channel becomes a Show, each year a Season, and each video an Episode (`Channel [ID]/Season {year}/S{year}E{XX} - Video title.strm`).
+5. In the ytdlp2STRM Youtube plugin config you can enable `jellyfin_integration` so the service triggers a scan of the configured `jellyfin_library_name` after new STRM files are written. Populate `jellyfin_base_url` and `jellyfin_api_key` accordingly.
+
+> If Jellyfin runs on a different host/container than ytdlp2STRM, the URL stored inside the `.strm` files (`http://127.0.0.1:5000/...` by default) must be reachable from that host. Change `ytdlp2strm_host` in `config/config.json` to the IP/DNS name the Jellyfin server can reach.
+
+## Troubleshooting
+* **`FileNotFoundError: [WinError 2] The system cannot find the file specified`** (or the equivalent on Linux/macOS) when opening a `direct` URL or running the plugin from the Dashboard: the service tried to run `yt-dlp` as a subprocess but could not find the binary on `PATH`. Install yt-dlp as a binary (see the Prerequisite section) and restart the ytdlp2STRM service.
+* **Cron runs but nothing happens / it always starts on the first channel**: usually a symptom of the previous point. Check `ytdlp2strm.log` for `FileNotFoundError` or `command not found: yt-dlp`.
+* **Dashboard › Run says `only python cli.py command can be executed from here`**: fixed in recent versions by resolving the interpreter server-side. If you still hit it, update to the latest version.
+* **Audio is in the wrong language even when `lang` is set**: YouTube videos with dubbed tracks default to the original. Recent versions add `-S lang:<lang>` automatically so the configured language is preferred. Update and restart.
 
 ## Credits
 [![GitHub - ShieldsIO](https://img.shields.io/badge/GitHub-ShieldsIO-42b983?logo=GitHub)](https://github.com/badges/shields)
