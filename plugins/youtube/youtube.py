@@ -86,6 +86,24 @@ class Youtube:
         self.channel_poster = None
         self.channel_landscape = None
     
+    @staticmethod
+    def _normalize_yt_url(url):
+        """Force youtube.com / m.youtube.com URLs to www.youtube.com.
+
+        Issue #101: yt-dlp returns 'HTTP Error 400: Bad Request' on the tab
+        extractor for some channels when the URL lacks 'www.' (e.g.
+        'https://youtube.com/@mkbhd'). Mobile and bare hosts are coerced to
+        the canonical www host so the API call succeeds.
+        """
+        if not url:
+            return url
+        return re.sub(
+            r'://(?:m\.|www\.)?youtube\.com',
+            '://www.youtube.com',
+            url,
+            count=1,
+        )
+
     def get_results(self):
         if 'extractaudio-' in self.channel:
             islist = False
@@ -109,6 +127,7 @@ class Youtube:
                 elif not 'www.youtube' in self.channel_url:
                     self.channel_url = f'https://www.youtube.com/{self.channel_url}'
 
+            self.channel_url = self._normalize_yt_url(self.channel_url)
 
             self.channel_name = self.get_channel_name()
             self.channel_description = self.get_channel_description() if not islist else  f'Playlist {self.channel_name}'
@@ -129,6 +148,8 @@ class Youtube:
             if not 'www.youtube' in self.channel_url:
                 self.channel_url = f'https://www.youtube.com/playlist?list={self.channel_url}'
 
+            self.channel_url = self._normalize_yt_url(self.channel_url)
+
             self.channel_name = self.get_channel_name()
             self.channel_description = f'Playlist {self.channel_name}'
             thumbs = self.get_channel_images()
@@ -145,6 +166,8 @@ class Youtube:
                 self.channel_url = f'https://www.youtube.com/{self.channel}'
             else:
                 self.channel_url = self.channel
+
+            self.channel_url = self._normalize_yt_url(self.channel_url)
 
             self.channel_name = self.get_channel_name()
             self.channel_description = self.get_channel_description()
@@ -265,9 +288,9 @@ class Youtube:
         return videos
     
     def get_channel_audios(self):
-        cu = self.channel
+        cu = self.channel_url
 
-        if not '/streams' in self.channel:
+        if not '/streams' in self.channel_url:
             cu = f'{self.channel_url}/videos'
 
         command = [
@@ -338,10 +361,10 @@ class Youtube:
         return videos
     
     def get_channel_videos(self):
-        cu = self.channel
+        cu = self.channel_url
 
-        if not '/streams' in self.channel:
-            cu = f'{self.channel}/videos'
+        if not '/streams' in self.channel_url:
+            cu = f'{self.channel_url}/videos'
             
 
         command = [
