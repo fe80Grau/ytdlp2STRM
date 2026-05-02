@@ -703,16 +703,30 @@ def download_subtitles_for_video(youtube_id, file_path):
 
 def filter_and_modify_bandwidth(m3u8_content, subtitle_info=None, youtube_id=None):
     lines = m3u8_content.splitlines()
-    
+
     highest_bandwidth = 0
     best_video_info = None
     best_video_url = None
-    
+
     media_lines = []
-    
+
+    # Issue #110 / PR #115: YouTube auto-dubbed videos expose per-language
+    # variants in the HLS manifest via YT-EXT-AUDIO-CONTENT-ID (e.g. "en-US.3").
+    # When at least one stream declares a language, prefer streams matching the
+    # configured `lang`; otherwise keep the pure highest-bandwidth logic.
+    yt_audio_lang_re = re.compile(r'YT-EXT-AUDIO-CONTENT-ID="([^."]+)')
+    sel_by_lang = False
+    if lang and lang.strip():
+        for line in lines:
+            if line.startswith("#EXT-X-STREAM-INF:"):
+                match = yt_audio_lang_re.search(line)
+                if match and match.group(1):
+                    sel_by_lang = True
+                    break
+
     for i in range(len(lines)):
         line = lines[i]
-        
+
         if line.startswith("#EXT-X-STREAM-INF:") and i + 1 < len(lines):
             info = line
             url = lines[i + 1]
@@ -721,13 +735,42 @@ def filter_and_modify_bandwidth(m3u8_content, subtitle_info=None, youtube_id=Non
             except:
                 bandwidth = 0
 
-            if bandwidth > highest_bandwidth:
+            desired_lang = not sel_by_lang
+            if sel_by_lang:
+                match = yt_audio_lang_re.search(info)
+                if match and match.group(1):
+                    info_lang = match.group(1)
+                    # Handle "en" vs "en-US" in either direction
+                    if (lang.startswith(info_lang)
+                            or info_lang.startswith(lang)
+                            or info_lang == lang):
+                        desired_lang = True
+
+            if bandwidth > highest_bandwidth and desired_lang:
                 highest_bandwidth = bandwidth
                 best_video_info = info
                 best_video_url = url
-        
+
         if line.startswith("#EXT-X-MEDIA:"):
             media_lines.append(line)
+
+    # Fallback: if language filtering rejected everything (e.g. the configured
+    # lang is not present at all in the manifest), relax the filter and pick
+    # the highest bandwidth variant so playback is not broken.
+    if sel_by_lang and best_video_url is None:
+        for i in range(len(lines)):
+            line = lines[i]
+            if line.startswith("#EXT-X-STREAM-INF:") and i + 1 < len(lines):
+                info = line
+                url = lines[i + 1]
+                try:
+                    bandwidth = int(info.split("BANDWIDTH=")[1].split(",")[0])
+                except:
+                    bandwidth = 0
+                if bandwidth > highest_bandwidth:
+                    highest_bandwidth = bandwidth
+                    best_video_info = info
+                    best_video_url = url
 
     # Create the final M3U8 content
     final_m3u8 = "#EXTM3U\n#EXT-X-INDEPENDENT-SEGMENTS\n"
