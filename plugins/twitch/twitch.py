@@ -277,6 +277,36 @@ def video_id_exists_in_content(media_folder, video_id):
                         return True
     return False
 
+def parse_twitch_metadata_line(line, twitch_channel, source):
+    line = str(line).strip()
+    if not line or 'ERROR' in line:
+        return None
+
+    line = line.replace('"', '')
+    parts = line.rstrip().split(';')
+    if len(parts) < 5:
+        l.log("twitch", f"Skipping malformed {source} metadata for {twitch_channel}: expected 5 fields, got {len(parts)}")
+        return None
+
+    try:
+        date = datetime.strptime(parts[4], '%Y%m%d')
+    except ValueError:
+        l.log("twitch", f"Skipping malformed {source} metadata for {twitch_channel}: invalid upload date '{parts[4]}'")
+        return None
+
+    description = parts[2]
+    if description == "NA":
+        description = ""
+
+    return {
+        "video_id": parts[0],
+        "video_name": parts[1],
+        "description": description,
+        "thumbnail": parts[3],
+        "upload_date": date.strftime('%Y-%m-%d'),
+        "year": date.year
+    }
+
 ## -- MANDATORY TO_STRM FUNCTION 
 def to_strm(method):
     for twitch_channel in channels:
@@ -349,17 +379,12 @@ def to_strm(method):
                 "strm"
             )
             if line != "":
-                if not 'ERROR' in line:
-                    line = line.replace('"', '')
-                    video_id = str(line).rstrip().split(';')[0]
-                    video_name = str(line).rstrip().split(';')[1]
-                    description = str(line).rstrip().split(';')[2]
-                    if description == "NA":
-                        description = ""
-                    thumbnail = str(line).rstrip().split(';')[3]
-                    date = datetime.strptime(str(line).rstrip().split(';')[4], '%Y%m%d')
-                    upload_date = date.strftime('%Y-%m-%d')
-                    year = date.year
+                metadata = parse_twitch_metadata_line(line, twitch_channel, "direct")
+                if metadata:
+                    video_id = metadata["video_id"]
+                    video_name = metadata["video_name"]
+                    description = metadata["description"]
+                    thumbnail = metadata["thumbnail"]
                     try:
                         video_name.pop(3)
                     except:
@@ -433,17 +458,14 @@ def to_strm(method):
         reversed_videos = list(reversed(twitch.videos))
         for line in reversed_videos:
             if line != "":
-                if not 'ERROR' in line:
-                    line = line.replace('"','')
-                    video_id = str(line).rstrip().split(';')[0]
-                    video_name = str(line).rstrip().split(';')[1].split(" ")
-                    description = str(line).rstrip().split(';')[2]
-                    if description == "NA":
-                        description = ""
-                    thumbnail = str(line).rstrip().split(';')[3]
-                    date = datetime.strptime(str(line).rstrip().split(';')[4], '%Y%m%d')
-                    upload_date = date.strftime('%Y-%m-%d')
-                    year = date.year
+                metadata = parse_twitch_metadata_line(line, twitch_channel, "videos")
+                if metadata:
+                    video_id = metadata["video_id"]
+                    video_name = metadata["video_name"].split(" ")
+                    description = metadata["description"]
+                    thumbnail = metadata["thumbnail"]
+                    upload_date = metadata["upload_date"]
+                    year = metadata["year"]
                     try:
                         video_name.pop(3)
                     except:
