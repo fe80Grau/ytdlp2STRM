@@ -170,6 +170,21 @@ Where:
 * **Episode numbering**: Files are named `S{year}E{XX}` format, resetting to E01 each year
 * **Cookie authentication**: Supports both browser cookies and cookie files for age-restricted content
 * **Language configuration**: Configurable audio language via `lang` parameter in config.json
+* **Subtitles**: When `download_subtitles` is enabled, YouTube `.vtt` subtitles are downloaded next to each `.strm` file. WebVTT files are post-processed to improve Jellyfin/Emby rendering:
+  - Force centered subtitle alignment.
+  - Remove YouTube karaoke inline timestamps.
+  - Collapse repeated rollup/persiana cues.
+  - The same cleanup is also applied when subtitles are served through `/youtube/subtitles/<id>.vtt`.
+* **Direct playback cache**: YouTube direct mode resolves the best HLS stream and stores the processed manifest in `<strm_output_folder>/.direct_cache`.
+  - `direct_stream_cache_hours` controls how long cached direct manifests are considered valid.
+  - Cached manifests avoid repeating the slow `yt-dlp` resolution on repeated playback.
+* **Optimized direct HLS**: With `direct_serve_media_playlist` enabled, ytdlp2STRM serves the selected media playlist directly instead of the full master playlist, reducing startup work for Jellyfin/Emby while keeping the selected highest-quality stream.
+  - The generated VOD playlist is cacheable for `direct_stream_cache_hours`, which can reduce extra playlist reloads during seek operations.
+  - Seeking still depends on Jellyfin/Emby fetching the target YouTube HLS segment from `googlevideo.com`. For near-instant seeking like YouTube, the only fully reliable options are local/download playback or a future segment proxy/cache mode, both with higher disk/bandwidth cost.
+* **Direct prewarm**:
+  - `direct_prewarm_latest_per_channel` precaches the latest detected videos per channel during the YouTube scan.
+  - `direct_prewarm_neighbors` precaches the previous and next video in the same folder when a video is played.
+  - Prewarm runs in background and is limited to avoid launching too many `yt-dlp` resolutions at once.
 
 ## Twitch
 * If a live video is on air the !000-live-channel.strm will be created. The script will download the strm for each video in the /videos channel tab in any manner. Take a look at the limits and daterange values for videos in ./plugins/twitch/config.json.
@@ -234,6 +249,16 @@ You can change --media value for another plugin
 * [YOUTUBE] cookies *Required to obtain the manifest for age-protected videos. It can be (cookies-from-browser or cookies)
 * [YOUTUBE] cookie_value *If you set cookies as browser cookies you must indicate the browser (i recommend firefox). In the case of cookies, you must indicate the cookie file path stored in text format
 * [YOUTUBE] lang *Language for yt-dlp extractor
+* [YOUTUBE] episode_format *Episode naming mode. `sequential` uses incremental episode numbers; `mmdd` uses month/day style numbering.
+* [YOUTUBE] download_subtitles *Download YouTube subtitles/auto-subtitles as `.vtt` sidecar files and fix alignment/rollup issues for Jellyfin/Emby.
+* [YOUTUBE] direct_stream_cache_hours *TTL in hours for cached direct playback manifests stored in `<strm_output_folder>/.direct_cache`.
+* [YOUTUBE] direct_serve_media_playlist *Serve the selected HLS media playlist directly instead of the master playlist to improve Jellyfin/Emby startup time.
+* [YOUTUBE] direct_prewarm_latest_per_channel *Number of latest videos per channel to prewarm during YouTube scans. Set `0` to disable.
+* [YOUTUBE] direct_prewarm_neighbors *When a direct video is played, prewarm previous/next videos in background.
+* [YOUTUBE] jellyfin_integration *Trigger a Jellyfin/Emby library scan after new YouTube STRM files are generated.
+* [YOUTUBE] jellyfin_base_url *Base URL of your Jellyfin/Emby server.
+* [YOUTUBE] jellyfin_api_key *API key used to trigger library scans.
+* [YOUTUBE] jellyfin_library_name *Library name to refresh when new YouTube content is added.
 * ~~[CRUNCHYROLL] crunchyroll_auth (~~browser, cookies or~~ login), browser option in addition with background task opening firefox is the best way to keep unatended workflow.~~
 * ~~[CRUNCHYROLL] crunchyroll_browser (set if your choice in curnchyroll_auth is browser) You can read more about this searching --cookies-from-browser in https://github.com/yt-dlp/yt-dlp~~
 * ~~[CRUNCHYROLL] crunchyroll_useragent (set if your choice in curnchyroll_auth is browser) Needs the same user agent that your browser. If you search current user-agent in Google you can see your user-agent, copy it.~~
