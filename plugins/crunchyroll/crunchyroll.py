@@ -27,8 +27,8 @@ class Crunchyroll:
         auth_command = [
             'node', multi_downloader_path,
             '--service', 'crunchy',
-            '-u', crunchyroll_username,
-            '-p', crunchyroll_password,
+            '--username', crunchyroll_username,
+            '--password', crunchyroll_password,
             '--auth'
         ]
         l.log("crunchyroll", "Authenticating with Crunchyroll...")
@@ -558,8 +558,9 @@ def download(crunchyroll_id, return_file=True):
     
     # Buscar archivo ya descargado
     existing_file = None
+    valid_extensions = ('.mp4', '.mkv', '.ts', '.avi', '.mov')
     for filename in os.listdir(temp_dir):
-        if crunchyroll_id in filename and (filename.endswith('.mp4') or filename.endswith('.mkv')):
+        if crunchyroll_id in filename and filename.lower().endswith(valid_extensions):
             existing_file = os.path.join(temp_dir, filename)
             break
     
@@ -597,6 +598,11 @@ def download(crunchyroll_id, return_file=True):
         
         Crunchyroll().set_proxy(command)
         
+        # Asegurar que existe la carpeta logs para multi-downloader-nx
+        multi_downloader_dir = os.path.dirname(multi_downloader_path)
+        logs_dir = os.path.join(multi_downloader_dir, 'logs')
+        os.makedirs(logs_dir, exist_ok=True)
+        
         # Ejecutar descarga con stdin para seleccionar episodio
         l.log("crunchyroll", f"Command: {' '.join(command)}")
         
@@ -631,14 +637,17 @@ def download(crunchyroll_id, return_file=True):
                 abort(500)
             return None
         
-        # Buscar el archivo descargado
-        for filename in os.listdir(temp_dir):
-            if crunchyroll_id in filename and (filename.endswith('.mp4') or filename.endswith('.mkv')):
+        # Buscar el archivo descargado (más extensiones y logging de debug)
+        temp_files = os.listdir(temp_dir)
+        l.log("crunchyroll", f"Files in temp: {temp_files}")
+        for filename in temp_files:
+            if crunchyroll_id in filename and filename.lower().endswith(valid_extensions):
                 existing_file = os.path.join(temp_dir, filename)
+                l.log("crunchyroll", f"Found downloaded file: {filename}")
                 break
         
         if not existing_file:
-            l.log("crunchyroll", "Downloaded file not found")
+            l.log("crunchyroll", f"Downloaded file not found (looked for {crunchyroll_id} with extensions {valid_extensions})")
             if return_file:
                 abort(404)
             return None

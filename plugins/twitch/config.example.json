@@ -6,6 +6,7 @@
     "cookies" : "",
     "cookie_value" : "",
     "episode_format" : "sequential",
+    "video_quality" : "best",
     "jellyfin_integration" : "False",
     "jellyfin_base_url" : "http://localhost:8096",
     "jellyfin_api_key" : "",

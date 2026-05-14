@@ -27,7 +27,7 @@ direct_prewarm_inflight = TTLCache(maxsize=1000, ttl=600)
 direct_neighbor_index_inflight = TTLCache(maxsize=1, ttl=600)
 direct_prewarm_lock = threading.Lock()
 direct_prewarm_semaphore = threading.Semaphore(2)
-DIRECT_CACHE_VERSION = "v3"
+DIRECT_CACHE_VERSION = "v4"
 
 ## -- LOAD CONFIG AND CHANNELS FILES
 ytdlp2strm_config = c.config(
@@ -63,9 +63,38 @@ except:
     episode_format = 'sequential'
 
 try:
+    video_quality = str(config["video_quality"]).strip().lower()
+except:
+    video_quality = "best"
+
+def _get_video_quality_height():
+    if not video_quality or video_quality in ("best", "0", "none", "default"):
+        return None
+    match = re.search(r'\d+', video_quality)
+    if not match:
+        return None
+    return int(match.group(0))
+
+def _get_video_format_selector(default_selector='best'):
+    max_height = _get_video_quality_height()
+    if not max_height:
+        return default_selector
+    return f'bestvideo[height<={max_height}]+bestaudio/best[height<={max_height}]/best'
+
+try:
     download_subtitles = str(config["download_subtitles"]).lower() in ("true", "1", "yes", "on")
 except:
     download_subtitles = False
+
+try:
+    convert_subtitles_to_srt = str(config["convert_subtitles_to_srt"]).lower() in ("true", "1", "yes", "on")
+except:
+    convert_subtitles_to_srt = False
+
+try:
+    keep_vtt_subtitles = str(config["keep_vtt_subtitles"]).lower() in ("true", "1", "yes", "on")
+except:
+    keep_vtt_subtitles = True
 
 try:
     direct_stream_cache_hours = int(config["direct_stream_cache_hours"])
@@ -241,7 +270,7 @@ class Youtube:
         keyword = self.channel.split('-')[1]
         command = [
             'yt-dlp', 
-            '-f', 'best', 'ytsearch:["{}"]'.format(keyword),
+            '-f', _get_video_format_selector('best'), 'ytsearch:["{}"]'.format(keyword),
             '--compat-options', 'no-youtube-channel-redirect',
             '--compat-options', 'no-youtube-unavailable-videos',
             '--playlist-start', '1', 
@@ -280,7 +309,7 @@ class Youtube:
         keyword = self.channel.split('-')[1]
         command = [
             'yt-dlp', 
-            '-f', 'best', 'ytsearch10:["{}"]'.format(keyword),
+            '-f', _get_video_format_selector('best'), 'ytsearch10:["{}"]'.format(keyword),
             '--compat-options', 'no-youtube-channel-redirect',
             '--compat-options', 'no-youtube-unavailable-videos',
             '--playlist-start', '1', 
@@ -806,6 +835,75 @@ def _fix_vtt_alignment(vtt_text):
 
     return '\n\n'.join(out_blocks)
 
+def _vtt_timestamp_to_srt(timestamp):
+    return timestamp.strip().replace('.', ',')
+
+def _vtt_text_to_srt(vtt_text):
+    blocks = re.split(r'\r?\n\r?\n', vtt_text)
+    srt_blocks = []
+    cue_number = 1
+
+    for block in blocks:
+        lines = [line.strip('\ufeff') for line in block.splitlines()]
+        if not lines:
+            continue
+
+        timing_idx = None
+        for idx, line in enumerate(lines):
+            if '-->' in line:
+                timing_idx = idx
+                break
+
+        if timing_idx is None:
+            continue
+
+        timing_line = lines[timing_idx]
+        timing_parts = timing_line.split('-->')
+        if len(timing_parts) != 2:
+            continue
+
+        start_time = _vtt_timestamp_to_srt(timing_parts[0])
+        end_time = _vtt_timestamp_to_srt(timing_parts[1].split()[0])
+        text_lines = [_clean_vtt_text_line(line) for line in lines[timing_idx + 1:] if line.strip()]
+        text_lines = [re.sub(r'<[^>]+>', '', line).strip() for line in text_lines]
+        text_lines = [line for line in text_lines if line]
+        if not text_lines:
+            continue
+
+        srt_blocks.append(f"{cue_number}\n{start_time} --> {end_time}\n" + "\n".join(text_lines))
+        cue_number += 1
+
+    return "\n\n".join(srt_blocks) + ("\n" if srt_blocks else "")
+
+def _convert_vtt_file_to_srt(vtt_path):
+    srt_path = os.path.splitext(vtt_path)[0] + ".srt"
+    with open(vtt_path, 'r', encoding='utf-8') as f:
+        vtt_text = f.read()
+    srt_text = _vtt_text_to_srt(_fix_vtt_alignment(vtt_text))
+    if not srt_text:
+        return False
+    with open(srt_path, 'w', encoding='utf-8') as f:
+        f.write(srt_text)
+    if not keep_vtt_subtitles:
+        try:
+            os.remove(vtt_path)
+        except:
+            pass
+    return True
+
+def _convert_vtt_files_to_srt_in_subtitle_dir(subtitle_dir, subtitle_base):
+    converted_count = 0
+    if os.path.isdir(subtitle_dir):
+        for fname in os.listdir(subtitle_dir):
+            if fname.startswith(subtitle_base + '.') and fname.endswith('.vtt'):
+                vtt_path = os.path.join(subtitle_dir, fname)
+                try:
+                    if _convert_vtt_file_to_srt(vtt_path):
+                        converted_count += 1
+                except Exception as e:
+                    l.log("youtube", f"Error converting VTT to SRT for {fname}: {e}")
+    return converted_count
+
 def _fix_vtt_files_in_subtitle_dir(subtitle_dir, subtitle_base):
     fixed_count = 0
     if os.path.isdir(subtitle_dir):
@@ -905,6 +1003,15 @@ def _make_media_playlist_absolute(m3u8_content, playlist_url):
             continue
         absolute_lines.append(urljoin(playlist_url, stripped))
     return "\n".join(absolute_lines) + "\n"
+
+def _get_stream_inf_height(info):
+    match = re.search(r'\bRESOLUTION=\d+x(\d+)', info)
+    if not match:
+        return None
+    try:
+        return int(match.group(1))
+    except:
+        return None
 
 def _is_direct_stream_cache_valid(cache_path):
     if not os.path.isfile(cache_path):
@@ -1064,6 +1171,10 @@ def download_subtitles_for_video(youtube_id, file_path):
                 fixed_count = _fix_vtt_files_in_subtitle_dir(subtitle_dir, subtitle_base)
                 if fixed_count:
                     l.log("youtube", f"Fixed VTT alignment for {fixed_count} subtitle file(s) of {youtube_id}")
+                if convert_subtitles_to_srt:
+                    converted_count = _convert_vtt_files_to_srt_in_subtitle_dir(subtitle_dir, subtitle_base)
+                    if converted_count:
+                        l.log("youtube", f"Converted {converted_count} VTT subtitle file(s) to SRT for {youtube_id}")
                 return
 
     sub_langs = f'{lang},{lang}-orig,en,en-orig'
@@ -1089,6 +1200,10 @@ def download_subtitles_for_video(youtube_id, file_path):
         fixed_count = _fix_vtt_files_in_subtitle_dir(subtitle_dir, subtitle_base)
         if fixed_count:
             l.log("youtube", f"Fixed VTT alignment for {fixed_count} subtitle file(s) of {youtube_id}")
+        if convert_subtitles_to_srt:
+            converted_count = _convert_vtt_files_to_srt_in_subtitle_dir(subtitle_dir, subtitle_base)
+            if converted_count:
+                l.log("youtube", f"Converted {converted_count} VTT subtitle file(s) to SRT for {youtube_id}")
     except Exception as e:
         l.log("youtube", f"Error downloading subtitles for {youtube_id}: {e}")
 
@@ -1141,7 +1256,11 @@ def filter_and_modify_bandwidth(m3u8_content, subtitle_info=None, youtube_id=Non
                             or info_lang == lang):
                         desired_lang = True
 
-            if bandwidth > highest_bandwidth and desired_lang:
+            max_height = _get_video_quality_height()
+            stream_height = _get_stream_inf_height(info)
+            desired_quality = not max_height or not stream_height or stream_height <= max_height
+
+            if bandwidth > highest_bandwidth and desired_lang and desired_quality:
                 highest_bandwidth = bandwidth
                 best_video_info = info
                 best_video_url = url
@@ -1152,7 +1271,25 @@ def filter_and_modify_bandwidth(m3u8_content, subtitle_info=None, youtube_id=Non
     # Fallback: if language filtering rejected everything (e.g. the configured
     # lang is not present at all in the manifest), relax the filter and pick
     # the highest bandwidth variant so playback is not broken.
-    if sel_by_lang and best_video_url is None:
+    if best_video_url is None:
+        for i in range(len(lines)):
+            line = lines[i]
+            if line.startswith("#EXT-X-STREAM-INF:") and i + 1 < len(lines):
+                info = line
+                url = lines[i + 1]
+                try:
+                    bandwidth = int(info.split("BANDWIDTH=")[1].split(",")[0])
+                except:
+                    bandwidth = 0
+                max_height = _get_video_quality_height()
+                stream_height = _get_stream_inf_height(info)
+                desired_quality = not max_height or not stream_height or stream_height <= max_height
+                if bandwidth > highest_bandwidth and desired_quality:
+                    highest_bandwidth = bandwidth
+                    best_video_info = info
+                    best_video_url = url
+
+    if best_video_url is None:
         for i in range(len(lines)):
             line = lines[i]
             if line.startswith("#EXT-X-STREAM-INF:") and i + 1 < len(lines):
@@ -1502,7 +1639,7 @@ def direct(youtube_id, remote_addr):
             l.log("youtube", log_text)
             command = [
                 'yt-dlp',
-                '-f', 'best',
+                '-f', _get_video_format_selector('best'),
                 '--get-url',
                 '--no-playlist',
                 '--no-warnings',
@@ -1605,9 +1742,9 @@ def bridge(youtube_id):
 
     def generate():
         if config["sponsorblock"]:
-            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'bestvideo+bestaudio', '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames']
+            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', _get_video_format_selector('bestvideo+bestaudio'), '--sponsorblock-remove',  config['sponsorblock_cats'], '--restrict-filenames']
         else:
-            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', 'best', '--restrict-filenames']
+            command = ['yt-dlp', '--no-warnings', '-o', '-', '-f', _get_video_format_selector('best'), '--restrict-filenames']
 
         if start_time > 0:
             command.extend(['--download-sections', f'*{start_time}-inf'])

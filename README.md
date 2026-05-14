@@ -170,11 +170,14 @@ Where:
 * **Episode numbering**: Files are named `S{year}E{XX}` format, resetting to E01 each year
 * **Cookie authentication**: Supports both browser cookies and cookie files for age-restricted content
 * **Language configuration**: Configurable audio language via `lang` parameter in config.json
+* **Video quality limit**: `video_quality` can limit playback quality. Use `best` for the current behavior or values like `1080`, `720`, `480` to avoid selecting higher resolutions.
 * **Subtitles**: When `download_subtitles` is enabled, YouTube `.vtt` subtitles are downloaded next to each `.strm` file. WebVTT files are post-processed to improve Jellyfin/Emby rendering:
   - Force centered subtitle alignment.
   - Remove YouTube karaoke inline timestamps.
   - Collapse repeated rollup/persiana cues.
   - The same cleanup is also applied when subtitles are served through `/youtube/subtitles/<id>.vtt`.
+  - `convert_subtitles_to_srt` can also create `.srt` sidecar files from the cleaned VTT subtitles for better compatibility with Android/TV clients.
+  - `keep_vtt_subtitles` keeps the original cleaned `.vtt` files when SRT conversion is enabled.
 * **Direct playback cache**: YouTube direct mode resolves the best HLS stream and stores the processed manifest in `<strm_output_folder>/.direct_cache`.
   - `direct_stream_cache_hours` controls how long cached direct manifests are considered valid.
   - Cached manifests avoid repeating the slow `yt-dlp` resolution on repeated playback.
@@ -244,13 +247,14 @@ You can change --media value for another plugin
 * videos_limit
 * [YOUTUBE] sponsorblock
 * [YOUTUBE] sponsorblock_cats
-* [YOUTUBE]  ~~[CRUNCHYROLL]~~ proxy
-* [YOUTUBE]  ~~[CRUNCHYROLL]~~ proxy_url
 * [YOUTUBE] cookies *Required to obtain the manifest for age-protected videos. It can be (cookies-from-browser or cookies)
 * [YOUTUBE] cookie_value *If you set cookies as browser cookies you must indicate the browser (i recommend firefox). In the case of cookies, you must indicate the cookie file path stored in text format
 * [YOUTUBE] lang *Language for yt-dlp extractor
 * [YOUTUBE] episode_format *Episode naming mode. `sequential` uses incremental episode numbers; `mmdd` uses month/day style numbering.
+* [YOUTUBE] video_quality *Maximum video height for yt-dlp playback selection. Use `best` for no limit, or values like `1080`, `720`, `480`.
 * [YOUTUBE] download_subtitles *Download YouTube subtitles/auto-subtitles as `.vtt` sidecar files and fix alignment/rollup issues for Jellyfin/Emby.
+* [YOUTUBE] convert_subtitles_to_srt *Generate `.srt` sidecar files from cleaned `.vtt` subtitles for better Android/TV compatibility.
+* [YOUTUBE] keep_vtt_subtitles *Keep `.vtt` files after SRT conversion. Set `False` to leave only `.srt` files.
 * [YOUTUBE] direct_stream_cache_hours *TTL in hours for cached direct playback manifests stored in `<strm_output_folder>/.direct_cache`.
 * [YOUTUBE] direct_serve_media_playlist *Serve the selected HLS media playlist directly instead of the master playlist to improve Jellyfin/Emby startup time.
 * [YOUTUBE] direct_prewarm_latest_per_channel *Number of latest videos per channel to prewarm during YouTube scans. Set `0` to disable.

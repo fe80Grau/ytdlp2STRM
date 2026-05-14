@@ -258,6 +258,25 @@ try:
 except:
     episode_format = 'sequential'
 
+try:
+    video_quality = str(config["video_quality"]).strip().lower()
+except:
+    video_quality = "best"
+
+def get_video_quality_height():
+    if not video_quality or video_quality in ("best", "0", "none", "default"):
+        return None
+    match = re.search(r'\d+', video_quality)
+    if not match:
+        return None
+    return int(match.group(0))
+
+def get_video_format_selector(default_selector='best'):
+    max_height = get_video_quality_height()
+    if not max_height:
+        return default_selector
+    return f'bestvideo[height<={max_height}]+bestaudio/best[height<={max_height}]/best'
+
 # Función helper para agregar cookies a comandos
 def set_cookies_to_command(command):
     if cookies and cookie_value and cookies.strip() and cookie_value.strip():
@@ -589,7 +608,7 @@ def direct(twitch_id, remote_addr):
     video_id = twitch_id.split("@")[1]
     command = [
         'yt-dlp', 
-        '-f', 'best',
+        '-f', get_video_format_selector('best'),
         '--no-warnings',
         f'https://www.twitch.tv/videos/{video_id}',
         '--get-url'
@@ -601,7 +620,7 @@ def direct(twitch_id, remote_addr):
     if 'ERROR' in twitch_url or not twitch_url:
         command_retry = [
             'yt-dlp', 
-            '-f', 'best',
+            '-f', get_video_format_selector('best'),
             '--no-warnings',
             f'https://www.twitch.tv/videos/{video_id.replace("v", "")}',
             '--get-url'
@@ -612,7 +631,7 @@ def direct(twitch_id, remote_addr):
         if 'ERROR' in twitch_url or not twitch_url:
             command_live = [
                 'yt-dlp', 
-                '-f', 'best',
+                '-f', get_video_format_selector('best'),
                 '--no-warnings',
                 f'https://www.twitch.tv/{channel}',
                 '--get-url'
@@ -632,7 +651,7 @@ def bridge(twitch_id):
     )
     command = [
         'yt-dlp', 
-        '-f', 'best',
+        '-f', get_video_format_selector('best'),
         '--no-warnings',
         turl,
         '--get-url'
@@ -651,7 +670,7 @@ def bridge(twitch_id):
 
         command_retry = [
             'yt-dlp', 
-            '-f', 'best',
+            '-f', get_video_format_selector('best'),
             '--no-warnings',
             turl,
             '--get-url'
@@ -667,7 +686,7 @@ def bridge(twitch_id):
 
             command_live = [
                 'yt-dlp', 
-                '-f', 'best',
+                '-f', get_video_format_selector('best'),
                 '--no-warnings',
                 'https://www.twitch.tv/{}'.format(
                     channel          
@@ -686,7 +705,7 @@ def bridge(twitch_id):
         command = [
             'yt-dlp', 
             '-o', '-',
-            '-f', 'best',
+            '-f', get_video_format_selector('best'),
             '--no-warnings',
             '--restrict-filenames',
             turl
