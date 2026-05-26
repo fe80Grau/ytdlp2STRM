@@ -3,6 +3,7 @@ import argparse
 import config.plugins as plugins
 from clases.log import log as l
 from utils.sanitize import sanitize
+from version import __version__ as APP_VERSION
 
 def main(raw_args=None):
     parser=argparse.ArgumentParser()
@@ -54,7 +55,7 @@ def main(raw_args=None):
     if args.version:
         log_text = (
             'ytdlp2STRM version: {}'.format(
-                '1.0.1'
+                APP_VERSION
             )
         )
         l.log("CLI", log_text)

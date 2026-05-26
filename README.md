@@ -152,6 +152,17 @@ Where:
 # Additional info
 * After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch ~~and /media/Crunchyroll~~ as folders in Library and enjoy it!
 
+## New in v1.1.1
+* **Fix: duplicate companion files in YouTube channels**: when a YouTube video was renamed or the episode counter had advanced, every cron run regenerated `.nfo`, `.png`, `.vtt` and `.srt` files under a *new* episode number with no `.strm` next to them, while the real `.strm` lived at the original number. The existence check now runs before the new title/episode number is computed and reuses the path of the existing `.strm` for subtitle and metadata refreshes. The lookup also tolerates unreadable/locked files.
+* **Fix #119: `video_quality` change ignored until cache TTL expired**: the direct-mode HLS cache (in memory and in `<strm_output_folder>/.direct_cache`) was keyed only by `youtube_id` + `lang`, so a previously-resolved low-quality variant kept being served after changing `video_quality` in `plugins/youtube/config.json`. The quality is now part of the cache key and filename, so changing the setting invalidates the previous caches immediately.
+* **Cleanup tool**: `scripts/clean_youtube_orphans.py` removes companion files (`.nfo`, `.png`/`.jpg`/`.webp`, `.vtt`, `.srt`, `.ass`) that no longer have a matching `.strm` in the same folder. Runs in dry-run by default; pass `--delete` to actually remove files.
+  ```console
+  python scripts/clean_youtube_orphans.py "/media/Youtube"           # dry-run
+  python scripts/clean_youtube_orphans.py "/media/Youtube" --delete  # actually delete
+  ```
+* **Centralized version**: the application version is now read from `version.py` (`__version__`) and injected into every UI template as `app_version`, instead of being hardcoded in each HTML page and in `cli.py`. To cut a release just bump `version.py`.
+* **YouTube `iframe` mode**: new generation method for the YouTube plugin. The `.strm` file is written with the public YouTube watch URL (`https://www.youtube.com/watch?v=<id>`) instead of a ytdlp2STRM endpoint, so players/apps that can resolve YouTube URLs natively don't need to go through this service. Use it from cron or CLI as `--params iframe`.
+
 ## New in v1.1.0
 * **Season folders by year**: YouTube and Twitch videos are now organized in year-based Season folders
   - Structure: `Channel/Season {year}/S{year}E{XX} - video.strm`
@@ -238,6 +249,7 @@ You can change --media value for another plugin
 * direct : A simple redirect to final stream URL. (faster, no disk usage, sponsorblock not works)
 * bridge : Remuxing on fly. (fast, no disk usage)
 * download : First download full video then it's served. (slow, temp disk usage)
+* iframe : The `.strm` stores the public YouTube watch URL (`https://www.youtube.com/watch?v=<id>`) instead of a ytdlp2STRM URL. Useful for players/apps that can play YouTube URLs natively without going through this service.
 * With download mode, the files in the temp folder older than 24h will be deleted.
 
 ## plugins/*media*/config.json

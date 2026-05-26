@@ -7,9 +7,15 @@ import platform
 import subprocess
 from clases.worker import worker as w
 from ui.ui import Ui
+from version import __version__ as APP_VERSION
 _ui = Ui()
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', manage_session=False)
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
+
+@app.context_processor
+def inject_app_version():
+    """Make `app_version` available in every Jinja template."""
+    return {'app_version': APP_VERSION}
 
 # Ruta principal
 @app.route('/')

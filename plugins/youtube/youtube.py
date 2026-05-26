@@ -81,6 +81,14 @@ def _get_video_format_selector(default_selector='best'):
         return default_selector
     return f'bestvideo[height<={max_height}]+bestaudio/best[height<={max_height}]/best'
 
+def _quality_cache_tag():
+    """Tag used in cache keys/filenames so changing video_quality in config
+    invalidates the previous direct-stream caches. Issue #119: without this,
+    a cached low-quality variant URL keeps being served until the TTL expires.
+    """
+    height = _get_video_quality_height()
+    return f"h{height}" if height else "best"
+
 try:
     download_subtitles = str(config["download_subtitles"]).lower() in ("true", "1", "yes", "on")
 except:
@@ -1021,7 +1029,9 @@ def _is_direct_stream_cache_valid(cache_path):
     return (time.time() - os.path.getmtime(cache_path)) < max_age_seconds
 
 def _direct_stream_cache_path(youtube_id):
-    return os.path.join(media_folder, ".direct_cache", f"{youtube_id}.{lang}.{DIRECT_CACHE_VERSION}.m3u8")
+    # Issue #119: include the quality tag in the filename so changing
+    # video_quality in config invalidates previously-cached variant URLs.
+    return os.path.join(media_folder, ".direct_cache", f"{youtube_id}.{lang}.{_quality_cache_tag()}.{DIRECT_CACHE_VERSION}.m3u8")
 
 def _save_direct_stream_to_disk(youtube_id, m3u8_content):
     cache_dir = os.path.join(media_folder, ".direct_cache")
@@ -1045,7 +1055,7 @@ def _load_direct_stream_from_disk(youtube_id):
     return None
 
 def _is_direct_stream_cached(youtube_id):
-    stream_cache_key = f"{youtube_id}:{lang}"
+    stream_cache_key = f"{youtube_id}:{lang}:{_quality_cache_tag()}"
     return stream_cache_key in direct_stream_cache or _is_direct_stream_cache_valid(_direct_stream_cache_path(youtube_id))
 
 def _prewarm_direct_stream(youtube_id, reason):
@@ -1066,7 +1076,7 @@ def _prewarm_direct_stream(youtube_id, reason):
             l.log("youtube", f"[direct-prewarm] start {youtube_id} reason={reason}")
             m3u8_content = _resolve_direct_m3u8(youtube_id)
             if m3u8_content:
-                direct_stream_cache[f"{youtube_id}:{lang}"] = m3u8_content
+                direct_stream_cache[f"{youtube_id}:{lang}:{_quality_cache_tag()}"] = m3u8_content
                 _save_direct_stream_to_disk(youtube_id, m3u8_content)
                 l.log("youtube", f"[direct-prewarm] done {youtube_id} reason={reason} elapsed={time.time() - started_at:.3f}s bytes={len(m3u8_content)}")
             else:
@@ -1372,14 +1382,24 @@ def clean_text(text):
     return text
 
 def video_id_exists_in_content(media_folder, video_id):
+    return find_strm_path_for_video_id(media_folder, video_id) is not None
+
+def find_strm_path_for_video_id(media_folder, video_id):
+    """Return the absolute path of the .strm file that references video_id,
+    or None if no such file exists. Robust to unreadable/locked files."""
+    if not os.path.isdir(media_folder):
+        return None
     for root, dirs, files in os.walk(media_folder):
         for file in files:
             if file.endswith(".strm"):
                 file_path = os.path.join(root, file)
-                with open(file_path, 'r') as f:
-                    if video_id in f.read():
-                        return True
-    return False
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        if video_id in f.read():
+                            return file_path
+                except Exception:
+                    continue
+    return None
 
 def to_strm(method):
     for youtube_channel in channels:
@@ -1469,7 +1489,14 @@ def to_strm(method):
                 year = date.year
                 youtube_channel = video['uploader_id']
                 youtube_channel_folder = youtube_channel.replace('/user/','@').replace('/streams','')
-                file_content = f'http://{host}:{port}/{source_platform}/{method}/{video_id}'
+                # In `iframe` mode the STRM points directly to the public YouTube
+                # watch URL, so players that support web/iframe playback (or the
+                # user's external app) can resolve it natively without going
+                # through ytdlp2STRM.
+                if method == 'iframe':
+                    file_content = f'https://www.youtube.com/watch?v={video_id}'
+                else:
+                    file_content = f'http://{host}:{port}/{source_platform}/{method}/{video_id}'
 
                 channel_folder = sanitize(
                     "{} [{}]".format(
@@ -1481,18 +1508,6 @@ def to_strm(method):
                 # Create season folder based on video year
                 season_folder = f"Season {year}"
                 folder_full_path = "{}/{}/{}".format(media_folder, channel_folder, season_folder)
-                
-                # Format title with episode number
-                use_mmdd = (episode_format.lower() == 'mmdd')
-                formatted_title = format_episode_title(video_name, folder_full_path, upload_date, use_mmdd)
-                
-                file_path = "{}/{}/{}/{}.{}".format(
-                    media_folder,
-                    channel_folder,
-                    season_folder,
-                    sanitize(formatted_title),
-                    "strm"
-                )
 
                 folder_path = "{}/{}".format(
                     media_folder, 
@@ -1504,10 +1519,29 @@ def to_strm(method):
                     )
                 )
 
-                if video_id_exists_in_content(folder_path, video_id):
-                    l.log("youtube", f'Video {video_id} already exists')
-                    download_subtitles_for_video(video_id, file_path)
+                # Check first whether this video already has an STRM somewhere
+                # in the channel folder. If it does, reuse the EXISTING file path
+                # (with its original episode number and title) for subtitle
+                # downloads instead of recomputing a new one. Otherwise a renamed
+                # YouTube title or an incremented episode counter would generate
+                # duplicate .nfo/.png/.vtt/.srt files under a non-existent STRM.
+                existing_strm_path = find_strm_path_for_video_id(folder_path, video_id)
+                if existing_strm_path:
+                    l.log("youtube", f'Video {video_id} already exists at {existing_strm_path}')
+                    download_subtitles_for_video(video_id, existing_strm_path)
                     continue
+
+                # Format title with episode number (only for NEW videos)
+                use_mmdd = (episode_format.lower() == 'mmdd')
+                formatted_title = format_episode_title(video_name, folder_full_path, upload_date, use_mmdd)
+
+                file_path = "{}/{}/{}/{}.{}".format(
+                    media_folder,
+                    channel_folder,
+                    season_folder,
+                    sanitize(formatted_title),
+                    "strm"
+                )
 
                 if not channel_folder_created:
                     f.folders().make_clean_folder(
@@ -1612,7 +1646,8 @@ def to_strm(method):
 def direct(youtube_id, remote_addr):
     current_time = time.time()
     cache_key = f"{remote_addr}_{youtube_id}"
-    stream_cache_key = f"{youtube_id}:{lang}"
+    # Issue #119: include the quality tag so cache busts when video_quality changes
+    stream_cache_key = f"{youtube_id}:{lang}:{_quality_cache_tag()}"
     
     # Check if the request is already cached
     if cache_key not in recent_requests:
