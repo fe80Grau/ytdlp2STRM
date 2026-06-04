@@ -46,88 +46,110 @@ class JellyfinNotifier:
     
     def get_library_id(self):
         """
-        Get the library ID by name
-        
+        Get the Emby/Jellyfin ItemId for the configured library name.
+
         Returns:
-            str: Library ID or None if not found
+            str or None: The library's ItemId (e.g. "12345"), or None if the
+                library is not configured / has no ItemId. We deliberately
+                never return the library name as a fallback because callers
+                use the result to build API URLs.
         """
         if not self.enabled:
             return None
-        
+
         try:
             # Endpoint is the same for both Jellyfin and Emby
             url = f"{self.base_url}/Library/VirtualFolders"
             headers = {
                 'X-Emby-Token': self.api_key
             }
-            
+
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
-            
+
             libraries = response.json()
-            
+
             for library in libraries:
                 if library.get('Name', '').lower() == self.library_name.lower():
-                    # Get the first ItemId from Locations
-                    locations = library.get('Locations', [])
-                    if locations:
-                        # For Jellyfin/Emby, we need to get the library ID from the CollectionType
-                        # We'll use the library name to trigger a scan
-                        return library.get('ItemId') or library.get('Name')
-            
-            l.log("jellyfin_notifier", f"Library '{self.library_name}' not found")
+                    item_id = library.get('ItemId')
+                    if item_id:
+                        return item_id
+                    l.log(
+                        "jellyfin_notifier",
+                        f"Library '{self.library_name}' has no ItemId, cannot refresh",
+                    )
+                    return None
+
+            l.log("jellyfin_notifier", f"Library '{self.library_name}' not found in Emby/Jellyfin")
             return None
-            
+
         except requests.exceptions.RequestException as e:
             l.log("jellyfin_notifier", f"Error getting library ID: {e}")
             return None
         except Exception as e:
             l.log("jellyfin_notifier", f"Unexpected error getting library ID: {e}")
             return None
-    
+
     def scan_library(self):
         """
-        Trigger a library scan
-        
+        Trigger a refresh of the configured library ONLY.
+
+        Bug fix: the previous implementation always called ``POST /Library/Refresh``
+        with empty params, which restarts validation from item #1 on the whole
+        server. When a cron job calls this every 2-4 hours, the main library
+        scan never finishes and the dashboard becomes slow.
+
+        The fix refreshes only the configured library (e.g. "Youtube" or
+        "Twitch") via ``POST /Items/{Id}/Refresh`` with conservative params
+        (no metadata re-extraction, no image re-extraction). If the library
+        cannot be found in Emby/Jellyfin, we skip the refresh instead of
+        falling back to a full server scan.
+
         Returns:
-            bool: True if scan was triggered successfully, False otherwise
+            bool: True if the library refresh was triggered, False otherwise
+                  (including when the library is not configured in Emby).
         """
         if not self.enabled:
             return False
-        
+
         try:
-            # First, try to get the library ID
             library_id = self.get_library_id()
-            
-            if library_id:
-                # Scan specific library by ID
-                url = f"{self.base_url}/Library/Refresh"
-                headers = {
-                    'X-Emby-Token': self.api_key,
-                    'Content-Type': 'application/json'
-                }
-                
-                # Try with library ID in query params
-                params = {}
-                
-                response = requests.post(url, headers=headers, params=params, timeout=10)
-                response.raise_for_status()
-                
-                l.log("jellyfin_notifier", f"Library scan triggered successfully for '{self.library_name}'")
-                return True
-            else:
-                # Fallback: trigger a full library scan
-                url = f"{self.base_url}/Library/Refresh"
-                headers = {
-                    'X-Emby-Token': self.api_key
-                }
-                
-                response = requests.post(url, headers=headers, timeout=10)
-                response.raise_for_status()
-                
-                l.log("jellyfin_notifier", f"Full library scan triggered (library '{self.library_name}' not found)")
-                return True
-                
+
+            if not library_id:
+                # Library missing or misconfigured. Do NOT fall back to a full
+                # server scan — that was the original bug.
+                l.log(
+                    "jellyfin_notifier",
+                    f"Library '{self.library_name}' not found, skipping refresh "
+                    f"(no full-scan fallback to avoid stalling other libraries)",
+                )
+                return False
+
+            # Refresh only the specific library (CollectionFolder).
+            # Endpoint: POST /Items/{Id}/Refresh where {Id} is the library's ItemId.
+            url = f"{self.base_url}/Items/{library_id}/Refresh"
+            headers = {
+                'X-Emby-Token': self.api_key,
+            }
+            # Conservative params: pick up new/changed files, do not re-extract
+            # metadata or images. This is the lightest possible refresh.
+            params = {
+                'Recursive': 'true',
+                'MetadataRefreshMode': 'Default',
+                'ImageRefreshMode': 'None',
+                'ReplaceAllMetadata': 'false',
+                'ReplaceAllImages': 'false',
+            }
+
+            response = requests.post(url, headers=headers, params=params, timeout=10)
+            response.raise_for_status()
+
+            l.log(
+                "jellyfin_notifier",
+                f"Library refresh triggered for '{self.library_name}' (ItemId={library_id})",
+            )
+            return True
+
         except requests.exceptions.RequestException as e:
             l.log("jellyfin_notifier", f"Error triggering library scan: {e}")
             return False
