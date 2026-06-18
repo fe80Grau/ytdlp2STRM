@@ -61,8 +61,18 @@ def main(raw_args=None):
         l.log("CLI", log_text)
 
     r = False
-    if params != None:
-        r = eval("{}.{}.{}".format("plugins",method,"to_strm"))(*params)
+    if params != None and method:
+        # Resolucion segura del plugin: en lugar de eval() sobre una cadena
+        # construida con entrada del usuario (riesgo de inyeccion de codigo),
+        # se obtiene el modulo del plugin y su funcion to_strm via getattr.
+        # getattr solo devuelve atributos ya existentes del modulo config.plugins,
+        # por lo que un 'method' arbitrario no puede ejecutar codigo.
+        plugin_module = getattr(plugins, method, None)
+        to_strm_func = getattr(plugin_module, "to_strm", None) if plugin_module else None
+        if callable(to_strm_func):
+            r = to_strm_func(*params)
+        else:
+            l.log("CLI", "Unknown or invalid plugin method: {}".format(method))
 
 if __name__ == "__main__":
     main()

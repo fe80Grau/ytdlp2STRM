@@ -15,7 +15,7 @@ from clases.cron import cron as cron
 restart_flag = False
 stop_event = None
 
-def run_flask_app(stop_event, port):
+def run_flask_app(stop_event, port, host='0.0.0.0'):
     @app.before_request
     def before_request():
         if stop_event.is_set():
@@ -27,7 +27,7 @@ def run_flask_app(stop_event, port):
                 func()
     
     try:
-        socketio.run(app, host='0.0.0.0', port=port, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
+        socketio.run(app, host=host, port=port, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
     except Exception as e:
         log_text = (f"Exception in Flask app: {e}")
         l.log("main", log_text)
@@ -81,7 +81,10 @@ if __name__ == "__main__":
 
     # Crear un proceso para la aplicación Flask
     port = ytdlp2strm_config['ytdlp2strm_port']
-    flask_thread = Thread(target=run_flask_app, args=(stop_event, port))
+    # Respeta el host configurado (p. ej. 127.0.0.1 para no exponer la UI a la
+    # red). Si no esta definido, se mantiene el comportamiento previo (0.0.0.0).
+    host = ytdlp2strm_config.get('ytdlp2strm_host', '0.0.0.0')
+    flask_thread = Thread(target=run_flask_app, args=(stop_event, port, host))
     flask_thread.daemon = True  # Set the thread as daemon
     flask_thread.start()
     log_text = (" * Flask thread started")

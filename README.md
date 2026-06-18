@@ -152,6 +152,13 @@ Where:
 # Additional info
 * After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch ~~and /media/Crunchyroll~~ as folders in Library and enjoy it!
 
+## New in v1.1.2
+* **Security hardening** (Issue #122):
+  - **Argument injection protection**: plugin streaming routes (`/youtube/direct/<id>`, `/twitch/bridge/<id>`, etc.) now validate the media ID against an allowlist (`[A-Za-z0-9_.-]`, no leading `-`) before passing it to `yt-dlp`, returning HTTP 400 on invalid input.
+  - **Replaced `eval()` in `cli.py`**: plugin method resolution now uses `getattr` instead of `eval()` on user-supplied strings, preventing code injection.
+  - **Host binding now respects `ytdlp2strm_host`**: `main.py` reads `ytdlp2strm_host` from `config.json` instead of hardcoding `0.0.0.0`. The default config now ships with `127.0.0.1`, reducing accidental exposure of the admin UI to the network.
+  - **Optional HTTP Basic Auth for admin routes**: setting `ytdlp2strm_web_username` and `ytdlp2strm_web_password` in `config.json` protects the dashboard (`/`, `/general`, `/plugin`, `/crons`, `/log`, `/restart_service`) while leaving streaming endpoints open for Jellyfin/Emby/Kodi. Streaming routes (`/youtube/*`, `/twitch/*`, etc.) remain unauthenticated so players keep working.
+
 ## New in v1.1.1
 * **Fix: duplicate companion files in YouTube channels**: when a YouTube video was renamed or the episode counter had advanced, every cron run regenerated `.nfo`, `.png`, `.vtt` and `.srt` files under a *new* episode number with no `.strm` next to them, while the real `.strm` lived at the original number. The existence check now runs before the new title/episode number is computed and reuses the path of the existing `.strm` for subtitle and metadata refreshes. The lookup also tolerates unreadable/locked files.
 * **Fix #119: `video_quality` change ignored until cache TTL expired**: the direct-mode HLS cache (in memory and in `<strm_output_folder>/.direct_cache`) was keyed only by `youtube_id` + `lang`, so a previously-resolved low-quality variant kept being served after changing `video_quality` in `plugins/youtube/config.json`. The quality is now part of the cache key and filename, so changing the setting invalidates the previous caches immediately.
@@ -236,10 +243,12 @@ cd /opt/ytdlp2STRM/ && python3 cli.py --media youtube --params direct
 You can change --media value for another plugin
 
 ## config/config.json
-* ytdlp2strm_host 
+* ytdlp2strm_host
 * ytdlp2strm_port
 * ytdlp2strm_keep_old_strm
 * ytdlp2strm_temp_file_duration
+* ytdlp2strm_web_username *(optional; enables HTTP Basic Auth on admin routes when both username and password are set)*
+* ytdlp2strm_web_password *(optional; enables HTTP Basic Auth on admin routes when both username and password are set)*
 
 ## config/crons.json
 * Working with Schedule library (https://schedule.readthedocs.io/en/stable/examples.html)

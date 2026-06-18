@@ -3,10 +3,13 @@
 import requests
 from __main__ import app
 from flask import Response, stream_with_context, request
+from utils.validate_id import is_valid_media_id
 
 
 @app.route("/telegram/direct/<telegram_id>")
 def telegram_direct(telegram_id):
+    if not is_valid_media_id(telegram_id):
+        return Response("Invalid id", status=400)
     quart_url = f"http://localhost:5151/telegram/direct/{telegram_id}"
     
     # Forward headers received from the original request (optional, but can be useful for things like range requests)

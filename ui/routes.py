@@ -1,5 +1,5 @@
 from __main__ import app
-from flask import request, render_template, session, send_from_directory, jsonify
+from flask import request, render_template, session, send_from_directory, jsonify, Response
 from flask_socketio import SocketIO
 import json
 import logging
@@ -11,6 +11,51 @@ from version import __version__ as APP_VERSION
 _ui = Ui()
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', manage_session=False)
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
+
+# Rutas de administracion que permiten escribir codigo/config o ejecutar
+# acciones sensibles. Se protegen con autenticacion Basic SOLO si se han
+# configurado credenciales (ytdlp2strm_web_username / ytdlp2strm_web_password)
+# en config.json. Las rutas de streaming de los plugins (/youtube, /twitch...)
+# quedan abiertas para que los reproductores (Jellyfin/Emby/Kodi) sigan
+# funcionando sin credenciales.
+_PROTECTED_PREFIXES = (
+    '/general',
+    '/plugin',     # cubre /plugins y /plugin/<...>
+    '/crons',
+    '/log',
+    '/restart_service',
+)
+
+
+def _get_web_credentials():
+    try:
+        cfg = _ui.general_settings or {}
+    except Exception:
+        return None, None
+    return cfg.get('ytdlp2strm_web_username'), cfg.get('ytdlp2strm_web_password')
+
+
+@app.before_request
+def _require_admin_auth():
+    user, pwd = _get_web_credentials()
+    # Sin credenciales configuradas -> se mantiene el comportamiento actual.
+    if not user or not pwd:
+        return None
+
+    path = request.path
+    is_protected = path == '/' or any(path.startswith(p) for p in _PROTECTED_PREFIXES)
+    if not is_protected:
+        return None
+
+    auth = request.authorization
+    if auth and auth.username == user and auth.password == pwd:
+        return None
+
+    return Response(
+        'Authentication required',
+        401,
+        {'WWW-Authenticate': 'Basic realm="ytdlp2STRM"'}
+    )
 
 @app.context_processor
 def inject_app_version():
