@@ -369,9 +369,9 @@ if SECRET_KEY:
 
 
 if 'jellyfin_preload' in config:
-    jellyfin_preload = bool(config['jellyfin_preload'])
+    jellyfin_preload = str(config['jellyfin_preload']).lower() == 'true'
 if 'jellyfin_preload_last_episode' in config:
-    jellyfin_preload_last_episode = bool(config['jellyfin_preload_last_episode'])
+    jellyfin_preload_last_episode = str(config['jellyfin_preload_last_episode']).lower() == 'true'
 if 'proxy' in config:
     proxy = config['proxy']
     proxy_url = config['proxy_url']

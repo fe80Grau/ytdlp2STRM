@@ -152,6 +152,9 @@ Where:
 # Additional info
 * After that you can view all channels folders within /media/Youtube and their strm files. If you are using Jellyfin/Emby, add /media/Youtube, /media/Twitch ~~and /media/Crunchyroll~~ as folders in Library and enjoy it!
 
+## New in v1.1.3
+* **Fix: Jellyfin daemon started even when `jellyfin_preload` was `"False"`**: the Crunchyroll plugin used `bool(config['jellyfin_preload'])`, but `bool("False")` returns `True` in Python (any non-empty string is truthy). This caused the Jellyfin preload daemon to run and spam HTTP errors every minute even with the feature disabled. The check now uses `str(value).lower() == 'true'`, matching the rest of the codebase.
+
 ## New in v1.1.2
 * **Security hardening** (Issue #122):
   - **Argument injection protection**: plugin streaming routes (`/youtube/direct/<id>`, `/twitch/bridge/<id>`, etc.) now validate the media ID against an allowlist (`[A-Za-z0-9_.-]`, no leading `-`) before passing it to `yt-dlp`, returning HTTP 400 on invalid input.
