@@ -55,30 +55,73 @@ http://localhost:5000/
 
 
 # Windows
-* The next steps have been tested on Windows 11 Pro 22H2. Using Powershell or Windows Terminal with Administrator privileges:
-```console
-cd C:\ProgramData; git clone https://github.com/fe80Grau/ytdlp2STRM.git;
+Use PowerShell. Choose **one explicit Python interpreter** and use it both for installing dependencies and for the scheduled task; a task may have a different `PATH` from your terminal. Python 3.10/3.11 are the tested versions. Keep FFmpeg and yt-dlp available to the task's account as well.
+
+```powershell
+cd C:\ProgramData
+git clone https://github.com/fe80Grau/ytdlp2STRM.git
+$ProjectPath = 'C:\ProgramData\ytdlp2STRM'
+# Replace this example with the full path to your python.exe (or venv python.exe).
+$PythonExe = 'C:\Python311\python.exe'
+Set-Location -LiteralPath $ProjectPath
+& $PythonExe -m pip install -r ./requierments.txt
+& $PythonExe -m pip check
 ```
-* Install requierments.txt
-```console
-cd C:\ProgramData\ytdlp2STRM; pip install -r requierments.txt
+
+### First check startup in the foreground
+Run this **before** creating a task, so missing dependencies, invalid configuration, permissions or port conflicts are visible. This starts the real application and its configured cron jobs. Stop it with Ctrl+C before starting a second instance.
+
+```powershell
+Set-Location -LiteralPath $ProjectPath
+& $PythonExe -u .\main.py
 ```
-* Create a task that is scheduled to run main.py at startup. If you plan to install ytdlp2STRM in a different folder than C:\ProgramData\ytdlp2STRM, edit ./config/MS-TASK-ytdlp2STRM.xml
-```console
-schtasks.exe /create /tn "ytdlp2STRM" /xml C:\ProgramData\ytdlp2STRM\config\MS-TASK-ytdlp2STRM.xml
+
+Open `http://localhost:5000/` (or the host/port configured in `config/config.json`). If startup fails here, fix the displayed error first; creating a task will not fix an import/configuration error.
+
+### Recommended: current-user task at sign-in
+The optional helper creates a **sign-in** task for the current Windows user, with no stored password and no automatic privilege elevation. It does **not** start the application. Sign-in is intentional: an interactive user token cannot run before that user logs in. Use the same Windows account that passed the foreground check.
+
+Preview and validate without registering a task or writing files (no Administrator session needed):
+
+```powershell
+.\scripts\install-windows-task.ps1 -ProjectPath $ProjectPath -PythonExe $PythonExe -WhatIf
+# -DryRun is equivalent. Both return the generated XML; neither starts main.py.
 ```
-* Run task
-```console
-schtasks.exe /run /tn "ytdlp2STRM"
+
+After reviewing the XML, register and start it explicitly:
+
+```powershell
+.\scripts\install-windows-task.ps1 -ProjectPath $ProjectPath -PythonExe $PythonExe
+Start-ScheduledTask -TaskName 'ytdlp2STRM' -TaskPath '\'
 ```
-* In case everything is working, these commands will return "Running"
-```console
-(Get-ScheduledTask | Where TaskName -eq ytdlp2STRM ).State
+
+The helper requires absolute local paths, supports spaces, and refuses to replace an existing task. For an existing installation, review/edit that task in Task Scheduler instead of creating a second running instance. If PowerShell blocks the script, review it and use a process-only execution-policy exception according to your local policy; do not disable execution policy machine-wide.
+
+### Alternative: manual import / boot-time task
+`config/MS-TASK-ytdlp2STRM.xml` remains a **boot-trigger template**. Before importing, edit its `Command` (if Windows is not in `C:\Windows`), `Arguments` (both the project/launcher path and the absolute Python path), and `WorkingDirectory`. The example Python path is not auto-detected. The launcher is `scripts/start-windows.cmd`; it changes to its own project directory, uses `python.exe -u`, appends **stdout and stderr** to `<project>\log.txt`, and preserves Python's exit code.
+
+```powershell
+# From an elevated terminal, after reviewing/editing the template:
+schtasks.exe /create /tn 'ytdlp2STRM' /xml "$ProjectPath\config\MS-TASK-ytdlp2STRM.xml"
 ```
-* Check the GUI in the browser.
-```console
-http://localhost:5000/
+
+For unattended startup **before sign-in**, also configure the task's General tab with an appropriate account and “Run whether user is logged on or not”; supply any required credentials through Task Scheduler, not a script. Confirm that account can run the selected Python, read/write the project/media folders, and access required executables and network resources. Do not switch to SYSTEM or “highest privileges” just to hide a permissions error. An interactive-account boot trigger alone does not provide unattended startup.
+
+### If the task returns to Ready or localhost is unavailable
+`Ready` means the task is not currently running, not that the web server started successfully. A successful `/run` or `Start-ScheduledTask` only submits the start request. Inspect the exact task, its exit result and both output streams:
+
+```powershell
+Get-ScheduledTask -TaskName 'ytdlp2STRM' -TaskPath '\' |
+    Select-Object TaskName, State
+Get-ScheduledTaskInfo -TaskName 'ytdlp2STRM' -TaskPath '\' |
+    Select-Object LastRunTime, LastTaskResult
+Get-Content -LiteralPath "$ProjectPath\log.txt" -Tail 100
+# Inspect the executable, arguments, directory and execution account:
+(Get-ScheduledTask -TaskName 'ytdlp2STRM' -TaskPath '\').Actions
+(Get-ScheduledTask -TaskName 'ytdlp2STRM' -TaskPath '\').Principal
 ```
+
+The former action `/c python main.py > log.txt` depended on PATH, buffered stdout and discarded stderr from the log. An empty log therefore did not rule out a Python/import error. The launcher now appends startup/exit markers and exception tracebacks; `log.txt` grows until you archive/truncate it while the task is stopped. If no log is created, check the action paths, account permissions and Task Scheduler History/Operational log, then repeat the foreground command under the task's account. `Running` alone is not an HTTP health check: verify the configured URL too. Do not assume a firewall problem before confirming the server actually started.
 
 # Docker
 To deploy this as a Docker container, follow these steps in the ytdlp2STRM root folder.
